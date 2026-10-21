@@ -25,7 +25,7 @@ export function QrTicketScreen({ id }: { id: string }) {
   }, [ticket, advance]);
 
   useEffect(() => {
-    if (ticket) updateRecord(ticket.recordId, { status: STATUSES[ticket.statusIndex] });
+    if (ticket) updateRecord(ticket.recordId, { status: STATUSES[ticket.statusIndex] ?? "Alındı" });
   }, [ticket, updateRecord]);
 
   if (!ticket)

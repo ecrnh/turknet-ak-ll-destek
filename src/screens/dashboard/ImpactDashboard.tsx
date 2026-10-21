@@ -7,7 +7,8 @@ import { useAppStore } from "@/features/core/appStore";
 import { fmtDateTime, fmtNum } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const [AUG, SEP] = CASE_BASELINE.months;
+const AUG = CASE_BASELINE.months[0]!;
+const SEP = CASE_BASELINE.months[1]!;
 const pct = (a: number, b: number) => Math.round((a / b) * 1000) / 10;
 const liveChatAug = pct(AUG.toLiveChat, AUG.fromAssistant);
 const liveChatSep = pct(SEP.toLiveChat, SEP.fromAssistant);

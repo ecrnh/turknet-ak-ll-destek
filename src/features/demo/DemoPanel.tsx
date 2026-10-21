@@ -93,7 +93,7 @@ export function DemoPanel({ onHide }: { onHide?: () => void }) {
           min={0}
           max={96}
           step={1}
-          onValueChange={([v]) => {
+          onValueChange={([v = 0]) => {
             setHours(v);
             if (isOut) startOutage(v);
           }}

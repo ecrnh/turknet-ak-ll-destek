@@ -72,7 +72,7 @@ export function AppShell() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.dataset.bigtext = String(bigText);
+    document.documentElement.dataset["bigtext"] = String(bigText);
   }, [bigText]);
 
   if (path.startsWith("/dashboard")) {

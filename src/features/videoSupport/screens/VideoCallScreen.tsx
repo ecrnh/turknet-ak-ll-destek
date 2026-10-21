@@ -74,7 +74,7 @@ export function VideoCallScreen() {
   const [rearOverride, setRearOverride] = useState<boolean | null>(null);
   const startedAt = useRef(Date.now());
 
-  const s = script[stage];
+  const s = script[stage]!;
   const base = guest ? 1 : 0;
   // checklist index boundaries depend on whether the guest stage exists
   const idx = { pon: 3 + base, ponDone: 4 + base, power: 5 + base, restart: 6 + base, restarting: 7 + base, cable: 8 + base, end: 9 + base };

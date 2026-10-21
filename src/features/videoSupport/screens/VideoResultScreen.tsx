@@ -153,7 +153,7 @@ export function VideoResultScreen() {
                   className="mt-5 w-full"
                   disabled={day === null || !slot}
                   onClick={() => {
-                    const d = days[day!];
+                    const d = days[day!]!;
                     addAppointment(d.iso, slot!);
                     updateRecord(call.recordId, { status: `Saha randevusu: ${d.label} ${slot}` });
                     notify({ kind: "support", title: "Teknik ekip randevun onaylandı", body: `${d.label} · ${slot}`, to: "/destek-kayitlari" }, false);

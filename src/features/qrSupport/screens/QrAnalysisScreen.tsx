@@ -93,7 +93,7 @@ export function QrAnalysisScreen() {
             <p className="text-sm text-muted-foreground">{serial} · {fmtDateTime(Date.now())}</p>
             <ul className="mt-4 space-y-3.5" aria-live="polite">
               {QR_CHECKS.map((c, idx) => {
-                const r = result.checks[idx];
+                const r = result.checks[idx]!;
                 const Icon = ICON[r.state];
                 return (
                   <li key={c.key} className="flex items-center gap-3">
