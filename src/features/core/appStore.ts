@@ -57,7 +57,7 @@ export interface AnalyticsEvent {
   name: string;
   feature: string;
   time: number;
-  props?: Record<string, string | number | boolean>;
+  props?: Record<string, string | number | boolean> | undefined;
 }
 
 interface NetState {

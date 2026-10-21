@@ -137,7 +137,7 @@ export function GiftWalletScreen() {
                 <span className="text-sm text-muted-foreground">Aktarılacak</span>
                 <span className="text-2xl font-bold text-magenta">{fmtGB(amount)}</span>
               </div>
-              <Slider value={[amount]} min={0} max={Math.max(0.5, remaining)} step={0.5} onValueChange={([v]) => setAmount(v)} className="mt-3" aria-label="Paylaşılacak GB" />
+              <Slider value={[amount]} min={0} max={Math.max(0.5, remaining)} step={0.5} onValueChange={([v = 0]) => setAmount(v)} className="mt-3" aria-label="Paylaşılacak GB" />
               <p className="mt-1 text-xs text-muted-foreground">{fmtGB(remaining)} kalanın {fmtGB(amount)} kadarı {to} hattına geçer.</p>
               <Button size="lg" className="mt-4 w-full" disabled={amount <= 0 || remaining <= 0} onClick={() => setConfirm(true)}>
                 Paylaş

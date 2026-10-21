@@ -19,8 +19,8 @@ interface Msg {
   id: number;
   from: "user" | "bot";
   text: string;
-  actions?: ChatAction[];
-  agent?: boolean;
+  actions?: ChatAction[] | undefined;
+  agent?: boolean | undefined;
 }
 
 function AgentSteps() {

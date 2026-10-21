@@ -74,7 +74,7 @@ export function VideoCallScreen() {
   const [rearOverride, setRearOverride] = useState<boolean | null>(null);
   const startedAt = useRef(Date.now());
 
-  const s = script[stage];
+  const s = script[stage]!;
   const base = guest ? 1 : 0;
   // checklist index boundaries depend on whether the guest stage exists
   const idx = { pon: 3 + base, ponDone: 4 + base, power: 5 + base, restart: 6 + base, restarting: 7 + base, cable: 8 + base, end: 9 + base };
@@ -179,7 +179,7 @@ export function VideoCallScreen() {
             </motion.div>
           ) : (
             <motion.div key="rear" className="absolute inset-0 flex items-center justify-center bg-call" initial={{ opacity: 0, rotateY: 90 }} animate={{ opacity: 1, rotateY: 0 }} exit={{ opacity: 0 }}>
-              <div className="relative aspect-[2/3] h-full max-w-full">
+              <div className="relative aspect-[2/3] w-full">
                 <img src={modemBackImg} alt="Arka kamera: modemin arka paneli" className="h-full w-full object-cover" />
                 <MarkCanvas marks={s.marks ?? []} />
               </div>

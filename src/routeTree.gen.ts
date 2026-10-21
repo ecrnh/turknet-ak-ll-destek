@@ -10,33 +10,401 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AramaRouteImport } from './routes/arama'
+import { Route as BildirimlerRouteImport } from './routes/bildirimler'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DestekKayitlariRouteImport } from './routes/destek-kayitlari'
+import { Route as DijitalOnarimRouteImport } from './routes/dijital-onarim'
+import { Route as HesabimRouteImport } from './routes/hesabim'
+import { Route as HizTestiRouteImport } from './routes/hiz-testi'
+import { Route as IslemGecmisiRouteImport } from './routes/islem-gecmisi'
+import { Route as IslemlerRouteImport } from './routes/islemler'
+import { Route as TercihlerRouteImport } from './routes/tercihler'
+import { Route as YardimRouteImport } from './routes/yardim'
+import { Route as AileIndexRouteImport } from './routes/aile.index'
+import { Route as AileYeniRouteImport } from './routes/aile.yeni'
+import { Route as AjanlarIndexRouteImport } from './routes/ajanlar.index'
+import { Route as AjanlarHizRouteImport } from './routes/ajanlar.hiz'
+import { Route as AjanlarYedekRouteImport } from './routes/ajanlar.yedek'
+import { Route as FaturalarIndexRouteImport } from './routes/faturalar.index'
+import { Route as FaturalarGecmisRouteImport } from './routes/faturalar.gecmis'
+import { Route as GoruntuluDestekIndexRouteImport } from './routes/goruntulu-destek.index'
+import { Route as GoruntuluDestekGorusmeRouteImport } from './routes/goruntulu-destek.gorusme'
+import { Route as GoruntuluDestekSonucRouteImport } from './routes/goruntulu-destek.sonuc'
+import { Route as HediyeIndexRouteImport } from './routes/hediye.index'
+import { Route as HediyeAktiflestirRouteImport } from './routes/hediye.aktiflestir'
+import { Route as IslemSlugRouteImport } from './routes/islem.$slug'
+import { Route as QrIndexRouteImport } from './routes/qr.index'
+import { Route as QrAnalizRouteImport } from './routes/qr.analiz'
+import { Route as QrTaraRouteImport } from './routes/qr.tara'
+import { Route as QrTalepIdRouteImport } from './routes/qr.talep.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AramaRoute = AramaRouteImport.update({
+  id: '/arama',
+  path: '/arama',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BildirimlerRoute = BildirimlerRouteImport.update({
+  id: '/bildirimler',
+  path: '/bildirimler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DestekKayitlariRoute = DestekKayitlariRouteImport.update({
+  id: '/destek-kayitlari',
+  path: '/destek-kayitlari',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DijitalOnarimRoute = DijitalOnarimRouteImport.update({
+  id: '/dijital-onarim',
+  path: '/dijital-onarim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HesabimRoute = HesabimRouteImport.update({
+  id: '/hesabim',
+  path: '/hesabim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HizTestiRoute = HizTestiRouteImport.update({
+  id: '/hiz-testi',
+  path: '/hiz-testi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IslemGecmisiRoute = IslemGecmisiRouteImport.update({
+  id: '/islem-gecmisi',
+  path: '/islem-gecmisi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IslemlerRoute = IslemlerRouteImport.update({
+  id: '/islemler',
+  path: '/islemler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TercihlerRoute = TercihlerRouteImport.update({
+  id: '/tercihler',
+  path: '/tercihler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const YardimRoute = YardimRouteImport.update({
+  id: '/yardim',
+  path: '/yardim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AileIndexRoute = AileIndexRouteImport.update({
+  id: '/aile/',
+  path: '/aile/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AileYeniRoute = AileYeniRouteImport.update({
+  id: '/aile/yeni',
+  path: '/aile/yeni',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AjanlarIndexRoute = AjanlarIndexRouteImport.update({
+  id: '/ajanlar/',
+  path: '/ajanlar/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AjanlarHizRoute = AjanlarHizRouteImport.update({
+  id: '/ajanlar/hiz',
+  path: '/ajanlar/hiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AjanlarYedekRoute = AjanlarYedekRouteImport.update({
+  id: '/ajanlar/yedek',
+  path: '/ajanlar/yedek',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaturalarIndexRoute = FaturalarIndexRouteImport.update({
+  id: '/faturalar/',
+  path: '/faturalar/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaturalarGecmisRoute = FaturalarGecmisRouteImport.update({
+  id: '/faturalar/gecmis',
+  path: '/faturalar/gecmis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoruntuluDestekIndexRoute = GoruntuluDestekIndexRouteImport.update({
+  id: '/goruntulu-destek/',
+  path: '/goruntulu-destek/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoruntuluDestekGorusmeRoute = GoruntuluDestekGorusmeRouteImport.update({
+  id: '/goruntulu-destek/gorusme',
+  path: '/goruntulu-destek/gorusme',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoruntuluDestekSonucRoute = GoruntuluDestekSonucRouteImport.update({
+  id: '/goruntulu-destek/sonuc',
+  path: '/goruntulu-destek/sonuc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HediyeIndexRoute = HediyeIndexRouteImport.update({
+  id: '/hediye/',
+  path: '/hediye/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HediyeAktiflestirRoute = HediyeAktiflestirRouteImport.update({
+  id: '/hediye/aktiflestir',
+  path: '/hediye/aktiflestir',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IslemSlugRoute = IslemSlugRouteImport.update({
+  id: '/islem/$slug',
+  path: '/islem/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QrIndexRoute = QrIndexRouteImport.update({
+  id: '/qr/',
+  path: '/qr/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QrAnalizRoute = QrAnalizRouteImport.update({
+  id: '/qr/analiz',
+  path: '/qr/analiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QrTaraRoute = QrTaraRouteImport.update({
+  id: '/qr/tara',
+  path: '/qr/tara',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QrTalepIdRoute = QrTalepIdRouteImport.update({
+  id: '/qr/talep/$id',
+  path: '/qr/talep/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/arama': typeof AramaRoute
+  '/bildirimler': typeof BildirimlerRoute
+  '/dashboard': typeof DashboardRoute
+  '/destek-kayitlari': typeof DestekKayitlariRoute
+  '/dijital-onarim': typeof DijitalOnarimRoute
+  '/hesabim': typeof HesabimRoute
+  '/hiz-testi': typeof HizTestiRoute
+  '/islem-gecmisi': typeof IslemGecmisiRoute
+  '/islemler': typeof IslemlerRoute
+  '/tercihler': typeof TercihlerRoute
+  '/yardim': typeof YardimRoute
+  '/aile/yeni': typeof AileYeniRoute
+  '/ajanlar/hiz': typeof AjanlarHizRoute
+  '/ajanlar/yedek': typeof AjanlarYedekRoute
+  '/faturalar/gecmis': typeof FaturalarGecmisRoute
+  '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
+  '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
+  '/hediye/aktiflestir': typeof HediyeAktiflestirRoute
+  '/islem/$slug': typeof IslemSlugRoute
+  '/qr/analiz': typeof QrAnalizRoute
+  '/qr/tara': typeof QrTaraRoute
+  '/aile/': typeof AileIndexRoute
+  '/ajanlar/': typeof AjanlarIndexRoute
+  '/faturalar/': typeof FaturalarIndexRoute
+  '/goruntulu-destek/': typeof GoruntuluDestekIndexRoute
+  '/hediye/': typeof HediyeIndexRoute
+  '/qr/': typeof QrIndexRoute
+  '/qr/talep/$id': typeof QrTalepIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/arama': typeof AramaRoute
+  '/bildirimler': typeof BildirimlerRoute
+  '/dashboard': typeof DashboardRoute
+  '/destek-kayitlari': typeof DestekKayitlariRoute
+  '/dijital-onarim': typeof DijitalOnarimRoute
+  '/hesabim': typeof HesabimRoute
+  '/hiz-testi': typeof HizTestiRoute
+  '/islem-gecmisi': typeof IslemGecmisiRoute
+  '/islemler': typeof IslemlerRoute
+  '/tercihler': typeof TercihlerRoute
+  '/yardim': typeof YardimRoute
+  '/aile/yeni': typeof AileYeniRoute
+  '/ajanlar/hiz': typeof AjanlarHizRoute
+  '/ajanlar/yedek': typeof AjanlarYedekRoute
+  '/faturalar/gecmis': typeof FaturalarGecmisRoute
+  '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
+  '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
+  '/hediye/aktiflestir': typeof HediyeAktiflestirRoute
+  '/islem/$slug': typeof IslemSlugRoute
+  '/qr/analiz': typeof QrAnalizRoute
+  '/qr/tara': typeof QrTaraRoute
+  '/aile': typeof AileIndexRoute
+  '/ajanlar': typeof AjanlarIndexRoute
+  '/faturalar': typeof FaturalarIndexRoute
+  '/goruntulu-destek': typeof GoruntuluDestekIndexRoute
+  '/hediye': typeof HediyeIndexRoute
+  '/qr': typeof QrIndexRoute
+  '/qr/talep/$id': typeof QrTalepIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/arama': typeof AramaRoute
+  '/bildirimler': typeof BildirimlerRoute
+  '/dashboard': typeof DashboardRoute
+  '/destek-kayitlari': typeof DestekKayitlariRoute
+  '/dijital-onarim': typeof DijitalOnarimRoute
+  '/hesabim': typeof HesabimRoute
+  '/hiz-testi': typeof HizTestiRoute
+  '/islem-gecmisi': typeof IslemGecmisiRoute
+  '/islemler': typeof IslemlerRoute
+  '/tercihler': typeof TercihlerRoute
+  '/yardim': typeof YardimRoute
+  '/aile/yeni': typeof AileYeniRoute
+  '/ajanlar/hiz': typeof AjanlarHizRoute
+  '/ajanlar/yedek': typeof AjanlarYedekRoute
+  '/faturalar/gecmis': typeof FaturalarGecmisRoute
+  '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
+  '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
+  '/hediye/aktiflestir': typeof HediyeAktiflestirRoute
+  '/islem/$slug': typeof IslemSlugRoute
+  '/qr/analiz': typeof QrAnalizRoute
+  '/qr/tara': typeof QrTaraRoute
+  '/aile/': typeof AileIndexRoute
+  '/ajanlar/': typeof AjanlarIndexRoute
+  '/faturalar/': typeof FaturalarIndexRoute
+  '/goruntulu-destek/': typeof GoruntuluDestekIndexRoute
+  '/hediye/': typeof HediyeIndexRoute
+  '/qr/': typeof QrIndexRoute
+  '/qr/talep/$id': typeof QrTalepIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/arama'
+    | '/bildirimler'
+    | '/dashboard'
+    | '/destek-kayitlari'
+    | '/dijital-onarim'
+    | '/hesabim'
+    | '/hiz-testi'
+    | '/islem-gecmisi'
+    | '/islemler'
+    | '/tercihler'
+    | '/yardim'
+    | '/aile/yeni'
+    | '/ajanlar/hiz'
+    | '/ajanlar/yedek'
+    | '/faturalar/gecmis'
+    | '/goruntulu-destek/gorusme'
+    | '/goruntulu-destek/sonuc'
+    | '/hediye/aktiflestir'
+    | '/islem/$slug'
+    | '/qr/analiz'
+    | '/qr/tara'
+    | '/aile/'
+    | '/ajanlar/'
+    | '/faturalar/'
+    | '/goruntulu-destek/'
+    | '/hediye/'
+    | '/qr/'
+    | '/qr/talep/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/arama'
+    | '/bildirimler'
+    | '/dashboard'
+    | '/destek-kayitlari'
+    | '/dijital-onarim'
+    | '/hesabim'
+    | '/hiz-testi'
+    | '/islem-gecmisi'
+    | '/islemler'
+    | '/tercihler'
+    | '/yardim'
+    | '/aile/yeni'
+    | '/ajanlar/hiz'
+    | '/ajanlar/yedek'
+    | '/faturalar/gecmis'
+    | '/goruntulu-destek/gorusme'
+    | '/goruntulu-destek/sonuc'
+    | '/hediye/aktiflestir'
+    | '/islem/$slug'
+    | '/qr/analiz'
+    | '/qr/tara'
+    | '/aile'
+    | '/ajanlar'
+    | '/faturalar'
+    | '/goruntulu-destek'
+    | '/hediye'
+    | '/qr'
+    | '/qr/talep/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/arama'
+    | '/bildirimler'
+    | '/dashboard'
+    | '/destek-kayitlari'
+    | '/dijital-onarim'
+    | '/hesabim'
+    | '/hiz-testi'
+    | '/islem-gecmisi'
+    | '/islemler'
+    | '/tercihler'
+    | '/yardim'
+    | '/aile/yeni'
+    | '/ajanlar/hiz'
+    | '/ajanlar/yedek'
+    | '/faturalar/gecmis'
+    | '/goruntulu-destek/gorusme'
+    | '/goruntulu-destek/sonuc'
+    | '/hediye/aktiflestir'
+    | '/islem/$slug'
+    | '/qr/analiz'
+    | '/qr/tara'
+    | '/aile/'
+    | '/ajanlar/'
+    | '/faturalar/'
+    | '/goruntulu-destek/'
+    | '/hediye/'
+    | '/qr/'
+    | '/qr/talep/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AramaRoute: typeof AramaRoute
+  BildirimlerRoute: typeof BildirimlerRoute
+  DashboardRoute: typeof DashboardRoute
+  DestekKayitlariRoute: typeof DestekKayitlariRoute
+  DijitalOnarimRoute: typeof DijitalOnarimRoute
+  HesabimRoute: typeof HesabimRoute
+  HizTestiRoute: typeof HizTestiRoute
+  IslemGecmisiRoute: typeof IslemGecmisiRoute
+  IslemlerRoute: typeof IslemlerRoute
+  TercihlerRoute: typeof TercihlerRoute
+  YardimRoute: typeof YardimRoute
+  AileYeniRoute: typeof AileYeniRoute
+  AjanlarHizRoute: typeof AjanlarHizRoute
+  AjanlarYedekRoute: typeof AjanlarYedekRoute
+  FaturalarGecmisRoute: typeof FaturalarGecmisRoute
+  GoruntuluDestekGorusmeRoute: typeof GoruntuluDestekGorusmeRoute
+  GoruntuluDestekSonucRoute: typeof GoruntuluDestekSonucRoute
+  HediyeAktiflestirRoute: typeof HediyeAktiflestirRoute
+  IslemSlugRoute: typeof IslemSlugRoute
+  QrAnalizRoute: typeof QrAnalizRoute
+  QrTaraRoute: typeof QrTaraRoute
+  AileIndexRoute: typeof AileIndexRoute
+  AjanlarIndexRoute: typeof AjanlarIndexRoute
+  FaturalarIndexRoute: typeof FaturalarIndexRoute
+  GoruntuluDestekIndexRoute: typeof GoruntuluDestekIndexRoute
+  HediyeIndexRoute: typeof HediyeIndexRoute
+  QrIndexRoute: typeof QrIndexRoute
+  QrTalepIdRoute: typeof QrTalepIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +416,235 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/arama': {
+      id: '/arama'
+      path: '/arama'
+      fullPath: '/arama'
+      preLoaderRoute: typeof AramaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bildirimler': {
+      id: '/bildirimler'
+      path: '/bildirimler'
+      fullPath: '/bildirimler'
+      preLoaderRoute: typeof BildirimlerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/destek-kayitlari': {
+      id: '/destek-kayitlari'
+      path: '/destek-kayitlari'
+      fullPath: '/destek-kayitlari'
+      preLoaderRoute: typeof DestekKayitlariRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dijital-onarim': {
+      id: '/dijital-onarim'
+      path: '/dijital-onarim'
+      fullPath: '/dijital-onarim'
+      preLoaderRoute: typeof DijitalOnarimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hesabim': {
+      id: '/hesabim'
+      path: '/hesabim'
+      fullPath: '/hesabim'
+      preLoaderRoute: typeof HesabimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hiz-testi': {
+      id: '/hiz-testi'
+      path: '/hiz-testi'
+      fullPath: '/hiz-testi'
+      preLoaderRoute: typeof HizTestiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/islem-gecmisi': {
+      id: '/islem-gecmisi'
+      path: '/islem-gecmisi'
+      fullPath: '/islem-gecmisi'
+      preLoaderRoute: typeof IslemGecmisiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/islemler': {
+      id: '/islemler'
+      path: '/islemler'
+      fullPath: '/islemler'
+      preLoaderRoute: typeof IslemlerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tercihler': {
+      id: '/tercihler'
+      path: '/tercihler'
+      fullPath: '/tercihler'
+      preLoaderRoute: typeof TercihlerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/yardim': {
+      id: '/yardim'
+      path: '/yardim'
+      fullPath: '/yardim'
+      preLoaderRoute: typeof YardimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aile/': {
+      id: '/aile/'
+      path: '/aile'
+      fullPath: '/aile/'
+      preLoaderRoute: typeof AileIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aile/yeni': {
+      id: '/aile/yeni'
+      path: '/aile/yeni'
+      fullPath: '/aile/yeni'
+      preLoaderRoute: typeof AileYeniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ajanlar/': {
+      id: '/ajanlar/'
+      path: '/ajanlar'
+      fullPath: '/ajanlar/'
+      preLoaderRoute: typeof AjanlarIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ajanlar/hiz': {
+      id: '/ajanlar/hiz'
+      path: '/ajanlar/hiz'
+      fullPath: '/ajanlar/hiz'
+      preLoaderRoute: typeof AjanlarHizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ajanlar/yedek': {
+      id: '/ajanlar/yedek'
+      path: '/ajanlar/yedek'
+      fullPath: '/ajanlar/yedek'
+      preLoaderRoute: typeof AjanlarYedekRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faturalar/': {
+      id: '/faturalar/'
+      path: '/faturalar'
+      fullPath: '/faturalar/'
+      preLoaderRoute: typeof FaturalarIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faturalar/gecmis': {
+      id: '/faturalar/gecmis'
+      path: '/faturalar/gecmis'
+      fullPath: '/faturalar/gecmis'
+      preLoaderRoute: typeof FaturalarGecmisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/goruntulu-destek/': {
+      id: '/goruntulu-destek/'
+      path: '/goruntulu-destek'
+      fullPath: '/goruntulu-destek/'
+      preLoaderRoute: typeof GoruntuluDestekIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/goruntulu-destek/gorusme': {
+      id: '/goruntulu-destek/gorusme'
+      path: '/goruntulu-destek/gorusme'
+      fullPath: '/goruntulu-destek/gorusme'
+      preLoaderRoute: typeof GoruntuluDestekGorusmeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/goruntulu-destek/sonuc': {
+      id: '/goruntulu-destek/sonuc'
+      path: '/goruntulu-destek/sonuc'
+      fullPath: '/goruntulu-destek/sonuc'
+      preLoaderRoute: typeof GoruntuluDestekSonucRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hediye/': {
+      id: '/hediye/'
+      path: '/hediye'
+      fullPath: '/hediye/'
+      preLoaderRoute: typeof HediyeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hediye/aktiflestir': {
+      id: '/hediye/aktiflestir'
+      path: '/hediye/aktiflestir'
+      fullPath: '/hediye/aktiflestir'
+      preLoaderRoute: typeof HediyeAktiflestirRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/islem/$slug': {
+      id: '/islem/$slug'
+      path: '/islem/$slug'
+      fullPath: '/islem/$slug'
+      preLoaderRoute: typeof IslemSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qr/': {
+      id: '/qr/'
+      path: '/qr'
+      fullPath: '/qr/'
+      preLoaderRoute: typeof QrIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qr/analiz': {
+      id: '/qr/analiz'
+      path: '/qr/analiz'
+      fullPath: '/qr/analiz'
+      preLoaderRoute: typeof QrAnalizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qr/tara': {
+      id: '/qr/tara'
+      path: '/qr/tara'
+      fullPath: '/qr/tara'
+      preLoaderRoute: typeof QrTaraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qr/talep/$id': {
+      id: '/qr/talep/$id'
+      path: '/qr/talep/$id'
+      fullPath: '/qr/talep/$id'
+      preLoaderRoute: typeof QrTalepIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AramaRoute: AramaRoute,
+  BildirimlerRoute: BildirimlerRoute,
+  DashboardRoute: DashboardRoute,
+  DestekKayitlariRoute: DestekKayitlariRoute,
+  DijitalOnarimRoute: DijitalOnarimRoute,
+  HesabimRoute: HesabimRoute,
+  HizTestiRoute: HizTestiRoute,
+  IslemGecmisiRoute: IslemGecmisiRoute,
+  IslemlerRoute: IslemlerRoute,
+  TercihlerRoute: TercihlerRoute,
+  YardimRoute: YardimRoute,
+  AileYeniRoute: AileYeniRoute,
+  AjanlarHizRoute: AjanlarHizRoute,
+  AjanlarYedekRoute: AjanlarYedekRoute,
+  FaturalarGecmisRoute: FaturalarGecmisRoute,
+  GoruntuluDestekGorusmeRoute: GoruntuluDestekGorusmeRoute,
+  GoruntuluDestekSonucRoute: GoruntuluDestekSonucRoute,
+  HediyeAktiflestirRoute: HediyeAktiflestirRoute,
+  IslemSlugRoute: IslemSlugRoute,
+  QrAnalizRoute: QrAnalizRoute,
+  QrTaraRoute: QrTaraRoute,
+  AileIndexRoute: AileIndexRoute,
+  AjanlarIndexRoute: AjanlarIndexRoute,
+  FaturalarIndexRoute: FaturalarIndexRoute,
+  GoruntuluDestekIndexRoute: GoruntuluDestekIndexRoute,
+  HediyeIndexRoute: HediyeIndexRoute,
+  QrIndexRoute: QrIndexRoute,
+  QrTalepIdRoute: QrTalepIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

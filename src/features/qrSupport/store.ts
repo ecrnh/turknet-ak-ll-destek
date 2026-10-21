@@ -9,7 +9,7 @@ export interface CheckResult {
   label: string;
   state: CheckState;
   value: string;
-  note?: string;
+  note?: string | undefined;
 }
 
 export interface ScanResult {
