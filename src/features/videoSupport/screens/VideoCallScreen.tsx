@@ -179,7 +179,7 @@ export function VideoCallScreen() {
             </motion.div>
           ) : (
             <motion.div key="rear" className="absolute inset-0 flex items-center justify-center bg-call" initial={{ opacity: 0, rotateY: 90 }} animate={{ opacity: 1, rotateY: 0 }} exit={{ opacity: 0 }}>
-              <div className="relative aspect-[2/3] h-full max-w-full">
+              <div className="relative aspect-[2/3] w-full">
                 <img src={modemBackImg} alt="Arka kamera: modemin arka paneli" className="h-full w-full object-cover" />
                 <MarkCanvas marks={s.marks ?? []} />
               </div>
