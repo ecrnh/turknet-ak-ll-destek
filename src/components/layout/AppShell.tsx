@@ -108,7 +108,7 @@ export function AppShell() {
 
       {ready && (
         <>
-          <button onClick={() => setMobilePanel(true)} aria-label="Demo paneli" className="fixed right-3 top-3 z-[90] flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-float lg:hidden">
+          <button onClick={() => setMobilePanel(true)} aria-label="Demo paneli" className="fixed right-0 top-1/3 z-[90] flex h-11 w-9 items-center justify-center rounded-l-2xl bg-primary/90 text-primary-foreground shadow-float lg:hidden">
             <SlidersHorizontal className="size-5" />
           </button>
           {mobilePanel && (
