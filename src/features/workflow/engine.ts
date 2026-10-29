@@ -282,3 +282,8 @@ function runOps(filter: (o: { dueAt: number; workflowId: string }) => boolean) {
 export const runDueOps = (t = now()) => runOps((o) => o.dueAt <= t);
 /** Fast-forward: run every queued job of a workflow immediately. */
 export const flushOps = (wfId?: string) => runOps((o) => !wfId || o.workflowId === wfId);
+
+/** Autonomous chaining: only when no presenter is stepping through a scenario. */
+export function chain(op: string, wfId: string, delayMs = 1500) {
+  if (W.getState().autoFollowUp) schedule(op, wfId, delayMs);
+}

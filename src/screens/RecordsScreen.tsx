@@ -1,4 +1,4 @@
-import { Bot, ChevronDown, ClipboardList, HeartPulse, MessageCircle, QrCode, ShieldCheck, Video } from "lucide-react";
+import { Workflow as WorkflowIcon, Bot, ChevronDown, ClipboardList, HeartPulse, MessageCircle, QrCode, ShieldCheck, Video } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { AppLink, Chip, EmptyState } from "@/components/tn/primitives";
@@ -7,13 +7,14 @@ import { useAppStore, type Channel } from "@/features/core/appStore";
 import { fmtDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const CH_ICON: Record<Channel, typeof Bot> = { Görüntülü: Video, QR: QrCode, Ajan: Bot, Chat: MessageCircle, "Dijital Onarım": HeartPulse };
+const CH_ICON: Record<Channel, typeof Bot> = { Görüntülü: Video, QR: QrCode, Ajan: Bot, Chat: MessageCircle, "Dijital Onarım": HeartPulse, Otonom: WorkflowIcon };
 const CH_STYLE: Record<Channel, string> = {
   Görüntülü: "bg-primary text-primary-foreground",
   QR: "bg-magenta text-magenta-foreground",
   Ajan: "bg-orange-deep text-primary-foreground",
   Chat: "bg-muted text-foreground",
   "Dijital Onarım": "bg-success text-success-foreground",
+  Otonom: "bg-magenta text-magenta-foreground",
 };
 
 export function RecordsScreen() {
@@ -40,7 +41,7 @@ export function RecordsScreen() {
         </div>
       </div>
       <div className="flex gap-2 overflow-x-auto px-4 pb-3 no-scrollbar">
-        {(["all", "Görüntülü", "QR", "Ajan", "Chat", "Dijital Onarım"] as const).map((c) => (
+        {(["all", "Görüntülü", "QR", "Ajan", "Chat", "Dijital Onarım", "Otonom"] as const).map((c) => (
           <Chip key={c} active={f === c} onClick={() => setF(c)} className="shrink-0">
             {c === "all" ? "Tümü" : c}
           </Chip>

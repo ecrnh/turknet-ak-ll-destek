@@ -6,6 +6,8 @@ export const NET_LABEL: Record<NetStatus, string> = {
   slow: "Yavaş",
   outage: "Kesinti",
   backup: "Yedek Altyapıda",
+  down: "Bağlantı Yok",
+  mobile: "Mobil Yedekte",
 };
 
 export const NET_DOT: Record<NetStatus, string> = {
@@ -13,6 +15,8 @@ export const NET_DOT: Record<NetStatus, string> = {
   slow: "bg-warning",
   outage: "bg-destructive",
   backup: "bg-orange",
+  down: "bg-destructive",
+  mobile: "bg-orange",
 };
 
 export const NET_TEXT: Record<NetStatus, string> = {
@@ -20,6 +24,8 @@ export const NET_TEXT: Record<NetStatus, string> = {
   slow: "text-warning",
   outage: "text-destructive",
   backup: "text-orange",
+  down: "text-destructive",
+  mobile: "text-orange",
 };
 
 export function NetBadge({ className, onDark }: { className?: string; onDark?: boolean }) {

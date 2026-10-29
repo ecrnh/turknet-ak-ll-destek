@@ -3,8 +3,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { uid } from "@/lib/format";
 import { USER } from "@/data/mock";
 
-export type NetStatus = "online" | "slow" | "outage" | "backup";
-export type Channel = "Görüntülü" | "QR" | "Ajan" | "Chat" | "Dijital Onarım";
+export type NetStatus = "online" | "slow" | "outage" | "backup" | "down" | "mobile";
+export type Channel = "Görüntülü" | "QR" | "Ajan" | "Chat" | "Dijital Onarım" | "Otonom";
 export type NotifKind = "agent" | "gift" | "support" | "family" | "campaign" | "bill";
 
 export interface AppNotification {
