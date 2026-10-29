@@ -249,7 +249,7 @@ export function HandoffCard({ wf }: { wf: Workflow }) {
       <p className="mt-3 text-xs font-semibold text-primary-foreground/70">Ekibe aktarılan bağlam (baştan anlatmana gerek yok):</p>
       <ul className="mt-1.5 space-y-1 text-xs text-primary-foreground/90">
         {wf.handoff.context.map((c) => (
-          <li key={c}>{c}</li>
+          <li key={`${i}-${c}`}>{c}</li>
         ))}
       </ul>
     </div>
@@ -266,7 +266,7 @@ export function OutcomeCard({ wf }: { wf: Workflow }) {
       <p className="mt-1 font-semibold text-foreground">{wf.outcome.summary}</p>
       <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
         {wf.outcome.results.map((r) => (
-          <li key={r}>✓ {r}</li>
+          <li key={`${i}-${r}`}>✓ {r}</li>
         ))}
       </ul>
     </div>
