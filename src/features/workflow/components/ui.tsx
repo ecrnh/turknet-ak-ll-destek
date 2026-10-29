@@ -274,9 +274,9 @@ export function OutcomeCard({ wf }: { wf: Workflow }) {
 }
 
 export function RecordsList({ wf }: { wf: Workflow }) {
-  const workOrders = useWorkflowStore((s) => s.workOrders.filter((o) => o.workflowId === wf.id));
-  const appts = useWorkflowStore((s) => s.appointments.filter((a) => a.workflowId === wf.id));
-  const temps = useWorkflowStore((s) => s.temp.filter((t) => t.parentWorkflowId === wf.id || t.workflowId === wf.id));
+  const workOrders = useWorkflowStore((s) => s.workOrders).filter((o) => o.workflowId === wf.id);
+  const appts = useWorkflowStore((s) => s.appointments).filter((a) => a.workflowId === wf.id);
+  const temps = useWorkflowStore((s) => s.temp).filter((t) => t.parentWorkflowId === wf.id || t.workflowId === wf.id);
   if (!workOrders.length && !appts.length && !temps.length) return null;
   return (
     <div className="divide-y divide-border rounded-card bg-card px-5 shadow-card">

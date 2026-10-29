@@ -23,8 +23,8 @@ const TEAM_FOR: Record<WorkflowType, string> = {
 
 export function WorkflowDetailScreen({ id }: { id: string }) {
   const wf = useWorkflowStore((s) => s.workflows.find((w) => w.id === id));
-  const related = useWorkflowStore((s) => s.workflows.filter((w) => wf?.relatedIds.includes(w.id)));
-  const audit = useWorkflowStore((s) => s.audit.filter((e) => e.workflowId === id));
+  const related = useWorkflowStore((s) => s.workflows).filter((w) => wf?.relatedIds.includes(w.id));
+  const audit = useWorkflowStore((s) => s.audit).filter((e) => e.workflowId === id);
   const [showAll, setShowAll] = useState(false);
 
   if (!wf)

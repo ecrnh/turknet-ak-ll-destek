@@ -15,7 +15,7 @@ export function BillingShieldScreen() {
   const navigate = useNavigate();
   const bills = useWorkflowStore((s) => s.bills);
   const payments = useWorkflowStore((s) => s.payments);
-  const wfs = useWorkflowStore((s) => s.workflows.filter((w) => w.type === "billing_check"));
+  const wfs = useWorkflowStore((s) => s.workflows).filter((w) => w.type === "billing_check");
   const [ran, setRan] = useState(false);
   const bill = bills[0]!;
   const findings = compareBilling(bill, payments);

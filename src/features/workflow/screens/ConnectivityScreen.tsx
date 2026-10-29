@@ -10,7 +10,7 @@ import { DemoNote, WorkflowCard } from "../components/ui";
 const TYPES = ["outage_recovery", "proactive_fault", "temp_internet", "ai_usta"];
 
 export function ConnectivityScreen() {
-  const related = useWorkflowStore((s) => s.workflows.filter((w) => TYPES.includes(w.type)).sort((a, b) => b.updatedAt - a.updatedAt));
+  const related = useWorkflowStore((s) => s.workflows).filter((w) => TYPES.includes(w.type)).sort((a, b) => b.updatedAt - a.updatedAt);
   return (
     <div>
       <PageHeader title="Bağlantım" />
