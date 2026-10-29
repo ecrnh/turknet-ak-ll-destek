@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { CheckCircle2, HeartPulse, Loader2, QrCode, Video } from "lucide-react";
+import { CheckCircle2, ChevronRight, HeartPulse, Loader2, QrCode, ScanEye, Video } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { Csat } from "@/components/tn/Csat";
@@ -63,6 +63,16 @@ export function DigitalRepairScreen() {
             </Button>
           )}
         </div>
+        <Link to="/ai-usta" className="flex items-center gap-3 rounded-card bg-card p-4 shadow-card">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-icon-box text-primary">
+            <ScanEye className="size-5" strokeWidth={1.75} />
+          </span>
+          <span className="flex-1">
+            <span className="block text-sm font-semibold text-primary">AI Usta ile adım adım çöz</span>
+            <span className="text-xs text-muted-foreground">Modem ışıklarını göster, güvenli adımlarla birlikte kontrol edelim</span>
+          </span>
+          <ChevronRight className="size-5 text-muted-foreground" />
+        </Link>
         {done && outage && (
           <Banner tone="warning" title="Sorun senden kaynaklı değil">
             Ekiplerimiz bölgesel arıza üzerinde çalışıyor. <Link to="/hediye" className="font-semibold text-magenta">Hediye internetini gör</Link>
