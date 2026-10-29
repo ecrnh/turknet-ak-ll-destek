@@ -121,7 +121,7 @@ export const SUBSCRIPTION_OPS: OpItem[] = [
   { slug: "hiz-yukseltme", title: "Hız Yükseltme", icon: "speed-up", to: "/islem/hiz-yukseltme" },
   { slug: "fiyat-sabitle", title: "12 Ay Fiyat Sabitle", icon: "price", to: "/islem/fiyat-sabitle" },
   { slug: "dondur", title: "Hizmeti Dondur", icon: "freeze", to: "/islem/dondur" },
-  { slug: "tasi", title: "İnternetini Taşı", icon: "move", to: "/islem/tasi" },
+  { slug: "tasi", title: "İnternetini Taşı", icon: "move", to: "/tasinma", isNew: true },
   { slug: "iptal", title: "Aboneliğini İptal Et", icon: "cancel", to: "/islem/iptal" },
 ];
 
@@ -132,6 +132,10 @@ export const INTERNET_OPS: OpItem[] = [
 ];
 
 export const SUPPORT_OPS: OpItem[] = [
+  { slug: "takip", title: "Benim İçin Takip Et", icon: "track", to: "/takip", isNew: true },
+  { slug: "ai-usta", title: "AI Usta", icon: "usta", to: "/ai-usta", isNew: true },
+  { slug: "fatura-kalkani", title: "Fatura Kalkanı", icon: "shield", to: "/fatura-kalkani", isNew: true },
+  { slug: "baglanti", title: "Bağlantım", icon: "network", to: "/baglanti", isNew: true },
   { slug: "video", title: "Görüntülü Destek", icon: "video", to: "/goruntulu-destek", isNew: true },
   { slug: "qr", title: "QR ile Destek", icon: "qr", to: "/qr", isNew: true },
   { slug: "gift", title: "Hediye GB", icon: "gift", to: "/hediye", isNew: true },
@@ -229,7 +233,11 @@ export const SEARCH_INDEX: { title: string; to: string; keywords: string; isNew?
   { title: "Statik IP", to: "/islem/statik-ip", keywords: "statik ip", section: "İnternet" },
   { title: "Peşin Ödeme Kampanyası", to: "/islem/fiyat-sabitle", keywords: "peşin kampanya sabit fiyat 12 ay", section: "Kampanya" },
   { title: "Arkadaşını Getir Birlikte Kazanın", to: "/islem/arkadasini-getir", keywords: "arkadaş davet referans", section: "Kampanya" },
-  { title: "İnternetini Yeni Adresine Taşı", to: "/islem/tasi", keywords: "taşı nakil adres", section: "Abonelik" },
+  { title: "İnternetini Yeni Adresine Taşı", to: "/tasinma", keywords: "taşı taşınma nakil adres", isNew: true, section: "Yeni" },
+  { title: "Benim İçin Takip Et", to: "/takip", keywords: "takip süreç talep durum otonom", isNew: true, section: "Yeni" },
+  { title: "AI Usta", to: "/ai-usta", keywords: "ai usta modem ışık çalışmıyor görsel fotoğraf", isNew: true, section: "Yeni" },
+  { title: "Fatura Kalkanı", to: "/fatura-kalkani", keywords: "fatura borç ödeme mükerrer iade kalkan", isNew: true, section: "Yeni" },
+  { title: "Bağlantım · Geçici internet · Hibrit", to: "/baglanti", keywords: "bağlantı geçici mobil internet hibrit yedek", isNew: true, section: "Yeni" },
   { title: "Yardım & Destek", to: "/yardim", keywords: "yardım destek", section: "Yardım" },
   { title: "Hız Testi", to: "/hiz-testi", keywords: "hız test speed", section: "İnternet" },
   { title: "Hız Yükseltme", to: "/islem/hiz-yukseltme", keywords: "hız yükselt paket fiber 1000", section: "Abonelik" },

@@ -11,6 +11,7 @@ import { AgentActivityCard } from "@/features/aiAgents/components/AgentActivityC
 import { OutageStatusCard } from "@/features/giftData/components/OutageStatusCard";
 import { cn } from "@/lib/utils";
 import { HeroCarousel } from "./home/HeroCarousel";
+import { AutonomyCard } from "@/features/workflow/components/AutonomyCard";
 
 function StatusPill() {
   const status = useAppStore((s) => s.net.status);
@@ -57,7 +58,7 @@ function SimpleHome() {
   return (
     <div className="mt-5 grid grid-cols-2 gap-3">
       <Big icon={ReceiptText} label="Faturam" to="/faturalar" />
-      <Big icon={WifiOff} label="İnternetim çalışmıyor" to="/dijital-onarim" />
+      <Big icon={WifiOff} label="İnternetim çalışmıyor" to="/ai-usta" />
       <Big icon={Video} label="Görüntülü yardım al" to="/goruntulu-destek" />
       <Big icon={MessageCircleQuestion} label="Soru sor" onClick={() => openHelp()} />
     </div>
@@ -81,6 +82,7 @@ export function HomeScreen() {
 
       <div className="space-y-4 px-4">
         {out && <OutageStatusCard />}
+        <AutonomyCard />
         {simple ? (
           <SimpleHome />
         ) : (

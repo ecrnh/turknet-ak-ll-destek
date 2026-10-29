@@ -9,6 +9,10 @@ import {
   HandHeart,
   HeartHandshake,
   Info,
+  ListChecks,
+  Network,
+  ScanEye,
+  ShieldCheck,
   Lightbulb,
   MapPinned,
   QrCode,
@@ -53,6 +57,10 @@ export const ICONS: Record<string, LucideIcon> = {
   wifi: Wifi,
   wrench: Wrench,
   more: Ellipsis,
+  track: ListChecks,
+  usta: ScanEye,
+  shield: ShieldCheck,
+  network: Network,
 };
 
 export const iconFor = (name: string): LucideIcon => ICONS[name] ?? Info;
