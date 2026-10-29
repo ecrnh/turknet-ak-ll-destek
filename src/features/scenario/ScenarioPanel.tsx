@@ -219,7 +219,7 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
               </p>
               <p className="mt-1 text-xs font-semibold text-foreground">{main.outcome?.summary ?? (main.handoff ? `${main.handoff.team} ekibine bağlamıyla aktarıldı` : STATUS_LABEL[main.status])}</p>
               <ul className="mt-1.5 space-y-0.5 text-[11px] text-muted-foreground">
-                {(main.outcome?.results ?? main.handoff?.context.slice(0, 5) ?? []).map((r) => (
+                {(main.outcome?.results ?? main.handoff?.context.slice(0, 5) ?? []).map((r, i) => (
                   <li key={`${i}-${r}`}>• {r}</li>
                 ))}
                 <li>
