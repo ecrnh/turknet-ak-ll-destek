@@ -121,7 +121,7 @@ export const SUBSCRIPTION_OPS: OpItem[] = [
   { slug: "hiz-yukseltme", title: "Hız Yükseltme", icon: "speed-up", to: "/islem/hiz-yukseltme" },
   { slug: "fiyat-sabitle", title: "12 Ay Fiyat Sabitle", icon: "price", to: "/islem/fiyat-sabitle" },
   { slug: "dondur", title: "Hizmeti Dondur", icon: "freeze", to: "/islem/dondur" },
-  { slug: "tasi", title: "İnternetini Taşı", icon: "move", to: "/islem/tasi" },
+  { slug: "tasi", title: "İnternetini Taşı", icon: "move", to: "/tasinma", isNew: true },
   { slug: "iptal", title: "Aboneliğini İptal Et", icon: "cancel", to: "/islem/iptal" },
 ];
 
@@ -132,6 +132,10 @@ export const INTERNET_OPS: OpItem[] = [
 ];
 
 export const SUPPORT_OPS: OpItem[] = [
+  { slug: "takip", title: "Benim İçin Takip Et", icon: "track", to: "/takip", isNew: true },
+  { slug: "ai-usta", title: "AI Usta", icon: "usta", to: "/ai-usta", isNew: true },
+  { slug: "fatura-kalkani", title: "Fatura Kalkanı", icon: "shield", to: "/fatura-kalkani", isNew: true },
+  { slug: "baglanti", title: "Bağlantım", icon: "network", to: "/baglanti", isNew: true },
   { slug: "video", title: "Görüntülü Destek", icon: "video", to: "/goruntulu-destek", isNew: true },
   { slug: "qr", title: "QR ile Destek", icon: "qr", to: "/qr", isNew: true },
   { slug: "gift", title: "Hediye GB", icon: "gift", to: "/hediye", isNew: true },
@@ -229,7 +233,11 @@ export const SEARCH_INDEX: { title: string; to: string; keywords: string; isNew?
   { title: "Statik IP", to: "/islem/statik-ip", keywords: "statik ip", section: "İnternet" },
   { title: "Peşin Ödeme Kampanyası", to: "/islem/fiyat-sabitle", keywords: "peşin kampanya sabit fiyat 12 ay", section: "Kampanya" },
   { title: "Arkadaşını Getir Birlikte Kazanın", to: "/islem/arkadasini-getir", keywords: "arkadaş davet referans", section: "Kampanya" },
-  { title: "İnternetini Yeni Adresine Taşı", to: "/islem/tasi", keywords: "taşı nakil adres", section: "Abonelik" },
+  { title: "İnternetini Yeni Adresine Taşı", to: "/tasinma", keywords: "taşı taşınma nakil adres", isNew: true, section: "Yeni" },
+  { title: "Benim İçin Takip Et", to: "/takip", keywords: "takip süreç talep durum otonom", isNew: true, section: "Yeni" },
+  { title: "AI Usta", to: "/ai-usta", keywords: "ai usta modem ışık çalışmıyor görsel fotoğraf", isNew: true, section: "Yeni" },
+  { title: "Fatura Kalkanı", to: "/fatura-kalkani", keywords: "fatura borç ödeme mükerrer iade kalkan", isNew: true, section: "Yeni" },
+  { title: "Bağlantım · Geçici internet · Hibrit", to: "/baglanti", keywords: "bağlantı geçici mobil internet hibrit yedek", isNew: true, section: "Yeni" },
   { title: "Yardım & Destek", to: "/yardim", keywords: "yardım destek", section: "Yardım" },
   { title: "Hız Testi", to: "/hiz-testi", keywords: "hız test speed", section: "İnternet" },
   { title: "Hız Yükseltme", to: "/islem/hiz-yukseltme", keywords: "hız yükselt paket fiber 1000", section: "Abonelik" },
@@ -336,3 +344,137 @@ export const SPEED_FIX_STEPS = [
 
 export const OUTAGE_CAUSE = "Bölgesel fiber kesintisi (Ümraniye – Çakmak santrali)";
 export const BACKUP_POP = { name: "Tekirdağ Çorlu POP", region: "Tekirdağ", pingDelta: 12, speedDelta: -8 };
+
+/* ======================================================================
+ * Otonom Müşteri Deneyimi Platformu — DEMO verileri.
+ * Bunların hiçbiri gerçek TurkNet, operatör, CRM, fatura veya ağ sistemi
+ * yanıtı değildir. Mock servisler (src/features/workflow/mockServices.ts)
+ * yalnızca bu verileri döndürür.
+ * ==================================================================== */
+
+export const CUSTOMER = { id: "CUST-4896005", name: USER.name, firstName: USER.firstName, phone: USER.phone };
+
+export const SUBSCRIPTION = {
+  id: "SUB-4896005",
+  customerId: "CUST-4896005",
+  packageName: USER.packageName,
+  speed: USER.packageSpeed,
+  commitmentEnd: "30 Haz 2027",
+  modem: USER.modemModel,
+  hybridReady: true,
+  debt: 0,
+};
+
+export interface DemoAddress {
+  id: string;
+  line: string;
+  district: string;
+  city: string;
+}
+
+export const CURRENT_ADDRESS: DemoAddress & { port: string } = {
+  id: "ADR-0001",
+  line: "Atatürk Mah. Çakmak Cd. No:12 D:5",
+  district: "Ümraniye",
+  city: "İstanbul",
+  port: "Ümraniye-Çakmak OLT · Port 3/14",
+};
+
+export const DEMO_NEW_ADDRESS: DemoAddress = {
+  id: "ADR-0002",
+  line: "Caferağa Mah. Moda Cd. No:48 D:3",
+  district: "Kadıköy",
+  city: "İstanbul",
+};
+
+export const DEMO_MOVE_DATE = "2026-11-10";
+
+export const APPOINTMENT_SLOTS = [
+  { id: "slot-1", label: "12 Kas Perşembe · 09:00–12:00" },
+  { id: "slot-2", label: "12 Kas Perşembe · 13:00–17:00" },
+  { id: "slot-3", label: "13 Kas Cuma · 09:00–12:00" },
+];
+
+export const TEAMS = {
+  infra: "Altyapı Planlama Ekibi",
+  relocation: "Nakil Operasyon Ekibi",
+  field: "Saha Teknik Ekibi",
+  finance: "Finans · Tahsilat Mutabakat Ekibi",
+  tech: "Canlı Teknik Destek (2. seviye)",
+  logistics: "Lojistik · Cihaz Gönderim",
+} as const;
+
+export const TEMP_MOBILE_OFFER = {
+  title: "Geçici mobil internet",
+  device: "4.5G mobil modem + SIM (iade edilir)",
+  price: "Örnek ücret: ₺199/ay (demo)",
+  quota: "100 GB / ay",
+  coverage: "Kadıköy Moda: 4.5G sinyal iyi (demo kapsama verisi)",
+  delivery: "Kurye ile 1 iş günü (tahmini, demo)",
+  terms: [
+    "Sabit internetin kurulana kadar geçerli; kurulumda otomatik sona erer.",
+    "Cihaz 15 gün içinde iade edilmezse cihaz bedeli faturaya yansır (demo koşul).",
+    "Onay vermeden sipariş verilmez, ücret yansımaz.",
+  ],
+};
+
+export const HYBRID_OFFER = {
+  title: "Hibrit yedek bağlantı",
+  device: "Mevcut modemin (ZTE F6640) + uzaktan tanımlanan eSIM",
+  price: "Örnek ücret: kesinti süresince ücretsiz, sonrası ₺49/ay opsiyonel (demo)",
+  quota: "Yedek modda 50 GB",
+  coverage: "Ümraniye Çakmak: 4.5G sinyal orta-iyi (demo kapsama verisi)",
+  delivery: "Cihaz gerekmez, uzaktan tanımlama ~2 dk (demo)",
+  terms: [
+    "Sabit hat kesilince modem mobil yedeğe otomatik geçer.",
+    "Sabit hat 5 dk kesintisiz çalışınca otomatik geri döner.",
+    "Yedek modda hız ve ping farklı olabilir; oyun/IPTV etkilenebilir.",
+  ],
+};
+
+export const BILLING_SEED = {
+  bill: { id: "INV-2026-10", period: "Ekim 2026", amount: 749.9, due: "28 Eki 2026" },
+  payment: { id: "PAY-88213", amount: 749.9, at: "27 Eki 2026 21:14", channel: "Kredi kartı (**** 4417)", ref: "BNK-5521907" },
+  duplicate: { id: "PAY-88214", amount: 749.9, at: "27 Eki 2026 21:16", channel: "Otomatik ödeme talimatı", ref: "BNK-5521931" },
+};
+
+export const BILLING_CHECKS = [
+  { code: "paid_but_debt", label: "Ödeme yapılmasına rağmen borç görünmesi" },
+  { code: "duplicate_payment", label: "Mükerrer ödeme veya fatura kaydı" },
+  { code: "after_cancel", label: "İptal sonrası oluşan ücretler" },
+  { code: "freeze_dates", label: "Dondurma / yeniden başlatma tarihleri" },
+  { code: "campaign", label: "Kampanya ve indirim tutarı" },
+  { code: "prepaid", label: "Ön ödemeli dönem ile aylık fatura" },
+  { code: "equipment", label: "Cihaz / ekipman bedeli" },
+  { code: "app_vs_detail", label: "Uygulama tutarı ile fatura detayı" },
+] as const;
+
+export const AI_USTA_STEPS = [
+  {
+    id: "reboot",
+    title: "Modemi yeniden başlat",
+    text: "Modemin arkasındaki güç düğmesiyle kapat, 30 saniye bekle ve tekrar aç. Işıkların oturması 2 dakika sürebilir.",
+    safe: "Güvenli adım: ayarların silinmez. Reset tuşuna basma.",
+  },
+  {
+    id: "fiber",
+    title: "Fiber kablo konnektörünü kontrol et",
+    text: "Modemin altındaki yeşil uçlu fiber kabloyu nazikçe çıkar, “tık” sesi gelene kadar geri tak. Kabloyu bükme.",
+    safe: "Güvenli adım: kabloyu kesme veya bükme, reset tuşuna basma.",
+  },
+];
+
+export const MODEM_LED_DEMO = [
+  { key: "power", name: "Power", state: "Yeşil sabit", ok: true },
+  { key: "pon", name: "PON", state: "Yeşil sabit", ok: true },
+  { key: "internet", name: "Internet", state: "Kapalı", ok: false },
+  { key: "wifi", name: "Wi-Fi", state: "Yanıp sönüyor", ok: true },
+];
+
+export const INTENT_KEYWORDS: { intent: "billing" | "ai_usta" | "relocation" | "temp_internet" | "track"; words: string[] }[] = [
+  { intent: "billing", words: ["borç", "ödeme", "ödedim", "fatura", "mükerrer", "iade", "tahsil", "ücret"] },
+  { intent: "relocation", words: ["taşın", "nakil", "yeni adres", "adres değiş", "ev değiş", "taşı"] },
+  { intent: "temp_internet", words: ["geçici internet", "mobil internet", "hibrit", "yedek bağlantı"] },
+  { intent: "ai_usta", words: ["çalışmıyor", "ışık", "modem", "internet yok", "bağlantı yok", "kopuyor", "bağlanamıyorum"] },
+  { intent: "track", words: ["takip", "durum", "talebim", "ne oldu", "nerede"] },
+];

@@ -3,7 +3,8 @@ import { BarChart3, Eye, SlidersHorizontal, Signal, Wifi, BatteryMedium, X } fro
 import { useEffect, useRef, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { useAppStore } from "@/features/core/appStore";
-import { DemoPanel } from "@/features/demo/DemoPanel";
+import { ScenarioPanel } from "@/features/scenario/ScenarioPanel";
+import { ScenarioDriver } from "@/features/scenario/ScenarioDriver";
 import { HelpCenterSheet } from "@/features/help/HelpCenterSheet";
 import { OutageOverlay, RestoredOverlay } from "@/features/giftData/components/OutageOverlays";
 import { rehydrateAll } from "@/features/demo/scenarios";
@@ -84,8 +85,8 @@ export function AppShell() {
       <aside className="hidden max-w-[260px] xl:block">
         <TurknetLogo className="text-6xl" />
         <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-magenta">Product Bootcamp · Final Case</p>
-        <h1 className="mt-2 text-3xl font-semibold leading-tight text-primary">Self-servis ve proaktif destek prototipi</h1>
-        <p className="mt-3 text-sm text-muted-foreground">Görüntülü Destek + Aile Yetkilendirme, QR ile Temassız Destek, Kesinti Telafisi ve AI Ajanlar.</p>
+        <h1 className="mt-2 text-3xl font-semibold leading-tight text-primary">Otonom Müşteri Deneyimi Platformu</h1>
+        <p className="mt-3 text-sm text-muted-foreground">“Sen talebini söyle. TurkNet süreci senin için yönetsin.” Taşınma, geçici internet, Fatura Kalkanı, AI Usta, proaktif arıza ve Benim İçin Takip Et.</p>
         <Link to="/dashboard" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-float">
           <BarChart3 className="size-4" /> Etki Panosu
         </Link>
@@ -96,8 +97,8 @@ export function AppShell() {
       </div>
 
       {ready && demoPanel && (
-        <aside className="hidden w-[300px] shrink-0 rounded-card bg-card p-5 shadow-card lg:block">
-          <DemoPanel onHide={() => setPref("demoPanel", false)} />
+        <aside className="hidden max-h-[844px] w-[380px] shrink-0 overflow-y-auto rounded-card bg-card p-5 shadow-card no-scrollbar lg:block">
+          <ScenarioPanel onHide={() => setPref("demoPanel", false)} />
         </aside>
       )}
       {ready && !demoPanel && (
@@ -106,6 +107,7 @@ export function AppShell() {
         </button>
       )}
 
+      {ready && <ScenarioDriver />}
       {ready && (
         <>
           <button onClick={() => setMobilePanel(true)} aria-label="Demo paneli" className="fixed right-0 top-1/3 z-[90] flex h-11 w-9 items-center justify-center rounded-l-2xl bg-primary/90 text-primary-foreground shadow-float lg:hidden">
@@ -113,13 +115,13 @@ export function AppShell() {
           </button>
           {mobilePanel && (
             <div className="fixed inset-0 z-[95] flex justify-end bg-primary-deep/50 lg:hidden" onClick={() => setMobilePanel(false)}>
-              <div className="h-full w-[320px] max-w-[90%] overflow-y-auto bg-card p-5" onClick={(e) => e.stopPropagation()}>
+              <div className="h-full w-[380px] max-w-[92%] overflow-y-auto bg-card p-5" onClick={(e) => e.stopPropagation()}>
                 <div className="mb-2 flex justify-end">
                   <button onClick={() => setMobilePanel(false)} aria-label="Kapat" className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted">
                     <X className="size-5" />
                   </button>
                 </div>
-                <DemoPanel />
+                <ScenarioPanel />
               </div>
             </div>
           )}

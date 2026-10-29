@@ -6,6 +6,9 @@ import { useQrStore } from "@/features/qrSupport/store";
 import { useVideoStore } from "@/features/videoSupport/store";
 import { BACKUP_POP, SPEED_FIX_STEPS, USER } from "@/data/mock";
 import { track } from "@/lib/analytics";
+import { useWorkflowStore } from "@/features/workflow/store";
+import { useScenarioStore } from "@/features/scenario/store";
+import { initialScenario } from "@/features/scenario/store";
 
 const app = () => useAppStore.getState();
 const agents = () => useAgentsStore.getState();
@@ -144,6 +147,8 @@ export function resetAll() {
   useFamilyStore.getState().reset();
   useQrStore.getState().reset();
   useVideoStore.getState().reset();
+  useWorkflowStore.getState().reset();
+  useScenarioStore.setState(initialScenario());
 }
 
 export async function rehydrateAll() {
@@ -154,5 +159,7 @@ export async function rehydrateAll() {
     useFamilyStore.persist.rehydrate(),
     useQrStore.persist.rehydrate(),
     useVideoStore.persist.rehydrate(),
+    useWorkflowStore.persist.rehydrate(),
+    useScenarioStore.persist.rehydrate(),
   ]);
 }

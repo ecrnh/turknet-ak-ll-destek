@@ -10,15 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AiUstaRouteImport } from './routes/ai-usta'
 import { Route as AramaRouteImport } from './routes/arama'
+import { Route as BaglantiRouteImport } from './routes/baglanti'
 import { Route as BildirimlerRouteImport } from './routes/bildirimler'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DestekKayitlariRouteImport } from './routes/destek-kayitlari'
 import { Route as DijitalOnarimRouteImport } from './routes/dijital-onarim'
+import { Route as FaturaKalkaniRouteImport } from './routes/fatura-kalkani'
 import { Route as HesabimRouteImport } from './routes/hesabim'
 import { Route as HizTestiRouteImport } from './routes/hiz-testi'
 import { Route as IslemGecmisiRouteImport } from './routes/islem-gecmisi'
 import { Route as IslemlerRouteImport } from './routes/islemler'
+import { Route as TakipRouteImport } from './routes/takip'
+import { Route as TasinmaRouteImport } from './routes/tasinma'
 import { Route as TercihlerRouteImport } from './routes/tercihler'
 import { Route as YardimRouteImport } from './routes/yardim'
 import { Route as AileIndexRouteImport } from './routes/aile.index'
@@ -37,6 +42,7 @@ import { Route as IslemSlugRouteImport } from './routes/islem.$slug'
 import { Route as QrIndexRouteImport } from './routes/qr.index'
 import { Route as QrAnalizRouteImport } from './routes/qr.analiz'
 import { Route as QrTaraRouteImport } from './routes/qr.tara'
+import { Route as SurecIdRouteImport } from './routes/surec.$id'
 import { Route as QrTalepIdRouteImport } from './routes/qr.talep.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -44,9 +50,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiUstaRoute = AiUstaRouteImport.update({
+  id: '/ai-usta',
+  path: '/ai-usta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AramaRoute = AramaRouteImport.update({
   id: '/arama',
   path: '/arama',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BaglantiRoute = BaglantiRouteImport.update({
+  id: '/baglanti',
+  path: '/baglanti',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BildirimlerRoute = BildirimlerRouteImport.update({
@@ -69,6 +85,11 @@ const DijitalOnarimRoute = DijitalOnarimRouteImport.update({
   path: '/dijital-onarim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FaturaKalkaniRoute = FaturaKalkaniRouteImport.update({
+  id: '/fatura-kalkani',
+  path: '/fatura-kalkani',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HesabimRoute = HesabimRouteImport.update({
   id: '/hesabim',
   path: '/hesabim',
@@ -87,6 +108,16 @@ const IslemGecmisiRoute = IslemGecmisiRouteImport.update({
 const IslemlerRoute = IslemlerRouteImport.update({
   id: '/islemler',
   path: '/islemler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TakipRoute = TakipRouteImport.update({
+  id: '/takip',
+  path: '/takip',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasinmaRoute = TasinmaRouteImport.update({
+  id: '/tasinma',
+  path: '/tasinma',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TercihlerRoute = TercihlerRouteImport.update({
@@ -179,6 +210,11 @@ const QrTaraRoute = QrTaraRouteImport.update({
   path: '/qr/tara',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SurecIdRoute = SurecIdRouteImport.update({
+  id: '/surec/$id',
+  path: '/surec/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QrTalepIdRoute = QrTalepIdRouteImport.update({
   id: '/qr/talep/$id',
   path: '/qr/talep/$id',
@@ -187,15 +223,20 @@ const QrTalepIdRoute = QrTalepIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-usta': typeof AiUstaRoute
   '/arama': typeof AramaRoute
+  '/baglanti': typeof BaglantiRoute
   '/bildirimler': typeof BildirimlerRoute
   '/dashboard': typeof DashboardRoute
   '/destek-kayitlari': typeof DestekKayitlariRoute
   '/dijital-onarim': typeof DijitalOnarimRoute
+  '/fatura-kalkani': typeof FaturaKalkaniRoute
   '/hesabim': typeof HesabimRoute
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
+  '/takip': typeof TakipRoute
+  '/tasinma': typeof TasinmaRoute
   '/tercihler': typeof TercihlerRoute
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
@@ -208,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
   '/qr/tara': typeof QrTaraRoute
+  '/surec/$id': typeof SurecIdRoute
   '/aile/': typeof AileIndexRoute
   '/ajanlar/': typeof AjanlarIndexRoute
   '/faturalar/': typeof FaturalarIndexRoute
@@ -218,15 +260,20 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-usta': typeof AiUstaRoute
   '/arama': typeof AramaRoute
+  '/baglanti': typeof BaglantiRoute
   '/bildirimler': typeof BildirimlerRoute
   '/dashboard': typeof DashboardRoute
   '/destek-kayitlari': typeof DestekKayitlariRoute
   '/dijital-onarim': typeof DijitalOnarimRoute
+  '/fatura-kalkani': typeof FaturaKalkaniRoute
   '/hesabim': typeof HesabimRoute
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
+  '/takip': typeof TakipRoute
+  '/tasinma': typeof TasinmaRoute
   '/tercihler': typeof TercihlerRoute
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
@@ -239,6 +286,7 @@ export interface FileRoutesByTo {
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
   '/qr/tara': typeof QrTaraRoute
+  '/surec/$id': typeof SurecIdRoute
   '/aile': typeof AileIndexRoute
   '/ajanlar': typeof AjanlarIndexRoute
   '/faturalar': typeof FaturalarIndexRoute
@@ -250,15 +298,20 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-usta': typeof AiUstaRoute
   '/arama': typeof AramaRoute
+  '/baglanti': typeof BaglantiRoute
   '/bildirimler': typeof BildirimlerRoute
   '/dashboard': typeof DashboardRoute
   '/destek-kayitlari': typeof DestekKayitlariRoute
   '/dijital-onarim': typeof DijitalOnarimRoute
+  '/fatura-kalkani': typeof FaturaKalkaniRoute
   '/hesabim': typeof HesabimRoute
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
+  '/takip': typeof TakipRoute
+  '/tasinma': typeof TasinmaRoute
   '/tercihler': typeof TercihlerRoute
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
@@ -271,6 +324,7 @@ export interface FileRoutesById {
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
   '/qr/tara': typeof QrTaraRoute
+  '/surec/$id': typeof SurecIdRoute
   '/aile/': typeof AileIndexRoute
   '/ajanlar/': typeof AjanlarIndexRoute
   '/faturalar/': typeof FaturalarIndexRoute
@@ -283,15 +337,20 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai-usta'
     | '/arama'
+    | '/baglanti'
     | '/bildirimler'
     | '/dashboard'
     | '/destek-kayitlari'
     | '/dijital-onarim'
+    | '/fatura-kalkani'
     | '/hesabim'
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
+    | '/takip'
+    | '/tasinma'
     | '/tercihler'
     | '/yardim'
     | '/aile/yeni'
@@ -304,6 +363,7 @@ export interface FileRouteTypes {
     | '/islem/$slug'
     | '/qr/analiz'
     | '/qr/tara'
+    | '/surec/$id'
     | '/aile/'
     | '/ajanlar/'
     | '/faturalar/'
@@ -314,15 +374,20 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ai-usta'
     | '/arama'
+    | '/baglanti'
     | '/bildirimler'
     | '/dashboard'
     | '/destek-kayitlari'
     | '/dijital-onarim'
+    | '/fatura-kalkani'
     | '/hesabim'
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
+    | '/takip'
+    | '/tasinma'
     | '/tercihler'
     | '/yardim'
     | '/aile/yeni'
@@ -335,6 +400,7 @@ export interface FileRouteTypes {
     | '/islem/$slug'
     | '/qr/analiz'
     | '/qr/tara'
+    | '/surec/$id'
     | '/aile'
     | '/ajanlar'
     | '/faturalar'
@@ -345,15 +411,20 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/ai-usta'
     | '/arama'
+    | '/baglanti'
     | '/bildirimler'
     | '/dashboard'
     | '/destek-kayitlari'
     | '/dijital-onarim'
+    | '/fatura-kalkani'
     | '/hesabim'
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
+    | '/takip'
+    | '/tasinma'
     | '/tercihler'
     | '/yardim'
     | '/aile/yeni'
@@ -366,6 +437,7 @@ export interface FileRouteTypes {
     | '/islem/$slug'
     | '/qr/analiz'
     | '/qr/tara'
+    | '/surec/$id'
     | '/aile/'
     | '/ajanlar/'
     | '/faturalar/'
@@ -377,15 +449,20 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiUstaRoute: typeof AiUstaRoute
   AramaRoute: typeof AramaRoute
+  BaglantiRoute: typeof BaglantiRoute
   BildirimlerRoute: typeof BildirimlerRoute
   DashboardRoute: typeof DashboardRoute
   DestekKayitlariRoute: typeof DestekKayitlariRoute
   DijitalOnarimRoute: typeof DijitalOnarimRoute
+  FaturaKalkaniRoute: typeof FaturaKalkaniRoute
   HesabimRoute: typeof HesabimRoute
   HizTestiRoute: typeof HizTestiRoute
   IslemGecmisiRoute: typeof IslemGecmisiRoute
   IslemlerRoute: typeof IslemlerRoute
+  TakipRoute: typeof TakipRoute
+  TasinmaRoute: typeof TasinmaRoute
   TercihlerRoute: typeof TercihlerRoute
   YardimRoute: typeof YardimRoute
   AileYeniRoute: typeof AileYeniRoute
@@ -398,6 +475,7 @@ export interface RootRouteChildren {
   IslemSlugRoute: typeof IslemSlugRoute
   QrAnalizRoute: typeof QrAnalizRoute
   QrTaraRoute: typeof QrTaraRoute
+  SurecIdRoute: typeof SurecIdRoute
   AileIndexRoute: typeof AileIndexRoute
   AjanlarIndexRoute: typeof AjanlarIndexRoute
   FaturalarIndexRoute: typeof FaturalarIndexRoute
@@ -416,11 +494,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-usta': {
+      id: '/ai-usta'
+      path: '/ai-usta'
+      fullPath: '/ai-usta'
+      preLoaderRoute: typeof AiUstaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/arama': {
       id: '/arama'
       path: '/arama'
       fullPath: '/arama'
       preLoaderRoute: typeof AramaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/baglanti': {
+      id: '/baglanti'
+      path: '/baglanti'
+      fullPath: '/baglanti'
+      preLoaderRoute: typeof BaglantiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bildirimler': {
@@ -451,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DijitalOnarimRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fatura-kalkani': {
+      id: '/fatura-kalkani'
+      path: '/fatura-kalkani'
+      fullPath: '/fatura-kalkani'
+      preLoaderRoute: typeof FaturaKalkaniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hesabim': {
       id: '/hesabim'
       path: '/hesabim'
@@ -477,6 +576,20 @@ declare module '@tanstack/react-router' {
       path: '/islemler'
       fullPath: '/islemler'
       preLoaderRoute: typeof IslemlerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/takip': {
+      id: '/takip'
+      path: '/takip'
+      fullPath: '/takip'
+      preLoaderRoute: typeof TakipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasinma': {
+      id: '/tasinma'
+      path: '/tasinma'
+      fullPath: '/tasinma'
+      preLoaderRoute: typeof TasinmaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tercihler': {
@@ -605,6 +718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QrTaraRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/surec/$id': {
+      id: '/surec/$id'
+      path: '/surec/$id'
+      fullPath: '/surec/$id'
+      preLoaderRoute: typeof SurecIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/qr/talep/$id': {
       id: '/qr/talep/$id'
       path: '/qr/talep/$id'
@@ -617,15 +737,20 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiUstaRoute: AiUstaRoute,
   AramaRoute: AramaRoute,
+  BaglantiRoute: BaglantiRoute,
   BildirimlerRoute: BildirimlerRoute,
   DashboardRoute: DashboardRoute,
   DestekKayitlariRoute: DestekKayitlariRoute,
   DijitalOnarimRoute: DijitalOnarimRoute,
+  FaturaKalkaniRoute: FaturaKalkaniRoute,
   HesabimRoute: HesabimRoute,
   HizTestiRoute: HizTestiRoute,
   IslemGecmisiRoute: IslemGecmisiRoute,
   IslemlerRoute: IslemlerRoute,
+  TakipRoute: TakipRoute,
+  TasinmaRoute: TasinmaRoute,
   TercihlerRoute: TercihlerRoute,
   YardimRoute: YardimRoute,
   AileYeniRoute: AileYeniRoute,
@@ -638,6 +763,7 @@ const rootRouteChildren: RootRouteChildren = {
   IslemSlugRoute: IslemSlugRoute,
   QrAnalizRoute: QrAnalizRoute,
   QrTaraRoute: QrTaraRoute,
+  SurecIdRoute: SurecIdRoute,
   AileIndexRoute: AileIndexRoute,
   AjanlarIndexRoute: AjanlarIndexRoute,
   FaturalarIndexRoute: FaturalarIndexRoute,
