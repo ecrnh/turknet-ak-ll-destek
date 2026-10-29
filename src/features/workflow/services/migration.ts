@@ -254,6 +254,7 @@ export function closeOldLine(id: string) {
   step(id, "old_line", "done", `${CURRENT_ADDRESS.port} kapatıldı (${wo.id}) · ek ücret yok, taahhüt aynen devam`);
   const temp = tempOfWorkflow(id);
   const slot = wf.decisions.find((d) => d.key === "relocation_slot");
+  const woCount = getWf(id)?.workOrderIds.length ?? 0;
   notify(id, "Taşınman tamamlandı 🎉", "Yeni adresinde internetin aktif. Eski hattın kapatıldı, ek ücret yansımadı.");
   complete(id, {
     resolved: true,
@@ -262,7 +263,7 @@ export function closeOldLine(id: string) {
       `Altyapı sonucu: ${wf.data["eligibility"] === "no_port" ? "port yoktu → altyapı genişletildi" : wf.data["eligibility"] === "eligible_external" ? "dış sağlayıcıdan port tahsis edildi" : "uygun"}`,
       `Geçici internet: ${temp ? "kullanıldı ve kapatıldı" : "kullanılmadı"}`,
       `Kurulum randevusu: ${slot?.label ?? "—"}`,
-      `İş emri: ${wf.workOrderIds.length + 1} adet, hepsi kapandı`,
+      `İş emri: ${woCount} adet, hepsi kapandı`,
       "Eski hat doğrulamadan sonra kapatıldı",
     ],
   });

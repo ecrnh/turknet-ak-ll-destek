@@ -6,7 +6,7 @@
  */
 import { HYBRID_OFFER, SUBSCRIPTION, TEAMS, TEMP_MOBILE_OFFER } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
-import { ask, chain, complete, createWorkflow, getWf, log, notify, plan, registerDecision, registerOp, schedule, setData, setStatus, setWorkOrder, step, stepStatus, workOrder } from "../engine";
+import { ask, chain, complete, createWorkflow, getWf, notify, registerDecision, registerOp, schedule, setData, setStatus, setWorkOrder, step, stepStatus, workOrder } from "../engine";
 import { MockLogisticsAPI, MockNetworkAPI } from "../mockServices";
 import { useWorkflowStore as W } from "../store";
 import type { ConnectivityStatus, TempKind, TempStatus } from "../types";
@@ -237,8 +237,3 @@ export function verifyOutage(id: string) {
   });
 }
 registerOp("outage.verify", verifyOutage);
-
-export function toggleHybridLog() {
-  log(null, "system", "info", "Bağlantı ekranı görüntülendi");
-}
-export { plan };
