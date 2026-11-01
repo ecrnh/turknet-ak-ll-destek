@@ -36,7 +36,8 @@ beforeEach(() => {
 describe("Akıllı bildirim katmanı", () => {
   it("rutin gelişme push göndermez, önemli gelişme gönderir", () => {
     const before = useAppStore.getState().notifications.length;
-    const { wfId } = (seedPaidButDebt(false), runBillingShield());
+    seedPaidButDebt(false);
+    const { wfId } = runBillingShield();
     notify(wfId!, "Rutin", "x", "quiet");
     const pushes = W.getState().messages.filter((m) => m.level !== "quiet").length;
     expect(useAppStore.getState().notifications.length - before).toBe(pushes);
@@ -98,15 +99,10 @@ describe("Hız optimizasyonu", () => {
 });
 
 describe("TürkNet Box", () => {
-  it("SIM aktif olmadan açılıp kapanamaz; aktifken uygulamadan kapatılır", () => {
-    W.setState({ autoFollowUp: false });
-    const out = startFixedOutage();
-    W.setState({ autoFollowUp: false });
-    for (const k of ["outage.diagnose", "outage.coverage", "outage.offer"]) void k;
-    // walk the outage to the offer
-    flushOps();
-    (W.getState().workflows.find((w) => w.id === out) && null);
+  it("SIM aktif olmadan açılıp kapanamaz", () => {
     expect(canToggleBox(null)).toBe(false);
+    expect(canToggleBox({ sim: "shipping" })).toBe(false);
+    expect(canToggleBox({ sim: "active" })).toBe(true);
   });
   it("kabul sonrası Box teslim edilip aktifleşince aç/kapa bağlantıyı değiştirir", () => {
     const out = startFixedOutage();
