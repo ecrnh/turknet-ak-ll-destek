@@ -421,7 +421,7 @@ export const TEMP_MOBILE_OFFER = {
 
 export const HYBRID_OFFER = {
   title: "Hibrit yedek bağlantı",
-  device: "Mevcut modemin (ZTE F6640) + uzaktan tanımlanan eSIM",
+  device: "Mevcut modeminiz (ZTE F6640) + uzaktan tanımlanan eSIM",
   price: "Örnek ücret: kesinti süresince ücretsiz, sonrası ₺49/ay opsiyonel (demo)",
   quota: "Yedek modda 50 GB",
   coverage: "Ümraniye Çakmak: 4.5G sinyal orta-iyi (demo kapsama verisi)",
