@@ -15,7 +15,7 @@ export interface BotReply {
 const has = (t: string, ...words: string[]) => words.some((w) => t.includes(w));
 
 /** Scripted assistant. Every answer routes to a self-service flow instead of a live agent. */
-export function botReply(input: string, net: { status: NetStatus; speed: number }, giftGB: number): BotReply {
+export function botReply(input: string, net: { status: NetStatus; speed: number }): BotReply {
   const t = input.toLocaleLowerCase("tr-TR");
 
   if (has(t, "hız", "yavaş", "düşük")) {
@@ -25,14 +25,13 @@ export function botReply(input: string, net: { status: NetStatus; speed: number 
     };
   }
   if (has(t, "kesinti", "çalışmıyor", "internet yok", "bağlantı", "koptu")) {
-    if (net.status === "outage" || net.status === "backup") {
+    if (net.status === "down" || net.status === "mobile") {
       return {
-        text: `Bölgende bir fiber kesintisi var, ekiplerimiz çalışıyor. ${giftGB > 0 ? `Bu sürede sana ${giftGB} GB hediye internet tanımladık.` : ""} ${net.status === "backup" ? "Şu an yedek altyapıdan bağlısın." : ""}`.trim(),
-        actions: [
-          { label: "Arıza durumunu gör", to: "/hediye" },
-          { label: "Hediyemi aktifleştir", to: "/hediye/aktiflestir" },
-          { label: "Yedek altyapı", to: "/ajanlar/yedek" },
-        ],
+        text:
+          net.status === "mobile"
+            ? "Ana bağlantınızdaki kesinti sürüyor; şu an Hibrit İnternet yedek bağlantınız üzerinden bağlısınız. Ana bağlantı düzelince otomatik olarak geri döneceğiz."
+            : "İnternet bağlantınızda kesinti tespit ettik. Teknik ekibimiz sorunun çözümü için çalışıyor. Kesinti 24 saati aşarsa ücretsiz Hibrit İnternet ile bağlı kalabilirsiniz.",
+        actions: [{ label: "Kesinti durumunu gör", to: "/hibrit" }],
       };
     }
     return {
@@ -68,8 +67,11 @@ export function botReply(input: string, net: { status: NetStatus; speed: number 
       actions: [{ label: "Aile Yetkilendirme", to: "/aile" }],
     };
   }
-  if (has(t, "hediye", "gb", "telafi")) {
-    return { text: "Kesinti 6 saati geçerse hangi operatörü kullanırsan kullan hattına 5–20 GB hediye ediyoruz.", actions: [{ label: "Hediye İnternet Cüzdanım", to: "/hediye" }] };
+  if (has(t, "hibrit", "yedek", "kesinti uzun")) {
+    return {
+      text: "Hibrit İnternet aboneliğinize dahildir, ek ücret ödemezsiniz. Kesinti 24 saati aşarsa yedek internet cihazınız üzerinden bağlantınızı uygulamadan etkinleştirebilirsiniz.",
+      actions: [{ label: "Hibrit İnternet", to: "/hibrit" }],
+    };
   }
   if (has(t, "fatura", "öde", "ödeme", "otomatik")) {
     return {

@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { CHAT_TOPICS, POPULAR_QUESTIONS, SPEED_FIX_STEPS, USER } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
 import { useAgentsStore } from "@/features/aiAgents/store";
-import { useGiftStore } from "@/features/giftData/store";
 import { useActingAccount } from "@/features/family/store";
 import { runSpeedAgent } from "@/features/demo/scenarios";
 import { NetBadge } from "@/components/tn/NetStatus";
@@ -63,7 +62,6 @@ export function HelpCenterSheet() {
   const close = useAppStore((s) => s.closeHelp);
   const net = useAppStore((s) => s.net);
   const addRecord = useAppStore((s) => s.addRecord);
-  const giftGB = useGiftStore((s) => s.giftGB);
   const acting = useActingAccount();
   const navigate = useNavigate();
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -96,7 +94,7 @@ export function HelpCenterSheet() {
     setMsgs((m) => [...m, { id: ++idRef.current, from: "user", text: t }]);
     setTyping(true);
     setTimeout(() => {
-      const r = botReply(t, net, giftGB);
+      const r = botReply(t, net);
       setTyping(false);
       setMsgs((m) => [...m, { id: ++idRef.current, from: "bot", text: r.text, actions: r.actions, agent: r.agent === "speed" }]);
       if (r.agent === "speed") {

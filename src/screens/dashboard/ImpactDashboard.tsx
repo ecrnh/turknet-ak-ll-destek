@@ -36,7 +36,7 @@ const PROJECTION = [
 const FUNNELS = [
   { f: "Görüntülü Destek", key: "video", steps: [100, 38, 31] },
   { f: "QR ile Destek", key: "qr", steps: [100, 52, 46] },
-  { f: "Hediye GB", key: "gift", steps: [100, 71, 64] },
+  { f: "Hibrit İnternet", key: "hybrid_internet", steps: [100, 74, 68] },
   { f: "AI Ajanlar", key: "ai", steps: [100, 88, 84] },
 ];
 
@@ -49,7 +49,7 @@ const DROPOFF = [
 const AB = [
   { f: "QR ile Destek", metric: "Kayıt açma süresi", control: "Asistan + form", variant: "QR tek dokunuş", effect: "-%60", dur: "4 hafta", n: "2 × 12.000 abone", good: true },
   { f: "Görüntülü Destek", metric: "Saha ziyareti oranı", control: "Chat → saha randevusu", variant: "Görüntülü uzman", effect: "-%25", dur: "6 hafta", n: "2 × 8.500 teknik kayıt", good: true },
-  { f: "Kesinti Telafisi", metric: "Kesinti dönemi destek çağrısı", control: "Sadece SMS bilgilendirme", variant: "Proaktif kart + hediye GB", effect: "-%35", dur: "Kesinti bazlı, 3 olay", n: "Etkilenen bölge aboneleri", good: true },
+  { f: "Hibrit İnternet", metric: "24 saat+ kesintide destek çağrısı", control: "Sadece SMS bilgilendirme", variant: "Proaktif kart + ücretsiz yedek bağlantı", effect: "-%35", dur: "Kesinti bazlı, 3 olay", n: "Etkilenen bölge aboneleri", good: true },
   { f: "AI Ajanlar", metric: "Asistandan canlı chat'e geçiş", control: "Reaktif asistan", variant: "Proaktif Hız Koruyucu", effect: "-%18", dur: "4 hafta", n: "2 × 20.000 abone", good: true },
   { f: "Aile Yetkilendirme", metric: "65+ yaş self-servis çözüm", control: "Yetki yok", variant: "Yakın yönetimi", effect: "+%22", dur: "8 hafta", n: "2 × 3.000 hane", good: true },
 ];

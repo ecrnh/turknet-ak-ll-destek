@@ -12,7 +12,7 @@ const LABEL: Record<Intent, string> = {
   relocation: "Taşınma",
   billing: "Fatura Kalkanı",
   ai_usta: "AI Usta",
-  temp_internet: "Bağlantım · geçici internet",
+  temp_internet: "Bağlantım · Hibrit İnternet",
   speed: "Hız kontrolü",
   track: "İşlemlerim",
 };
@@ -52,7 +52,7 @@ export function IntentBox({ onDark, className }: { onDark?: boolean; className?:
       case "speed":
         return navigate({ to: "/surec/$id", params: { id: startSpeedCheck() } });
       case "temp_internet":
-        return navigate({ to: "/baglanti" });
+        return navigate({ to: openOutage() ? "/hibrit" : "/baglanti" });
       case "track":
         return navigate({ to: "/takip" });
     }
