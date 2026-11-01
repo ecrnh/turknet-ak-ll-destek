@@ -4,22 +4,12 @@ import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { EmptyState, SectionTitle } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
-import { TEAMS } from "@/data/mock";
 import { fmtDateTime } from "@/lib/format";
 import { escalate, recheck, useWorkflowStore } from "@/features/workflow";
-import { STATUS_LABEL, isActive } from "../rules";
-import type { WorkflowType } from "../types";
-import { AiUstaPanel, BillingPanel, ConnectivityPanel, RelocationPanel, TempPanel } from "../components/panels";
-import { AuditList, DecisionCard, DemoNote, HandoffCard, OutcomeCard, RecordsList, StatusPill, StepTimeline, TYPE_ICON, TYPE_LABEL } from "../components/ui";
-
-const TEAM_FOR: Record<WorkflowType, string> = {
-  relocation: TEAMS.relocation,
-  temp_internet: TEAMS.logistics,
-  outage_recovery: TEAMS.tech,
-  billing_check: TEAMS.finance,
-  ai_usta: TEAMS.tech,
-  proactive_fault: TEAMS.tech,
-};
+import { isActive } from "../rules";
+import { customerAction, statusSentence, TEAM_FOR, whatsNext } from "../copy";
+import { AiUstaPanel, BillingPanel, ConnectivityPanel, HealthCard, RelocationPanel, SpeedPanel, TempPanel } from "../components/panels";
+import { AuditList, DecisionCard, DemoNote, HandoffCard, OutcomeCard, RecordsList, StatusPill, StepTimeline, TechDetails, TYPE_ICON, TYPE_LABEL } from "../components/ui";
 
 export function WorkflowDetailScreen({ id }: { id: string }) {
   const wf = useWorkflowStore((s) => s.workflows.find((w) => w.id === id));
@@ -30,50 +20,48 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
   if (!wf)
     return (
       <div>
-        <PageHeader title="Süreç" />
-        <EmptyState icon={AlertTriangle} title="Süreç bulunamadı" text="Demo sıfırlanmış olabilir." action={<Link to="/takip" className="font-semibold text-magenta">Tüm süreçlerim</Link>} />
+        <PageHeader title="İşlem" />
+        <EmptyState icon={AlertTriangle} title="İşlem bulunamadı" text="Demo sıfırlanmış olabilir." action={<Link to="/takip" className="font-semibold text-magenta">Tüm işlemlerim</Link>} />
       </div>
     );
 
   const Icon = TYPE_ICON[wf.type];
   const events = [...audit].reverse();
+  const action = customerAction(wf);
+  const isConn = wf.type === "outage_recovery" || wf.type === "proactive_fault" || wf.type === "speed_optimize";
 
   return (
     <div>
       <PageHeader title={TYPE_LABEL[wf.type]} right={<StatusPill status={wf.status} className="mr-2" />} />
       <div className="space-y-4 px-4">
-        <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
+        <section className="rounded-card bg-plum p-5 text-primary-foreground shadow-float" aria-live="polite">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">
               <Icon className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-primary-foreground/70">
-                {wf.id} · {fmtDateTime(wf.createdAt)}
-              </p>
               <p className="font-semibold leading-tight">{wf.title}</p>
+              <p className="text-xs text-primary-foreground/70">Başlangıç {fmtDateTime(wf.createdAt)}</p>
             </div>
           </div>
-          <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Şu an</p>
-          <p className="text-lg font-semibold">{STATUS_LABEL[wf.status]}</p>
-          {wf.status !== "completed" && <p className="mt-0.5 text-sm text-primary-foreground/90">Sıradaki: {wf.decision ? "Senin kararın" : (wf.nextStep ?? (wf.handoff ? `${wf.handoff.team} inceliyor` : "—"))}</p>}
-          {wf.eta && wf.status !== "completed" && (
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-primary-foreground/80">
-              <Clock3 className="size-3.5" /> {wf.eta}
-            </p>
-          )}
-          <p className="mt-3 text-xs text-primary-foreground/70">TurkNet bu süreci senin için takip ediyor. Bir şey değişince bildirim alacaksın.</p>
-        </div>
-
-        {wf.blocker && wf.status !== "completed" && wf.status !== "escalated" && (
-          <div className="flex items-start gap-3 rounded-2xl border border-orange/30 bg-orange-soft p-3.5 text-sm" role="status">
-            <AlertTriangle className="mt-0.5 size-5 shrink-0 text-orange-deep" />
+          <h2 className="mt-4 text-xl font-semibold leading-snug">{statusSentence(wf)}</h2>
+          {wf.blocker && isActive(wf) && wf.status !== "escalated" && <p className="mt-1 text-sm text-primary-foreground/85">{wf.blocker}</p>}
+          <dl className="mt-4 space-y-2 rounded-2xl bg-primary-foreground/10 p-3 text-sm">
             <div>
-              <p className="font-semibold text-foreground">Engel / bekleme nedeni</p>
-              <p className="text-muted-foreground">{wf.blocker}</p>
+              <dt className="text-[11px] font-bold uppercase tracking-wider text-primary-foreground/60">Sizden beklenen</dt>
+              <dd className={action.needed ? "font-semibold text-primary-foreground" : "text-primary-foreground/90"}>{action.text}</dd>
             </div>
-          </div>
-        )}
+            <div>
+              <dt className="text-[11px] font-bold uppercase tracking-wider text-primary-foreground/60">{wf.status === "completed" ? "Sonuç" : "Bundan sonra"}</dt>
+              <dd className="text-primary-foreground/90">{whatsNext(wf)}</dd>
+            </div>
+            {wf.eta && wf.status !== "completed" && (
+              <div className="flex items-center gap-1.5 pt-1 text-xs text-primary-foreground/80">
+                <Clock3 className="size-3.5" /> {wf.eta}
+              </div>
+            )}
+          </dl>
+        </section>
 
         <DecisionCard key={wf.decision?.key ?? "none"} wf={wf} />
         <HandoffCard wf={wf} />
@@ -83,36 +71,35 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
         {wf.type === "temp_internet" && <TempPanel wf={wf} />}
         {wf.type === "billing_check" && <BillingPanel wf={wf} />}
         {wf.type === "ai_usta" && <AiUstaPanel wf={wf} />}
-        {(wf.type === "outage_recovery" || wf.type === "proactive_fault") && <ConnectivityPanel compact />}
+        {(wf.type === "proactive_fault" || wf.type === "speed_optimize") && <SpeedPanel wf={wf} />}
+        {isConn && <HealthCard />}
 
         {isActive(wf) && (
           <div className="grid grid-cols-2 gap-2">
             {wf.status === "waiting_for_external_system" && wf.type === "relocation" ? (
               <Button variant="outline" onClick={() => recheck(wf.id)}>
-                <RefreshCw /> Yeniden kontrol et
+                <RefreshCw /> Tekrar Kontrol Et
               </Button>
             ) : (
               <span />
             )}
             {!wf.handoff && (
               <Button variant="outline" onClick={() => escalate(wf.id, TEAM_FOR[wf.type], "Müşteri canlı destek istedi", "customer")}>
-                <Headset /> Canlı desteğe aktar
+                <Headset /> Canlı Desteğe Bağlan
               </Button>
             )}
           </div>
         )}
 
-        <SectionTitle className="mt-5">Adımlar</SectionTitle>
+        <SectionTitle className="mt-5">Aşamalar</SectionTitle>
         <div className="rounded-card bg-card p-5 shadow-card">
           <StepTimeline wf={wf} />
         </div>
 
-        <RecordsList wf={wf} />
-
         {related.length > 0 && (
           <div className="rounded-card bg-card p-4 shadow-card">
             <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-primary">
-              <Link2 className="size-4" /> İlişkili süreçler
+              <Link2 className="size-4" /> İlişkili işlemler
             </p>
             {related.map((r) => (
               <Link key={r.id} to="/surec/$id" params={{ id: r.id }} className="flex items-center justify-between rounded-xl px-2 py-2 text-sm hover:bg-accent">
@@ -123,13 +110,27 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
           </div>
         )}
 
-        <SectionTitle className="mt-5" action={events.length > 6 && <button className="text-sm font-semibold text-magenta" onClick={() => setShowAll((v) => !v)}>{showAll ? "Daha az" : "Tümü"}</button>}>
-          İşlem günlüğü
-        </SectionTitle>
-        <div className="rounded-card bg-card p-4 shadow-card">
-          <AuditList events={showAll ? events : events.slice(0, 6)} />
-        </div>
-        <DemoNote className="pb-2" />
+        <TechDetails>
+          <div>
+            <p className="mb-2 text-xs font-semibold text-foreground">Yapılan kontroller ve sonuçları</p>
+            <StepTimeline wf={wf} detailed />
+          </div>
+          <RecordsList wf={wf} />
+          {isConn && <ConnectivityPanel compact />}
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-semibold text-foreground">İşlem geçmişi · {wf.id}</p>
+              {events.length > 6 && (
+                <button className="text-xs font-semibold text-magenta" onClick={() => setShowAll((v) => !v)}>
+                  {showAll ? "Daha az" : "Tümü"}
+                </button>
+              )}
+            </div>
+            <AuditList events={showAll ? events : events.slice(0, 6)} />
+          </div>
+          <DemoNote />
+        </TechDetails>
+        <div className="pb-2" />
       </div>
     </div>
   );
