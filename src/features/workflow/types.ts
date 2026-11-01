@@ -13,7 +13,7 @@ export type WorkflowStatus =
   | "completed"
   | "failed";
 
-export type WorkflowType = "relocation" | "temp_internet" | "outage_recovery" | "billing_check" | "ai_usta" | "proactive_fault";
+export type WorkflowType = "relocation" | "temp_internet" | "outage_recovery" | "billing_check" | "ai_usta" | "proactive_fault" | "speed_optimize";
 
 export type StepStatus = "pending" | "in_progress" | "waiting" | "done" | "failed" | "skipped";
 
@@ -143,7 +143,7 @@ export interface ConnectivityStatus {
   mode: "fixed" | "temp_mobile" | "hybrid_backup";
   hybridEnabled: boolean;
   lastCheckAt: number;
-  metric: { optic: number; drops: number };
+  metric: { optic: number; drops: number; speed?: number };
   history: { at: number; label: string }[];
 }
 
@@ -173,6 +173,32 @@ export interface CustomerNotification {
   title: string;
   body: string;
   at: number;
+  /** push = phone notification; quiet = shown only inside the app / history. */
+  level?: "push" | "quiet";
+}
+
+/** TürkNet Box: hypothetical SIM-based temporary internet device (mock, no real operator). */
+export interface BoxDevice {
+  id: string;
+  tempWfId: string;
+  model: string;
+  sim: "shipping" | "ready" | "active" | "returning";
+  power: "on" | "off";
+  usedGb: number;
+  quotaGb: number;
+  toggles: number;
+  signal: string;
+  updatedAt: number;
+}
+
+/** Simulated SMS (no real SMS is sent). */
+export interface SmsMessage {
+  id: string;
+  workflowId: string;
+  body: string;
+  link: string;
+  at: number;
+  opened: boolean;
 }
 
 export type Actor = "system" | "customer" | "external" | "agent" | "presenter" | "team";

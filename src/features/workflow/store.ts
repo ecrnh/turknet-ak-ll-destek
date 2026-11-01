@@ -5,11 +5,13 @@ import type {
   Appointment,
   AuditEvent,
   BillingRecord,
+  BoxDevice,
   ConnectivityStatus,
   CustomerNotification,
   DemoConfig,
   PaymentRecord,
   ScheduledOp,
+  SmsMessage,
   TemporaryInternetRequest,
   WorkOrder,
   Workflow,
@@ -29,6 +31,8 @@ export interface WorkflowState {
   bills: BillingRecord[];
   payments: PaymentRecord[];
   messages: CustomerNotification[];
+  box: BoxDevice | null;
+  sms: SmsMessage[];
   audit: AuditEvent[];
   ops: ScheduledOp[];
   config: DemoConfig;
@@ -52,7 +56,7 @@ export const initialConnectivity = (): ConnectivityStatus => ({
   mode: "fixed",
   hybridEnabled: false,
   lastCheckAt: Date.now(),
-  metric: { optic: -19.2, drops: 0 },
+  metric: { optic: -19.2, drops: 0, speed: 96 },
   history: [],
 });
 
@@ -65,6 +69,8 @@ const initial = () => ({
   bills: [{ ...BILLING_SEED.bill, status: "paid" as const, shownDebt: 0 }],
   payments: [{ ...BILLING_SEED.payment, billId: BILLING_SEED.bill.id, status: "success" as const }],
   messages: [] as CustomerNotification[],
+  box: null as BoxDevice | null,
+  sms: [] as SmsMessage[],
   audit: [] as AuditEvent[],
   ops: [] as ScheduledOp[],
   config: defaultConfig(),
@@ -77,6 +83,13 @@ export const useWorkflowStore = create<WorkflowState>()(
       ...initial(),
       reset: () => set(initial()),
     }),
-    { name: "tn-workflow", storage: createJSONStorage(() => localStorage), skipHydration: true },
+    {
+      name: "tn-workflow",
+      storage: createJSONStorage(() => localStorage),
+      skipHydration: true,
+      version: 2,
+      migrate: (persisted) => ({ ...initial(), ...(persisted as object) }) as WorkflowState,
+      merge: (persisted, current) => ({ ...current, ...initial(), ...(persisted as object), reset: current.reset }),
+    },
   ),
 );
