@@ -226,7 +226,7 @@ export function restoreMain(): boolean {
       patchDevice({ status: "cancelled" });
       setWorkOrder(id, "device_delivery", "cancelled");
     }
-    patchHybrid({ status: "unavailable", checks: null });
+    patchHybrid({ status: "unavailable" });
   }
   schedule("outage.verify", id, 1500);
   return true;
