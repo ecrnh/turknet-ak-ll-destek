@@ -1,16 +1,11 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Activity, BarChart3, ChevronRight, CloudOff, Gauge, PlugZap, QrCode, RotateCcw, Route, Video, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { Activity, BarChart3, ChevronRight, Gauge, QrCode, RotateCcw, Video, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { Slider } from "@/components/ui/slider";
 import { useAppStore } from "@/features/core/appStore";
-import { useGiftStore } from "@/features/giftData/store";
-import { useAgentsStore } from "@/features/aiAgents/store";
 import { useActingAccount } from "@/features/family/store";
-import { giftForOutage } from "@/features/giftData/gift";
 import { NET_LABEL, NET_TEXT } from "@/components/tn/NetStatus";
 import { cn } from "@/lib/utils";
-import { elderVideoScenario, qrFaultScenario, resetAll, restoreLine, simulateSpeedDrop, startOutage, switchToBackup } from "./scenarios";
+import { elderVideoScenario, qrFaultScenario, resetAll, simulateSpeedDrop } from "./scenarios";
 
 function Btn({ icon: Icon, label, onClick, tone = "default" }: { icon: typeof Gauge; label: string; onClick: () => void; tone?: "default" | "danger" | "ok" }) {
   return (
@@ -34,13 +29,7 @@ function Btn({ icon: Icon, label, onClick, tone = "default" }: { icon: typeof Ga
 export function DemoPanel({ onHide }: { onHide?: () => void }) {
   const navigate = useNavigate();
   const net = useAppStore((s) => s.net);
-  const giftGB = useGiftStore((s) => s.giftGB);
-  const outageHours = useGiftStore((s) => s.outageHours);
-  const backup = useAgentsStore((s) => s.backup);
   const acting = useActingAccount();
-  const [hours, setHours] = useState(outageHours || 10);
-
-  const isOut = net.status === "outage" || net.status === "backup";
 
   return (
     <div className="flex flex-col gap-4">
@@ -56,7 +45,7 @@ export function DemoPanel({ onHide }: { onHide?: () => void }) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted p-3 text-xs">
+      <div className="grid grid-cols-3 gap-2 rounded-2xl bg-muted p-3 text-xs">
         <div>
           <p className="text-muted-foreground">İnternet</p>
           <p className={cn("font-bold", NET_TEXT[net.status])}>{NET_LABEL[net.status]}</p>
@@ -64,10 +53,6 @@ export function DemoPanel({ onHide }: { onHide?: () => void }) {
         <div>
           <p className="text-muted-foreground">Hız</p>
           <p className="font-bold text-foreground">{net.speed} Mbps</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground">Hediye</p>
-          <p className="font-bold text-foreground">{giftGB} GB</p>
         </div>
         <div>
           <p className="text-muted-foreground">Profil</p>
@@ -78,35 +63,6 @@ export function DemoPanel({ onHide }: { onHide?: () => void }) {
       <div className="space-y-2">
         <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Ajan senaryoları</p>
         <Btn icon={Gauge} label="Hız düşüşü simüle et" onClick={() => { simulateSpeedDrop(); navigate({ to: "/" }); }} />
-        <Btn icon={Route} label={backup.active ? "Yedek altyapı aktif" : "Yedek altyapıya geç"} onClick={() => { switchToBackup(); navigate({ to: "/ajanlar/yedek" }); }} />
-      </div>
-
-      <div className="space-y-3 rounded-2xl border border-border bg-card p-3">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-primary">Kesinti süresi</p>
-          <p className="text-sm font-bold text-magenta">
-            {hours} saat → {giftForOutage(hours)} GB
-          </p>
-        </div>
-        <Slider
-          value={[hours]}
-          min={0}
-          max={96}
-          step={1}
-          onValueChange={([v = 0]) => {
-            setHours(v);
-            if (isOut) startOutage(v);
-          }}
-          aria-label="Kesinti süresi (saat)"
-        />
-        <div className="flex justify-between text-[10px] text-muted-foreground">
-          <span>0</span>
-          <span>6s · 5GB</span>
-          <span>24s · 10GB</span>
-          <span>72s · 20GB</span>
-        </div>
-        <Btn icon={CloudOff} tone="danger" label={isOut ? "Kesinti sürüyor (slider canlı)" : "Kesinti başlat"} onClick={() => startOutage(hours)} />
-        <Btn icon={PlugZap} tone="ok" label="Hat düzeldi" onClick={restoreLine} />
       </div>
 
       <div className="space-y-2">
