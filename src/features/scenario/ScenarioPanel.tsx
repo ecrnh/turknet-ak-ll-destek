@@ -1,28 +1,18 @@
 import { CheckCircle2, EyeOff, Headset, Pause, Play, PlugZap, RotateCcw, SkipForward, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { DemoPanel } from "@/features/demo/DemoPanel";
-import { TEAMS } from "@/data/mock";
 import { checkExternal, decide, escalate, flushOps, recheckRelocation, stepStatus } from "@/features/workflow";
 import { MOCK_LABEL, MockBillingAPI, MockInfraAPI, MockLogisticsAPI, MockNetworkAPI, MockProviderAPI, MockVisionAPI } from "@/features/workflow/mockServices";
 import { STATUS_LABEL, isActive } from "@/features/workflow/rules";
 import { useWorkflowStore } from "@/features/workflow/store";
-import { ActorChip, AuditList, StepIcon } from "@/features/workflow/components/ui";
-import type { WorkflowType } from "@/features/workflow/types";
+import { ActorChip, AuditList, StatusPill, StepIcon } from "@/features/workflow/components/ui";
+import { TEAM_FOR, TYPE_LABEL } from "@/features/workflow/copy";
 import { cn } from "@/lib/utils";
 import { buildCtx, cursorOf, next, resetScenario, setPlaying, startScenario, visibleSteps } from "./player";
 import { SCENARIOS, scenarioById } from "./scenarios";
 import { useScenarioStore } from "./store";
 
 type Tab = "scenario" | "log" | "notif" | "classic";
-
-const TEAM_FOR: Record<WorkflowType, string> = {
-  relocation: TEAMS.relocation,
-  temp_internet: TEAMS.logistics,
-  outage_recovery: TEAMS.tech,
-  billing_check: TEAMS.finance,
-  ai_usta: TEAMS.tech,
-  proactive_fault: TEAMS.tech,
-};
 
 const clock = (t: number) => new Date(t).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
@@ -153,7 +143,7 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
               </div>
               {main && (
                 <p className="mt-1.5 text-[11px] text-muted-foreground">
-                  İşlem durumu: <span className="font-semibold text-foreground">{STATUS_LABEL[main.status]}</span>
+                  İşlem durumu: <span className="font-semibold text-foreground">{STATUS_LABEL[main.status]}</span> <span className="font-mono">({main.status})</span>
                   {main.blocker && main.status !== "completed" ? ` · ${main.blocker}` : ""}
                 </p>
               )}
@@ -187,6 +177,7 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
                     <span className={cn("flex-1 text-xs font-semibold leading-snug", v.state === "pending" ? "text-muted-foreground" : v.state === "skipped" ? "text-muted-foreground line-through" : "text-foreground")}>
                       {i + 1}. {v.step.label}
                     </span>
+                    {v.step.decisionKey && <span className="shrink-0 rounded-full bg-magenta-soft px-1.5 py-0.5 text-[10px] font-bold text-magenta">Onay</span>}
                     <ActorChip actor={v.step.actor} />
                   </button>
                   {show && (
@@ -229,6 +220,24 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
             </div>
           )}
 
+          {w.workflows.length > 0 && (
+            <div className="rounded-2xl border border-border p-3">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Süreçlerin son durumu</p>
+              <ul className="mt-1.5 space-y-1.5">
+                {w.workflows.map((x) => (
+                  <li key={x.id} className="flex items-center gap-2 text-[11px]">
+                    <span className="w-[72px] shrink-0 font-mono text-muted-foreground">{x.id}</span>
+                    <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{TYPE_LABEL[x.type]}</span>
+                    <StatusPill status={x.status} className="px-2 py-0.5 text-[10px]" />
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[10px] text-muted-foreground">
+                {w.workOrders.filter((o) => o.status !== "done" && o.status !== "cancelled").length} açık iş emri · {w.workflows.filter((x) => x.decision).length} karar bekliyor · {w.box ? `Box ${w.box.power === "on" ? "açık" : "kapalı"}` : "Box yok"}
+              </p>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-dashed border-border p-3 text-[11px] text-muted-foreground">
             <p className="font-semibold text-foreground">Entegrasyon durumu</p>
             <p>Gerçek entegrasyon: yok. Tüm dış sistemler mock servis:</p>
@@ -254,13 +263,14 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
 
       {tab === "notif" && (
         <div className="max-h-[640px] space-y-2 overflow-y-auto pr-1">
-          <p className="text-[11px] text-muted-foreground">Müşteriye gönderilen bildirimler (uygulama içi + push, demo).</p>
+          <p className="text-[11px] text-muted-foreground">Push yalnızca karar, önemli aşama, gecikme, yeni işlem ve çözümde gönderilir; rutin gelişmeler uygulama içinde kalır.</p>
           {w.messages.length === 0 && <p className="py-3 text-center text-xs text-muted-foreground">Henüz bildirim yok.</p>}
           {w.messages.map((m) => (
             <div key={m.id} className="rounded-xl border border-border p-2.5">
-              <p className="flex justify-between text-[10px] text-muted-foreground">
+              <p className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
                 <span className="font-mono">{m.workflowId}</span>
-                <span>{clock(m.at)}</span>
+                <span className={cn("rounded-full px-1.5 py-0.5 font-bold", m.level === "quiet" ? "bg-muted" : "bg-magenta-soft text-magenta")}>{m.level === "quiet" ? "Sessiz" : "Push"}</span>
+                <span className="ml-auto">{clock(m.at)}</span>
               </p>
               <p className="text-xs font-semibold text-foreground">{m.title}</p>
               <p className="text-[11px] text-muted-foreground">{m.body}</p>

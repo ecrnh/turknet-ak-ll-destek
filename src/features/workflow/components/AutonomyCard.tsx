@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, ListChecks } from "lucide-react";
+import { ChevronRight, Sparkles } from "lucide-react";
 import { useWorkflowStore } from "../store";
 import { isActive } from "../rules";
+import { statusSentence } from "../copy";
 import { IntentBox } from "./IntentBox";
 import { StatusPill } from "./ui";
 
-/** Home entry point for the autonomous platform: intent box + live process summary. */
+/** Home entry point: "Size nasıl yardımcı olabilirim?" + the most relevant process in progress. */
 export function AutonomyCard() {
   const workflows = useWorkflowStore((s) => s.workflows);
   const active = workflows.filter(isActive).sort((a, b) => b.updatedAt - a.updatedAt);
@@ -14,27 +15,29 @@ export function AutonomyCard() {
 
   return (
     <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
-      <Link to="/takip" className="flex items-center gap-3">
+      <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">
-          <ListChecks className="size-6" />
+          <Sparkles className="size-6" />
         </span>
         <div className="flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">Benim İçin Takip Et</p>
-          <p className="font-semibold leading-snug">Sen talebini söyle, süreci biz yönetelim</p>
+          <p className="text-lg font-semibold leading-snug">Size nasıl yardımcı olabilirim?</p>
+          <p className="text-xs text-primary-foreground/75">Talebinizi söyleyin, süreci sizin için yönetelim.</p>
         </div>
-        <ChevronRight className="size-5" />
-      </Link>
-      {top ? (
+      </div>
+      <IntentBox onDark className="mt-4" />
+      {top && (
         <Link to="/surec/$id" params={{ id: top.id }} className="mt-4 block rounded-2xl bg-primary-foreground/10 p-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-semibold">{top.title}</p>
             <StatusPill status={top.status} />
           </div>
-          <p className="mt-1 text-xs text-primary-foreground/80">{top.decision ? `Kararın bekleniyor: ${top.decision.prompt}` : `Sıradaki: ${top.nextStep ?? "—"}`}</p>
-          {active.length > 1 && <p className="mt-1 text-[11px] text-primary-foreground/70">+{active.length - 1} süreç daha takipte</p>}
+          <p className="mt-1 text-xs text-primary-foreground/80">{top.decision ? `Kararınızı bekliyoruz: ${top.decision.prompt}` : statusSentence(top)}</p>
         </Link>
-      ) : null}
-      <IntentBox onDark className="mt-4" />
+      )}
+      <Link to="/takip" className="mt-3 flex items-center justify-between text-sm font-semibold">
+        İşlemlerim{active.length ? ` · ${active.length} takipte` : ""}
+        <ChevronRight className="size-4" />
+      </Link>
     </div>
   );
 }

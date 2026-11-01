@@ -39,13 +39,19 @@ const KIND_FOR: Record<WorkflowType, NotifKind> = {
   billing_check: "bill",
   ai_usta: "agent",
   proactive_fault: "agent",
+  speed_optimize: "agent",
 };
 
-export function notify(workflowId: string, title: string, body: string) {
+/**
+ * Smart notification layer. "push" only for: a customer decision, a key milestone,
+ * an unexpected delay, a newly started process or a resolved problem.
+ * Routine progress is "quiet": visible in the app and history, no phone push.
+ */
+export function notify(workflowId: string, title: string, body: string, level: "push" | "quiet" = "push") {
   const wf = getWf(workflowId);
-  W.setState((s) => ({ messages: [...s.messages, { id: newId("MSG"), workflowId, title, body, at: now() }] }));
-  useAppStore.getState().notify({ kind: wf ? KIND_FOR[wf.type] : "support", title, body, to: `/surec/${workflowId}` });
-  log(workflowId, "system", "notify", `Müşteriye bildirim: “${title}”`);
+  W.setState((s) => ({ messages: [...s.messages, { id: newId("MSG"), workflowId, title, body, at: now(), level }] }));
+  if (level === "push") useAppStore.getState().notify({ kind: wf ? KIND_FOR[wf.type] : "support", title, body, to: `/surec/${workflowId}` });
+  log(workflowId, "system", "notify", level === "push" ? `Bildirim gönderildi: “${title}”` : `Uygulama içi bilgi (bildirim gönderilmedi): “${title}”`, level === "push" ? undefined : "Rutin gelişme; yalnızca önemli aşamalarda bildirim gönderilir");
 }
 
 /* ---------------- Workflows ---------------- */
@@ -65,7 +71,7 @@ export function createWorkflow(input: {
   }
   const t = now();
   const wf: Workflow = {
-    id: newId(input.type === "relocation" ? "NKL" : input.type === "billing_check" ? "FTR" : input.type === "temp_internet" ? "GCI" : input.type === "ai_usta" ? "USTA" : input.type === "proactive_fault" ? "PRO" : "ARZ"),
+    id: newId(input.type === "relocation" ? "NKL" : input.type === "billing_check" ? "FTR" : input.type === "temp_internet" ? "GCI" : input.type === "ai_usta" ? "USTA" : input.type === "proactive_fault" ? "PRO" : input.type === "speed_optimize" ? "HIZ" : "ARZ"),
     customerId: CUSTOMER.id,
     subscriptionId: SUBSCRIPTION.id,
     type: input.type,
@@ -144,11 +150,13 @@ export const registerDecision = (key: string, fn: DecisionHandler) => {
   decisionHandlers[key] = fn;
 };
 
-export function ask(wfId: string, d: Omit<Decision, "askedAt">, why: string) {
+/** Asks the customer to decide. Sends a push unless the customer is already inside the flow (push: false). */
+export function ask(wfId: string, d: Omit<Decision, "askedAt">, why: string, opts: { push?: boolean } = {}) {
   const wf = getWf(wfId);
   if (!wf || wf.decision?.key === d.key || wf.decisions.some((x) => x.key === d.key)) return;
   patchWf(wfId, () => ({ decision: { ...d, askedAt: now() }, status: "waiting_for_customer" }));
   log(wfId, "system", "decision", `Müşteriden karar istendi: ${d.prompt}`, why);
+  if (opts.push !== false) notify(wfId, "Kararınız gerekiyor", d.prompt);
 }
 
 export function decide(wfId: string, optionId: string, by: Actor = "customer"): boolean {
@@ -196,7 +204,9 @@ export function escalate(wfId: string, team: string, reason: string, actor: Acto
   const done = wf.steps.filter((s) => s.status === "done").map((s) => `✓ ${s.label}${s.note ? `: ${s.note}` : ""}`);
   const failed = wf.steps.filter((s) => s.status === "failed").map((s) => `✕ ${s.label}${s.note ? `: ${s.note}` : ""}`);
   const decisions = wf.decisions.map((d) => `Müşteri kararı: ${d.label}`);
-  const handoff = { id: newId("AKT"), team, reason, at: now(), context: [...done, ...failed, ...decisions] };
+  const c = W.getState().connectivity;
+  const conn = `Mevcut bağlantı: sabit ${c.fixed === "up" ? "aktif" : c.fixed === "degraded" ? "zayıf" : c.fixed === "down" ? "kesik" : "kurulmadı"} · mobil ${c.mobile === "active" ? "aktif" : c.mobile === "standby" ? "beklemede" : "kapalı"}`;
+  const handoff = { id: newId("AKT"), team, reason, at: now(), context: [...done, ...failed, ...decisions, conn] };
   patchWf(wfId, (w) => ({
     handoff,
     decision: null,
@@ -206,7 +216,7 @@ export function escalate(wfId: string, team: string, reason: string, actor: Acto
   }));
   W.setState((s) => ({ ops: s.ops.filter((o) => o.workflowId !== wfId) }));
   log(wfId, actor === "presenter" ? "presenter" : "system", "escalation", `${team} ekibine aktarıldı (${handoff.id}). ${handoff.context.length} adımlık bağlam aktarıldı.`, reason);
-  notify(wfId, "Uzman ekibimize aktardım", `${team} talebini devraldı. Yapılan tüm kontroller aktarıldı, baştan anlatmana gerek yok.`);
+  notify(wfId, "Konuyu uzman ekibimize ilettik", `${team} talebinizi devraldı. Yaptığımız tüm kontrolleri ilettik; sorunu baştan anlatmanız gerekmeyecek.`);
   useAppStore.getState().addRecord({ channel: "Otonom", title: `${wf.title} · uzman ekipte`, summary: reason, status: "Uzman ekipte", details: handoff.context, to: `/surec/${wfId}` });
 }
 
@@ -241,7 +251,7 @@ export function setWorkOrder(wfId: string, kind: WorkOrderKind, status: WorkOrde
   log(wfId, "system", "workorder", `İş emri ${wo.id}: ${WO_LABEL[status]}`);
 }
 
-export const WO_LABEL: Record<WorkOrderStatus, string> = { open: "Açık", in_progress: "Yürütülüyor", waiting_external: "Dış sistem bekleniyor", done: "Tamamlandı", cancelled: "İptal" };
+export const WO_LABEL: Record<WorkOrderStatus, string> = { open: "Açık", in_progress: "Devam ediyor", waiting_external: "Yanıt bekleniyor", done: "Tamamlandı", cancelled: "İptal" };
 
 export function book(wfId: string, slot: { id: string; label: string }, workOrderId: string | null) {
   const existing = W.getState().appointments.find((a) => a.workflowId === wfId);

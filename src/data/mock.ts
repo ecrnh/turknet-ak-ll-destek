@@ -405,22 +405,23 @@ export const TEAMS = {
 } as const;
 
 export const TEMP_MOBILE_OFFER = {
-  title: "Geçici mobil internet",
-  device: "4.5G mobil modem + SIM (iade edilir)",
+  title: "TürkNet Box · geçici internet",
+  device: "SIM kartlı TürkNet Box (4.5G, iade edilir)",
   price: "Örnek ücret: ₺199/ay (demo)",
   quota: "100 GB / ay",
   coverage: "Kadıköy Moda: 4.5G sinyal iyi (demo kapsama verisi)",
   delivery: "Kurye ile 1 iş günü (tahmini, demo)",
   terms: [
-    "Sabit internetin kurulana kadar geçerli; kurulumda otomatik sona erer.",
+    "Sabit internetiniz hazır olana kadar geçerlidir; kurulumda otomatik sona erer.",
     "Cihaz 15 gün içinde iade edilmezse cihaz bedeli faturaya yansır (demo koşul).",
-    "Onay vermeden sipariş verilmez, ücret yansımaz.",
+    "Siz onay vermeden sipariş verilmez, ücret yansımaz.",
+    "Varsayımsal ürün konsepti: mobil operatör iş ortaklığı varsayılmıştır (demo).",
   ],
 };
 
 export const HYBRID_OFFER = {
   title: "Hibrit yedek bağlantı",
-  device: "Mevcut modemin (ZTE F6640) + uzaktan tanımlanan eSIM",
+  device: "Mevcut modeminiz (ZTE F6640) + uzaktan tanımlanan eSIM",
   price: "Örnek ücret: kesinti süresince ücretsiz, sonrası ₺49/ay opsiyonel (demo)",
   quota: "Yedek modda 50 GB",
   coverage: "Ümraniye Çakmak: 4.5G sinyal orta-iyi (demo kapsama verisi)",
@@ -451,16 +452,16 @@ export const BILLING_CHECKS = [
 
 export const AI_USTA_STEPS = [
   {
-    id: "reboot",
-    title: "Modemi yeniden başlat",
-    text: "Modemin arkasındaki güç düğmesiyle kapat, 30 saniye bekle ve tekrar aç. Işıkların oturması 2 dakika sürebilir.",
-    safe: "Güvenli adım: ayarların silinmez. Reset tuşuna basma.",
+    id: "cables",
+    title: "Güç ve kablo bağlantılarını kontrol edin",
+    text: "Modemin güç kablosunun takılı olduğundan emin olun. Ardından modemin altındaki fiber (WAN) kablosunu nazikçe çıkarıp “tık” sesi gelene kadar geri takın.",
+    safe: "Güvenli adım: kabloyu bükmeyin, reset tuşuna basmayın.",
   },
   {
-    id: "fiber",
-    title: "Fiber kablo konnektörünü kontrol et",
-    text: "Modemin altındaki yeşil uçlu fiber kabloyu nazikçe çıkar, “tık” sesi gelene kadar geri tak. Kabloyu bükme.",
-    safe: "Güvenli adım: kabloyu kesme veya bükme, reset tuşuna basma.",
+    id: "reboot",
+    title: "Modemi yeniden başlatın",
+    text: "Modemin arkasındaki güç düğmesiyle kapatın, 30 saniye bekleyip tekrar açın. Işıkların yerine oturması 2 dakika sürebilir.",
+    safe: "Güvenli adım: ayarlarınız silinmez.",
   },
 ];
 
@@ -471,10 +472,11 @@ export const MODEM_LED_DEMO = [
   { key: "wifi", name: "Wi-Fi", state: "Yanıp sönüyor", ok: true },
 ];
 
-export const INTENT_KEYWORDS: { intent: "billing" | "ai_usta" | "relocation" | "temp_internet" | "track"; words: string[] }[] = [
-  { intent: "billing", words: ["borç", "ödeme", "ödedim", "fatura", "mükerrer", "iade", "tahsil", "ücret"] },
+export const INTENT_KEYWORDS: { intent: "billing" | "ai_usta" | "relocation" | "temp_internet" | "speed" | "track"; words: string[] }[] = [
+  { intent: "billing", words: ["borç", "ödeme", "ödedim", "fatura", "mükerrer", "iade", "tahsil", "ücret", "tutarsız"] },
   { intent: "relocation", words: ["taşın", "nakil", "yeni adres", "adres değiş", "ev değiş", "taşı"] },
-  { intent: "temp_internet", words: ["geçici internet", "mobil internet", "hibrit", "yedek bağlantı"] },
-  { intent: "ai_usta", words: ["çalışmıyor", "ışık", "modem", "internet yok", "bağlantı yok", "kopuyor", "bağlanamıyorum"] },
-  { intent: "track", words: ["takip", "durum", "talebim", "ne oldu", "nerede"] },
+  { intent: "temp_internet", words: ["geçici internet", "mobil internet", "hibrit", "yedek bağlantı", "box"] },
+  { intent: "speed", words: ["yavaş", "hız düş", "hızım", "düşük hız", "hız sorun", "donuyor", "kasıyor"] },
+  { intent: "ai_usta", words: ["çalışmıyor", "kesildi", "kesinti", "ışık", "modem", "internet yok", "bağlantı yok", "kopuyor", "bağlanamıyorum", "gitti"] },
+  { intent: "track", words: ["takip", "durum", "talebim", "işlemim", "ne oldu", "nerede", "devam eden"] },
 ];

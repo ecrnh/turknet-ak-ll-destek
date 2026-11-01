@@ -20,5 +20,7 @@
 - Zustand selectors must return stored references; filter/sort after selecting. Why: selectors that build new arrays cause infinite re-render loops.
 - All mock data and copy constants come from `src/data/mock.ts`. Why: single source for demo content.
 - Overlays/sheets use `position: fixed` inside the transformed phone frame instead of Radix portals. Why: portals would escape the device frame.
-- Business rules with tests live in pure modules (e.g. `src/features/giftData/gift.ts`) covered by `src/test/rules.test.ts` and `src/test/workflow.test.ts`.
+- Business rules with tests live in pure modules (e.g. `src/features/giftData/gift.ts`, `src/features/workflow/rules.ts`) covered by `src/test/*.test.ts`; `src/test/platform.test.ts` plays every presenter scenario outcome end to end. Why: scenario regressions surface without a browser.
 - Analytics: call `track()` / `useFlow()` from `src/lib/analytics.ts`; events go to console and the app store for the dashboard.
+- Customer-facing workflow wording comes only from `STATUS_LABEL` (rules.ts) and `src/features/workflow/copy.ts`; technical detail goes to the audit log / `TechDetails`. Why: the same state must read the same everywhere.
+- `notify()` defaults to push; routine progress passes `"quiet"` and in-flow `ask()` calls pass `{ push: false }`. Why: phone pushes only for decisions, milestones, delays, new processes and resolutions.

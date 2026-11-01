@@ -26,7 +26,7 @@ export function BillingShieldScreen() {
     const r = runBillingShield();
     setRan(true);
     if (r.wfId) navigate({ to: "/surec/$id", params: { id: r.wfId } });
-    else toast.success("Tutarsızlık bulunamadı", { description: `${BILLING_CHECKS.length} kontrolün hepsi uyumlu.` });
+    else toast.success("Faturanız uyumlu görünüyor", { description: `${BILLING_CHECKS.length} kontrolün hepsi uyumlu.` });
   };
 
   return (
@@ -37,8 +37,8 @@ export function BillingShieldScreen() {
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">
             <ShieldCheck className="size-6" />
           </span>
-          <p className="mt-3 text-lg font-semibold leading-snug">Faturanı ve ödemelerini biz karşılaştıralım; olası bir tutarsızlığı sen fark etmeden yakalayalım.</p>
-          <p className="mt-2 text-xs text-primary-foreground/80">Fatura Kalkanı kayıtları kendisi değiştirmez. İade, borç düzeltme gibi işlemler yalnızca senin onayınla ve yetkili ekip üzerinden yapılır.</p>
+          <p className="mt-3 text-lg font-semibold leading-snug">Faturanızı ve ödemelerinizi biz karşılaştıralım; olası bir farklılığı siz fark etmeden yakalayalım.</p>
+          <p className="mt-2 text-xs text-primary-foreground/80">Fatura Kalkanı kayıtları kendisi değiştirmez. İade veya borç düzeltme yalnızca sizin onayınızla ve yetkili ekip üzerinden yapılır.</p>
         </div>
 
         {active && (
@@ -67,16 +67,13 @@ export function BillingShieldScreen() {
               return (
                 <li key={c.code} className="flex items-center justify-between gap-2">
                   <span className="text-foreground">{c.label}</span>
-                  <span className={cn("shrink-0 text-xs font-bold", !checked ? "text-muted-foreground" : hit ? "text-orange-deep" : "text-success")}>{!checked ? "Kontrol edilmedi" : hit ? "Olası tutarsızlık" : "Uyumlu"}</span>
+                  <span className={cn("shrink-0 text-xs font-bold", !checked ? "text-muted-foreground" : hit ? "text-orange-deep" : "text-success")}>{!checked ? "Kontrol edilmedi" : hit ? "Farklılık olabilir" : "Uyumlu"}</span>
                 </li>
               );
             })}
           </ul>
           <Button size="xl" className="mt-5 w-full" onClick={run}>
-            Kontrolleri çalıştır
-          </Button>
-          <Button variant="outline" className="mt-2 w-full" onClick={run}>
-            “Ödememi yaptım ama borç görünüyor”
+            Faturamı İncele
           </Button>
         </div>
         <DemoNote className="pb-2">Fatura ve ödeme kayıtları örnek verilerdir; gerçek fatura sistemine bağlanılmaz.</DemoNote>

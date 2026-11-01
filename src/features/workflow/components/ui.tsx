@@ -7,7 +7,9 @@ import {
   ChevronRight,
   CircleDashed,
   Clock3,
+  ChevronDown,
   CloudOff,
+  Gauge,
   Headset,
   Hourglass,
   Loader2,
@@ -24,10 +26,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { fmtRelative } from "@/lib/format";
+import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { decide, WO_LABEL } from "../engine";
 import { STATUS_LABEL } from "../rules";
+import { customerAction, lastDoneStep, TYPE_LABEL } from "../copy";
 import { useWorkflowStore } from "../store";
 import type { Actor, AuditEvent, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
 
@@ -38,16 +41,10 @@ export const TYPE_ICON: Record<WorkflowType, LucideIcon> = {
   billing_check: ShieldCheck,
   ai_usta: ScanEye,
   proactive_fault: Radar,
+  speed_optimize: Gauge,
 };
 
-export const TYPE_LABEL: Record<WorkflowType, string> = {
-  relocation: "Taşınma",
-  temp_internet: "Geçici internet",
-  outage_recovery: "Kesinti",
-  billing_check: "Fatura Kalkanı",
-  ai_usta: "AI Usta",
-  proactive_fault: "Proaktif",
-};
+export { TYPE_LABEL };
 
 const STATUS_STYLE: Record<WorkflowStatus, string> = {
   pending: "bg-icon-box text-primary",
@@ -74,20 +71,36 @@ export function StepIcon({ status, className }: { status: StepStatus | "running"
   return <span className={cn("m-0.5 size-4 shrink-0 rounded-full border-2 border-border", className)} aria-label="Sırada" />;
 }
 
-export function StepTimeline({ wf }: { wf: Workflow }) {
+/** Simple mode (default) shows only meaningful stages; `detailed` adds skipped steps and technical notes. */
+export function StepTimeline({ wf, detailed }: { wf: Workflow; detailed?: boolean }) {
+  const steps = detailed ? wf.steps : wf.steps.filter((s) => s.status !== "skipped");
   return (
     <ol className="space-y-0">
-      {wf.steps.map((s, i) => (
+      {steps.map((s, i) => (
         <li key={s.key} className="relative flex gap-3 pb-4 last:pb-0">
-          {i < wf.steps.length - 1 && <span className="absolute left-[9px] top-6 h-[calc(100%-18px)] w-0.5 bg-border" aria-hidden />}
+          {i < steps.length - 1 && <span className="absolute left-[9px] top-6 h-[calc(100%-18px)] w-0.5 bg-border" aria-hidden />}
           <StepIcon status={s.status} />
           <div className="min-w-0 flex-1">
             <p className={cn("text-sm font-semibold", s.status === "pending" || s.status === "skipped" ? "text-muted-foreground" : "text-foreground")}>{s.label}</p>
-            {s.note && <p className="mt-0.5 text-xs text-muted-foreground">{s.note}</p>}
+            {detailed && s.note && <p className="mt-0.5 text-xs text-muted-foreground">{s.note}</p>}
           </div>
         </li>
       ))}
     </ol>
+  );
+}
+
+/** Second information level: "Teknik detayları gör". Closed by default. */
+export function TechDetails({ title = "Teknik detayları gör", children, className }: { title?: string; children: React.ReactNode; className?: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={cn("rounded-card bg-card shadow-card", className)}>
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex min-h-12 w-full items-center justify-between px-5 text-sm font-semibold text-primary">
+        {title}
+        <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && <div className="space-y-4 border-t border-border px-5 pb-5 pt-4">{children}</div>}
+    </div>
   );
 }
 
@@ -98,13 +111,13 @@ export function DecisionCard({ wf }: { wf: Workflow }) {
   const options = d.key === "usta_photo" ? d.options.filter((o) => o.id !== "uploaded") : d.options;
   return (
     <div className="rounded-card border-2 border-magenta/30 bg-card p-5 shadow-card" role="group" aria-label="Karar bekleniyor">
-      <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Senden bir karar bekleniyor</p>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Sizden bir karar bekleniyor</p>
       <h3 className="mt-1 text-lg font-semibold leading-snug text-primary">{d.prompt}</h3>
       {d.detail && <p className="mt-1.5 text-sm text-muted-foreground">{d.detail}</p>}
       {d.key === "usta_photo" && (
         <label className="mt-4 flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/30 bg-icon-box px-4 text-sm font-semibold text-primary">
           {preview ? <img src={preview} alt="Yüklenen modem fotoğrafı" className="h-10 w-10 rounded-lg object-cover" /> : <Upload className="size-5" />}
-          Fotoğraf çek veya yükle
+          Fotoğraf Çek veya Yükle
           <input
             type="file"
             accept="image/*"
@@ -195,8 +208,12 @@ export function AuditList({ events, showWf, dense }: { events: AuditEvent[]; sho
   );
 }
 
+/** Track-hub card: name, start, status, last step, next step, what the customer must do, ETA, details. */
 export function WorkflowCard({ wf }: { wf: Workflow }) {
   const Icon = TYPE_ICON[wf.type];
+  const action = customerAction(wf);
+  const last = lastDoneStep(wf);
+  const closed = wf.status === "completed" || wf.status === "failed";
   return (
     <Link to="/surec/$id" params={{ id: wf.id }} className="block rounded-card bg-card p-4 shadow-card transition-transform active:scale-[0.99]">
       <div className="flex items-start gap-3">
@@ -208,26 +225,37 @@ export function WorkflowCard({ wf }: { wf: Workflow }) {
             <p className="font-semibold leading-tight text-primary">{wf.title}</p>
             <StatusPill status={wf.status} />
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {wf.id} · {fmtRelative(wf.updatedAt)}
-          </p>
-          {wf.decision ? (
-            <p className="mt-2 rounded-xl bg-magenta-soft px-3 py-2 text-xs font-semibold text-magenta">Karar bekleniyor: {wf.decision.prompt}</p>
-          ) : wf.status === "completed" ? (
-            <p className="mt-2 text-xs text-success">{wf.outcome?.summary}</p>
-          ) : (
-            <p className="mt-2 text-xs text-foreground">
-              <span className="text-muted-foreground">Sıradaki: </span>
-              {wf.nextStep ?? (wf.handoff ? `${wf.handoff.team} inceliyor` : "—")}
-            </p>
-          )}
-          {wf.eta && wf.status !== "completed" && (
-            <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
-              <Clock3 className="size-3" /> {wf.eta}
-            </p>
-          )}
+          <p className="mt-1 text-[11px] text-muted-foreground">Başlangıç {fmtDateTime(wf.createdAt)}</p>
         </div>
       </div>
+      {closed ? (
+        <p className="mt-3 text-sm text-success">{wf.outcome?.summary ?? "Süreç kapandı"}</p>
+      ) : (
+        <dl className="mt-3 space-y-1.5 text-xs">
+          {last && (
+            <div className="flex gap-2">
+              <dt className="w-20 shrink-0 text-muted-foreground">Son adım</dt>
+              <dd className="text-foreground">{last}</dd>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <dt className="w-20 shrink-0 text-muted-foreground">Sıradaki</dt>
+            <dd className="text-foreground">{wf.decision ? "Sizin kararınız" : (wf.nextStep ?? (wf.handoff ? `${wf.handoff.team} inceliyor` : "—"))}</dd>
+          </div>
+          {wf.eta && (
+            <div className="flex gap-2">
+              <dt className="w-20 shrink-0 text-muted-foreground">Tahmini</dt>
+              <dd className="flex items-center gap-1 text-foreground">
+                <Clock3 className="size-3" /> {wf.eta}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+      {!closed && <p className={cn("mt-3 rounded-xl px-3 py-2 text-xs font-semibold", action.needed ? "bg-magenta-soft text-magenta" : "bg-muted text-muted-foreground")}>{action.needed && wf.decision ? `Sizden beklenen: ${wf.decision.prompt}` : action.text}</p>}
+      <p className="mt-2 flex items-center justify-end gap-1 text-xs font-semibold text-magenta">
+        Detayları Gör <ChevronRight className="size-3.5" />
+      </p>
     </Link>
   );
 }
@@ -241,12 +269,12 @@ export function HandoffCard({ wf }: { wf: Workflow }) {
           <Headset className="size-5" />
         </span>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">Uzman ekibe aktarıldı · {wf.handoff.id}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">Uzman ekibimize iletildi · {wf.handoff.id}</p>
           <p className="font-semibold">{wf.handoff.team}</p>
         </div>
       </div>
       <p className="mt-3 text-sm text-primary-foreground/90">{wf.handoff.reason}</p>
-      <p className="mt-3 text-xs font-semibold text-primary-foreground/70">Ekibe aktarılan bağlam (baştan anlatmana gerek yok):</p>
+      <p className="mt-3 text-xs font-semibold text-primary-foreground/70">Ekibe ilettiğimiz bilgiler (sorunu baştan anlatmanız gerekmez):</p>
       <ul className="mt-1.5 space-y-1 text-xs text-primary-foreground/90">
         {wf.handoff.context.map((c, i) => (
           <li key={`${i}-${c}`}>{c}</li>
@@ -261,7 +289,7 @@ export function OutcomeCard({ wf }: { wf: Workflow }) {
   return (
     <div className="rounded-card border border-success/25 bg-success-soft p-5">
       <div className="flex items-center gap-2 font-semibold text-success">
-        <BadgeCheck className="size-5" /> Süreç tamamlandı
+        <BadgeCheck className="size-5" /> İşleminiz tamamlandı
       </div>
       <p className="mt-1 font-semibold text-foreground">{wf.outcome.summary}</p>
       <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
@@ -308,7 +336,7 @@ export function RecordsList({ wf }: { wf: Workflow }) {
         <Link key={t.id} to="/surec/$id" params={{ id: t.workflowId }} className="flex items-center gap-3 py-3">
           <Smartphone className="size-5 shrink-0 text-primary" strokeWidth={1.75} />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">{t.kind === "hybrid" ? "Hibrit yedek" : "Geçici mobil internet"}</p>
+            <p className="text-sm font-semibold text-foreground">{t.kind === "hybrid" ? "Hibrit yedek" : "TürkNet Box"}</p>
             <p className="text-[11px] text-muted-foreground">
               {t.id} · {t.price}
             </p>
@@ -320,7 +348,7 @@ export function RecordsList({ wf }: { wf: Workflow }) {
   );
 }
 
-export const TEMP_LABEL: Record<string, string> = { offered: "Teklif", accepted: "Onaylandı", declined: "Reddedildi", ordered: "Sipariş", shipped: "Teslim edildi", active: "Aktif", ended: "Sona erdi" };
+export const TEMP_LABEL: Record<string, string> = { offered: "Teklif", accepted: "Onaylandı", declined: "İstenmedi", ordered: "Hazırlanıyor", shipped: "Teslim edildi", active: "Aktif", ended: "Sona erdi" };
 
 export function DemoNote({ className, children }: { className?: string; children?: React.ReactNode }) {
   return (

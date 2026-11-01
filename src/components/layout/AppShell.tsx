@@ -9,6 +9,7 @@ import { HelpCenterSheet } from "@/features/help/HelpCenterSheet";
 import { OutageOverlay, RestoredOverlay } from "@/features/giftData/components/OutageOverlays";
 import { rehydrateAll } from "@/features/demo/scenarios";
 import { fmtClock } from "@/lib/format";
+import { CallSmsLayer } from "@/features/workflow/components/CallSms";
 import { BottomNav } from "./BottomNav";
 import { ActingBanner, PushBanner, Splash } from "./Overlays";
 import { TurknetLogo } from "./headers";
@@ -54,6 +55,7 @@ function PhoneApp() {
       <OutageOverlay />
       <RestoredOverlay />
       <PushBanner />
+      <CallSmsLayer />
       <Toaster position="top-center" richColors closeButton />
     </div>
   );

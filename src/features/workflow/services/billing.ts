@@ -6,7 +6,7 @@
  */
 import { BILLING_CHECKS, BILLING_SEED, TEAMS } from "@/data/mock";
 import { fmtTL } from "@/lib/format";
-import { ask, chain, complete, createWorkflow, escalate, getWf, log, notify, registerDecision, registerOp, schedule, setData, setStatus, step, stepStatus, teamResolve, workOrder } from "../engine";
+import { ask, chain, choiceOf, complete, createWorkflow, escalate, getWf, log, notify, registerDecision, registerOp, schedule, setData, setStatus, step, stepStatus, teamResolve, workOrder } from "../engine";
 import { MockBillingAPI } from "../mockServices";
 import { compareBilling } from "../rules";
 import { useWorkflowStore as W } from "../store";
@@ -35,11 +35,12 @@ export function runBillingShield(): { wfId: string | null; findings: number } {
     title: `Fatura Kalkanı · ${bill.period}`,
     dedupeKey: `billing:${bill.id}`,
     steps: [
-      { key: "match", label: "Ödeme ve fatura eşleştirme" },
-      { key: "detect", label: "Olası tutarsızlık tespiti" },
-      { key: "explain", label: "Müşteriye karşılaştırmalı açıklama" },
-      { key: "reconcile", label: "Ödeme mutabakat kontrolü" },
-      { key: "update", label: "Borç kaydının yetkili süreçle güncellenmesi" },
+      { key: "match", label: "Ödeme ve fatura eşleştirildi" },
+      { key: "detect", label: "Olası farklılık tespit edildi" },
+      { key: "explain", label: "Size karşılaştırmalı açıklama" },
+      { key: "consent", label: "İnceleme onayınız" },
+      { key: "reconcile", label: "Ödeme ve fatura bilgileri karşılaştırılıyor" },
+      { key: "update", label: "Borç bilgisi yetkili süreçle güncellendi" },
       { key: "review", label: "İnceleme talebi" },
       { key: "inform", label: "Sonuç bilgilendirmesi" },
     ],
@@ -49,7 +50,7 @@ export function runBillingShield(): { wfId: string | null; findings: number } {
   if (!created) return { wfId: wf.id, findings: findings.length };
   step(wf.id, "match", "done", payments.map((p) => `${p.id} ${fmtTL(p.amount)}`).join(" + ") + ` ↔ ${bill.id} ${fmtTL(bill.amount)}`);
   step(wf.id, "detect", "done", findings.map((f) => f.title).join(" · "), "Bu bir kesin hata değil, olasılıktır; doğrulanmadan kayıt değiştirilmez");
-  notify(wf.id, "Faturanda olası bir tutarsızlık buldum", "Ödemen görünüyor ama borç ekranın güncellenmemiş olabilir. Kontrol ediyorum, senin bir şey yapmana gerek yok.");
+  notify(wf.id, "Faturanızı kontrol ettik", "Son ödemeniz ile borç bilginiz arasında güncelleme gerektiren bir farklılık olabilir.", "quiet");
   chain("billing.explain", wf.id, 1200);
   return { wfId: wf.id, findings: findings.length };
 }
@@ -57,14 +58,48 @@ export function runBillingShield(): { wfId: string | null; findings: number } {
 export function explainBilling(id: string) {
   if (stepStatus(id, "explain") !== "pending") return;
   step(id, "explain", "done", "Ödeme ve borç yan yana gösterildi; hiçbir kayıt değiştirilmedi");
-  chain("billing.reconcile", id, 1200);
+  step(id, "consent", "waiting");
+  ask(
+    id,
+    {
+      key: "billing_start",
+      prompt: "Sizin için inceleme başlatalım mı?",
+      detail: "Faturanızı kontrol ettik. Son ödemeniz ile mevcut borç bilginiz arasında güncelleme gerektiren bir farklılık olabilir. Tekrar ödeme yapmanıza gerek yok.",
+      options: [
+        { id: "start", label: "İncelemeyi Başlat", desc: "Ödeme ve fatura bilgileriniz karşılaştırılır; kayıtlar yalnızca yetkili süreçle güncellenir.", primary: true },
+        { id: "later", label: "Daha Sonra", desc: "Hiçbir kayıt değiştirilmez." },
+      ],
+    },
+    "Fatura incelemesi müşterinin onayıyla başlatılır",
+  );
 }
 registerOp("billing.explain", explainBilling);
 
+registerDecision("billing_start", (id, opt) => {
+  if (opt === "later") {
+    step(id, "consent", "waiting", "Müşteri daha sonra başlatmak istedi");
+    setStatus(id, "waiting_for_customer", { blocker: "İncelemeyi siz başlattığınızda devam edeceğiz" });
+    return;
+  }
+  step(id, "consent", "done", "Müşteri incelemeyi onayladı");
+  chain("billing.reconcile", id, 1000);
+});
+
+/** "İncelemeyi Başlat" after the customer chose "Daha Sonra". */
+export function resumeBillingReview(id: string) {
+  if (stepStatus(id, "consent") !== "waiting" || choiceOf(id, "billing_start") !== "later") return;
+  step(id, "consent", "done", "Müşteri incelemeyi sonradan başlattı");
+  setStatus(id, "in_progress", { blocker: null });
+  startReconcile(id);
+}
+
 export function startReconcile(id: string) {
   if (stepStatus(id, "reconcile") !== "pending") return;
+  const consent = stepStatus(id, "consent");
+  if (consent && consent !== "done") return;
   step(id, "reconcile", "in_progress", `Sorgu: ${MockBillingAPI.name} · ref ${BILLING_SEED.payment.ref}`);
-  setStatus(id, "waiting_for_external_system", { blocker: "Ödeme kuruluşundan mutabakat yanıtı bekleniyor", eta: "Genelde birkaç dakika (demo)" });
+  setStatus(id, "waiting_for_external_system", { blocker: "Ödeme kuruluşundan yanıt bekleniyor", eta: "Genellikle birkaç dakika (demo)" });
+  notify(id, "Faturanız için inceleme başlattık", "Ödemenizi kontrol ediyoruz. Sonuçlandığında size haber vereceğiz.");
   schedule("billing.reconciled", id, 1800);
 }
 registerOp("billing.reconcile", startReconcile);
@@ -101,11 +136,11 @@ export function startBillingReview(id: string) {
     {
       key: "billing_refund",
       prompt: `Fazladan çekilen ${fmtTL(BILLING_SEED.duplicate.amount)} için ne yapalım?`,
-      detail: "Onayın olmadan hiçbir iade veya mahsup yapılmaz. Talebin yetkili finans ekibine gider.",
+      detail: "Onayınız olmadan hiçbir iade veya mahsup yapılmaz. Talebiniz yetkili finans ekibine iletilir.",
       options: [
-        { id: "refund", label: "Kartıma iade edilsin", desc: "Finans onayından sonra 3–7 iş günü (demo)", primary: true },
-        { id: "offset", label: "Sonraki faturamdan düşülsün", desc: "Kasım faturasına mahsup (finans onayıyla)" },
-        { id: "wait", label: "Şimdilik bir şey yapma", desc: "Kayıt değiştirilmez" },
+        { id: "refund", label: "Kartıma İade Edilsin", desc: "Finans onayından sonra 3–7 iş günü (demo)", primary: true },
+        { id: "offset", label: "Sonraki Faturamdan Düşülsün", desc: "Kasım faturasına mahsup (finans onayıyla)" },
+        { id: "wait", label: "Daha Sonra", desc: "Kayıt değiştirilmez" },
       ],
     },
     "Para iadesi müşteri onayı ve yetkili işlem olmadan yapılmaz",
@@ -131,7 +166,7 @@ export function informBilling(id: string) {
   if (!wf || stepStatus(id, "inform") !== "pending" || stepStatus(id, "update") !== "done") return;
   step(id, "inform", "done", "Sonuç ve yapılan kontroller müşteriye iletildi");
   if (stepStatus(id, "review") === "pending") step(id, "review", "skipped", "Gerekmedi");
-  notify(id, "Borç ekranın düzeltildi", `${BILLING_SEED.bill.period} ödemen teyit edildi, borcun ${fmtTL(0)}. Kayıt işlem geçmişine eklendi.`);
+  notify(id, "Ödemeniz doğrulandı", `${BILLING_SEED.bill.period} ödemeniz teyit edildi, güncel borcunuz ${fmtTL(0)}. Sonuç işlem geçmişinize eklendi.`);
   complete(id, {
     resolved: true,
     summary: "Ödeme teyit edildi, borç görünümü düzeltildi",
@@ -150,5 +185,5 @@ export function financeResolve(id: string) {
     summary: `Finans ekibi ${choice?.optionId === "offset" ? "mahsubu" : "iadeyi"} onayladı (demo)`,
     results: ["Borç görünümü düzeltildi", `Fazla tahsilat: ${fmtTL(BILLING_SEED.duplicate.amount)} → ${choice?.label ?? "—"}`, "Onay: Finans · Tahsilat Mutabakat Ekibi (demo)"],
   });
-  notify(id, choice?.optionId === "offset" ? "Mahsup talebin onaylandı" : "İade talebin onaylandı", `${fmtTL(BILLING_SEED.duplicate.amount)} ${choice?.optionId === "offset" ? "Kasım faturandan düşülecek" : "3–7 iş günü içinde kartına yansıyacak"} (demo).`);
+  notify(id, choice?.optionId === "offset" ? "Mahsup talebiniz onaylandı" : "İade talebiniz onaylandı", `${fmtTL(BILLING_SEED.duplicate.amount)} ${choice?.optionId === "offset" ? "Kasım faturanızdan düşülecek" : "3–7 iş günü içinde kartınıza yansıyacak"} (demo).`);
 }
