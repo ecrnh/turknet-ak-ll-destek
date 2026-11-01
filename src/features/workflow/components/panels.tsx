@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
-import { BILLING_CHECKS, CURRENT_ADDRESS, HYBRID_OFFER, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
+import { BILLING_CHECKS, CURRENT_ADDRESS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
 import { fmtRelative, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { choiceOf } from "../engine";
@@ -127,8 +127,7 @@ export function BoxCard({ className }: { className?: string }) {
 
 export function TempPanel({ wf }: { wf: Workflow }) {
   const req = useWorkflowStore((s) => s.temp.find((t) => t.workflowId === wf.id));
-  const isBox = wf.data["kind"] !== "hybrid";
-  const offer = isBox ? TEMP_MOBILE_OFFER : HYBRID_OFFER;
+  const offer = TEMP_MOBILE_OFFER;
   const order = ["accepted", "ordered", "shipped", "active", "ended"];
   const idx = req ? order.indexOf(req.status) : -1;
   return (
@@ -157,7 +156,7 @@ export function TempPanel({ wf }: { wf: Workflow }) {
           ))}
         </dl>
       </Box>
-      {isBox && <BoxCard />}
+      <BoxCard />
     </>
   );
 }
@@ -376,13 +375,13 @@ export function ConnectivityPanel({ compact }: { compact?: boolean }) {
       <div className="grid grid-cols-2 gap-2">
         <div className={cn("rounded-2xl p-3", fixedOk ? "bg-success-soft" : c.fixed === "degraded" ? "bg-warning-soft" : "bg-destructive-soft")}>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            {fixedOk ? <Router className="size-4 text-success" /> : <WifiOff className="size-4 text-destructive" />} Sabit fiber
+            {fixedOk ? <Router className="size-4 text-success" /> : <WifiOff className="size-4 text-destructive" />} Ana bağlantı
           </div>
           <p className={cn("mt-1 font-bold", fixedOk ? "text-success" : c.fixed === "degraded" ? "text-warning" : "text-destructive")}>{FIXED_LABEL[c.fixed]}</p>
         </div>
         <div className={cn("rounded-2xl p-3", c.mobile === "active" ? "bg-orange-soft" : "bg-muted")}>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Smartphone className={cn("size-4", c.mobile === "active" ? "text-orange-deep" : "text-muted-foreground")} /> Mobil yedek
+            <Smartphone className={cn("size-4", c.mobile === "active" ? "text-orange-deep" : "text-muted-foreground")} /> Yedek bağlantı
           </div>
           <p className={cn("mt-1 font-bold", c.mobile === "active" ? "text-orange-deep" : "text-foreground")}>{MOBILE_LABEL[c.mobile]}</p>
         </div>
@@ -391,7 +390,7 @@ export function ConnectivityPanel({ compact }: { compact?: boolean }) {
         <span className="flex items-center gap-1.5 text-muted-foreground">
           <Wifi className="size-4" /> Şu an kullanılan
         </span>
-        <span className="font-semibold text-foreground">{c.mode === "fixed" ? "Sabit fiber" : c.mode === "hybrid_backup" ? "Hibrit · yedek bağlantı" : "TürkNet Box"}</span>
+        <span className="font-semibold text-foreground">{c.mode === "fixed" ? "Ana bağlantı (fiber)" : c.mode === "hybrid_backup" ? "Hibrit İnternet · yedek bağlantı" : "TürkNet Box"}</span>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-xl bg-muted px-3 py-2">
