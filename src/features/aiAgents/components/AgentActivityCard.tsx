@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Bot, ChevronRight, Loader2 } from "lucide-react";
 import { useAgentsStore } from "../store";
+import { useWorkflowStore } from "@/features/workflow/store";
 import { AGENT_DEFS, SPEED_FIX_STEPS } from "@/data/mock";
 import { fmtRelative } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
@@ -10,13 +11,13 @@ import { Progress } from "@/components/ui/progress";
 export function AgentActivityCard() {
   const run = useAgentsStore((s) => s.speedRun);
   const actions = useAgentsStore((s) => s.actions);
-  const backup = useAgentsStore((s) => s.backup);
+  const backupOn = useWorkflowStore((s) => s.hybrid.status === "active");
   const stats = useAgentsStore((s) => s.stats);
   const latest = actions.find((a) => !a.undone);
   const running = run.status === "running";
 
   return (
-    <Link to={running ? "/ajanlar/hiz" : backup.active ? "/ajanlar/yedek" : "/ajanlar"} className="block rounded-card bg-plum p-5 text-primary-foreground shadow-float">
+    <Link to={running ? "/ajanlar/hiz" : backupOn ? "/hibrit" : "/ajanlar"} className="block rounded-card bg-plum p-5 text-primary-foreground shadow-float">
       <div className="flex items-center gap-3">
         <span className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">
           <Bot className="size-6" />
@@ -24,7 +25,7 @@ export function AgentActivityCard() {
         </span>
         <div className="flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">Ajan Etkinlik · canlı</p>
-          <p className="font-semibold">{running ? "Hız Koruyucu çalışıyor…" : backup.active ? "Kesinti Yedekleme aktif" : "4 ajan hattını izliyor"}</p>
+          <p className="font-semibold">{running ? "Hız Koruyucu çalışıyor…" : backupOn ? "Hibrit İnternet ile bağlısınız" : "4 ajan hattını izliyor"}</p>
         </div>
         <ChevronRight className="size-5" />
       </div>

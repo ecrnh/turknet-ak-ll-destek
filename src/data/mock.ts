@@ -68,21 +68,21 @@ export const HERO_SLIDES = [
     icon: "qr",
   },
   {
-    id: "gift",
+    id: "hybrid",
     kind: "feature" as const,
-    eyebrow: "HER HATTA HEDİYE",
-    title: "Kesinti Olursa İnternet Bizden",
-    text: "Kesinti 6 saati geçerse hangi operatörü kullanırsan kullan hattına GB hediye.",
-    cta: "Hediye Cüzdanım",
-    to: "/hediye",
-    icon: "gift",
+    eyebrow: "ÜCRETSİZ · ABONELİĞİNE DAHİL",
+    title: "Kesintide Bağlı Kal: Hibrit İnternet",
+    text: "Kesinti 24 saati aşarsa yedek bağlantını uygulamadan ücretsiz etkinleştir.",
+    cta: "Nasıl Çalışır?",
+    to: "/hibrit",
+    icon: "router",
   },
   {
     id: "agents",
     kind: "feature" as const,
     eyebrow: "AI AJANLAR",
     title: "Sen Fark Etmeden Çözüyoruz",
-    text: "Hız Koruyucu ve Kesinti Yedekleme ajanların 7/24 hattını izliyor.",
+    text: "Hız Koruyucu ve Kesinti Takibi ajanların 7/24 hattını izliyor.",
     cta: "Ajanlarımı Gör",
     to: "/ajanlar",
     icon: "bot",
@@ -138,7 +138,7 @@ export const SUPPORT_OPS: OpItem[] = [
   { slug: "baglanti", title: "Bağlantım", icon: "network", to: "/baglanti", isNew: true },
   { slug: "video", title: "Görüntülü Destek", icon: "video", to: "/goruntulu-destek", isNew: true },
   { slug: "qr", title: "QR ile Destek", icon: "qr", to: "/qr", isNew: true },
-  { slug: "gift", title: "Hediye GB", icon: "gift", to: "/hediye", isNew: true },
+  { slug: "hibrit", title: "Hibrit İnternet", icon: "router", to: "/hibrit", isNew: true },
   { slug: "agents", title: "AI Ajanlar", icon: "bot", to: "/ajanlar", isNew: true },
 ];
 
@@ -326,7 +326,7 @@ export const CASE_BASELINE = {
 
 export const AGENT_DEFS = [
   { id: "speed", name: "Hız Koruyucu", desc: "Hızın paketinin altına düşerse kök nedeni bulur ve düzeltir.", icon: "gauge", to: "/ajanlar/hiz" },
-  { id: "backup", name: "Kesinti Yedekleme", desc: "Bölgesel arızada seni en yakın sağlıklı altyapıya geçici bağlar.", icon: "route", to: "/ajanlar/yedek" },
+  { id: "backup", name: "Kesinti Takibi", desc: "Kesintiyi senin için izler; 24 saati aşarsa ücretsiz Hibrit İnternet'i hatırlatır.", icon: "route", to: "/hibrit" },
   { id: "modem", name: "Modem Sağlık İzleyici", desc: "Optik güç, sıcaklık ve kopmaları izler, sorun büyümeden uyarır.", icon: "router", to: "/ajanlar" },
   { id: "bill", name: "Fatura Asistanı", desc: "Son ödeme gününü hatırlatır, olağan dışı tutarları açıklar.", icon: "receipt", to: "/faturalar" },
 ] as const;
@@ -343,7 +343,6 @@ export const SPEED_FIX_STEPS = [
 ];
 
 export const OUTAGE_CAUSE = "Bölgesel fiber kesintisi (Ümraniye – Çakmak santrali)";
-export const BACKUP_POP = { name: "Tekirdağ Çorlu POP", region: "Tekirdağ", pingDelta: 12, speedDelta: -8 };
 
 /* ======================================================================
  * Otonom Müşteri Deneyimi Platformu — DEMO verileri.
