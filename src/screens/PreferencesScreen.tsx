@@ -24,16 +24,6 @@ export function PreferencesScreen() {
 
         <section className="rounded-card bg-card px-5 py-2 shadow-card">
           <p className="pt-3 text-xs font-bold uppercase tracking-wide text-magenta">AI Ajan İzinleri</p>
-          <ToggleRow
-            id="backup-consent"
-            title="Yedek altyapıdan bağlanma izni"
-            desc="Kesintide başka bölge altyapısından geçici bağlanabilirim"
-            checked={prefs.backupConsent === true}
-            onChange={(v) => {
-              setPref("backupConsent", v);
-              toast(v ? "İzin verildi" : "İzin kapatıldı", { action: { label: "Geri al", onClick: () => setPref("backupConsent", !v) } });
-            }}
-          />
           <ToggleRow id="speed-agent" title="Hız Koruyucu Ajan" desc="Hız düşünce otomatik düzelt" checked={enabled.speed} onChange={(v) => toggle("speed", v)} />
           <Link to="/ajanlar" className="flex min-h-12 items-center justify-between py-3 text-sm font-semibold text-primary">
             Tüm ajanları yönet <ChevronRight className="size-4" />
@@ -42,7 +32,7 @@ export function PreferencesScreen() {
 
         <section className="rounded-card bg-card px-5 py-2 shadow-card">
           <p className="pt-3 text-xs font-bold uppercase tracking-wide text-magenta">Bildirimler</p>
-          <ToggleRow id="push" title="Anlık bildirimler" desc="Ajan aksiyonları, kesinti ve hediye bildirimleri" checked={prefs.push} onChange={(v) => setPref("push", v)} />
+          <ToggleRow id="push" title="Anlık bildirimler" desc="Ajan aksiyonları, kesinti ve işlem bildirimleri" checked={prefs.push} onChange={(v) => setPref("push", v)} />
         </section>
       </div>
     </div>

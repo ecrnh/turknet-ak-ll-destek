@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bot, Gift, LifeBuoy, ReceiptText, Users, X, ArrowLeftRight } from "lucide-react";
+import { Bot, LifeBuoy, Megaphone, ReceiptText, Users, X, ArrowLeftRight } from "lucide-react";
 import { useEffect } from "react";
 import { useAppStore, type NotifKind } from "@/features/core/appStore";
 import { useActingAccount, useFamilyStore } from "@/features/family/store";
@@ -8,10 +8,9 @@ import { TurknetLogo } from "./headers";
 
 export const NOTIF_ICON: Record<NotifKind, typeof Bot> = {
   agent: Bot,
-  gift: Gift,
   support: LifeBuoy,
   family: Users,
-  campaign: Gift,
+  campaign: Megaphone,
   bill: ReceiptText,
 };
 

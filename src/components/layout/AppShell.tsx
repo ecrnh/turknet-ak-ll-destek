@@ -6,7 +6,6 @@ import { useAppStore } from "@/features/core/appStore";
 import { ScenarioPanel } from "@/features/scenario/ScenarioPanel";
 import { ScenarioDriver } from "@/features/scenario/ScenarioDriver";
 import { HelpCenterSheet } from "@/features/help/HelpCenterSheet";
-import { OutageOverlay, RestoredOverlay } from "@/features/giftData/components/OutageOverlays";
 import { rehydrateAll } from "@/features/demo/scenarios";
 import { fmtClock } from "@/lib/format";
 import { CallSmsLayer } from "@/features/workflow/components/CallSms";
@@ -52,8 +51,6 @@ function PhoneApp() {
       </main>
       {showNav && <BottomNav />}
       <HelpCenterSheet />
-      <OutageOverlay />
-      <RestoredOverlay />
       <PushBanner />
       <CallSmsLayer />
       <Toaster position="top-center" richColors closeButton />

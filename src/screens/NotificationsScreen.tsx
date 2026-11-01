@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 const FILTERS: { id: NotifKind | "all"; label: string }[] = [
   { id: "all", label: "Tümü" },
   { id: "agent", label: "Ajanlar" },
-  { id: "gift", label: "Hediye" },
   { id: "support", label: "Destek" },
   { id: "family", label: "Aile" },
 ];
@@ -54,7 +53,7 @@ export function NotificationsScreen() {
               }}
               className={cn("flex w-full items-start gap-3 rounded-card bg-card p-4 text-left shadow-card", !n.read && "ring-1 ring-magenta/30")}
             >
-              <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", n.kind === "gift" ? "bg-magenta text-magenta-foreground" : n.kind === "agent" ? "bg-primary text-primary-foreground" : "bg-icon-box text-primary")}>
+              <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", n.kind === "campaign" ? "bg-magenta text-magenta-foreground" : n.kind === "agent" ? "bg-primary text-primary-foreground" : "bg-icon-box text-primary")}>
                 <Icon className="size-5" />
               </span>
               <span className="flex-1">

@@ -38,11 +38,11 @@ export function SpeedTestScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  if (net.status === "outage")
+  if (net.status === "down")
     return (
       <div>
         <PageHeader title="Hız Testi" />
-        <EmptyState icon={WifiOff} title="Bağlantı yok" text="Bölgendeki kesinti nedeniyle hız testi yapılamıyor." />
+        <EmptyState icon={WifiOff} title="Bağlantı yok" text="Ana bağlantınızdaki kesinti nedeniyle hız testi yapılamıyor." />
       </div>
     );
 
@@ -60,7 +60,7 @@ export function SpeedTestScreen() {
           {[
             ["Paket", `${USER.packageSpeed} Mbps`],
             ["Ping", phase === "done" ? `${net.ping} ms` : "—"],
-            ["Altyapı", net.status === "backup" ? "Tekirdağ" : "Ümraniye"],
+            ["Bağlantı", net.status === "mobile" ? "Yedek" : "Fiber"],
           ].map(([k, v]) => (
             <div key={k} className="rounded-2xl bg-card p-3 shadow-card">
               <p className="text-xs text-muted-foreground">{k}</p>

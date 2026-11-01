@@ -3,6 +3,6 @@ import { NotificationsScreen } from "@/screens/NotificationsScreen";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/bildirimler")({
-  head: () => pageHead("Bildirimler", "Ajan aksiyonları, kesinti hediyeleri ve destek talebi durumları."),
+  head: () => pageHead("Bildirimler", "Ajan aksiyonları, kesinti bilgilendirmeleri ve destek talebi durumları."),
   component: NotificationsScreen,
 });
