@@ -43,7 +43,7 @@ export function startRelocation(input: RelocationInput): string {
   });
   if (!created) return wf.id;
   step(wf.id, "context", "done", `${SUBSCRIPTION.packageName} · borç yok · taahhüt ${SUBSCRIPTION.commitmentEnd} · mevcut port ${CURRENT_ADDRESS.port}`, "Nakil öncesi abonelik, borç ve mevcut port bilgisi doğrulanır; müşteriden tekrar istenmez");
-  notify(wf.id, "Taşınma talebini aldım", "Yeni adresinin altyapısını kontrol ediyorum. Her adımda seni bilgilendireceğim.");
+  notify(wf.id, "Yeni adresiniz için altyapı kontrolü başladı", "Taşınma sürecinizi sizin için takip ediyoruz. Önemli bir gelişme olduğunda size haber vereceğiz.");
   checkEligibility(wf.id);
   return wf.id;
 }
@@ -66,7 +66,7 @@ registerOp("relocation.eligibility", (id) => {
     W.setState((st) => ({ workflows: st.workflows.map((w) => (w.id === id ? { ...w, retries } : w)) }));
     step(id, "eligibility", "waiting", `Yanıt yok (${retries}. deneme)`);
     setStatus(id, "waiting_for_external_system", { blocker: "Altyapı sorgu servisi yanıt vermiyor", eta: "Otomatik yeniden kontrol planlandı (demo)" });
-    if (retries === 1) notify(id, "Altyapı sorgusu gecikiyor", "Sorgu servisinden yanıt alamadım. Sonucu tahmin etmiyorum; takip ediyorum ve tekrar deneyeceğim.");
+    if (retries === 1) notify(id, "Altyapı kontrolü gecikiyor", "Altyapı sisteminden henüz yanıt alamadık. Sonucu tahmin etmiyoruz; tekrar kontrol edip size haber vereceğiz.");
     if (shouldEscalateAfterRetry(retries)) escalate(id, TEAMS.infra, `Altyapı sorgusu ${retries} denemede yanıt vermedi`);
     else chain("relocation.retryEligibility", id, 8000);
     return;
@@ -98,12 +98,12 @@ function applyEligibility(id: string, result: EligibilityResult, reason: string)
   if (result === "no_port") {
     step(id, "eligibility", "done", "Uygun değil: dağıtım kutusunda boş port yok");
     setStatus(id, "blocked", { blocker: reason, eta: "Altyapı planlama yanıtı 3–5 iş günü (demo tahmini)" });
-    notify(id, "Yeni adresinde şu an boş port yok", "Bu bir hata değil, binadaki fiber kutusu dolu. Altyapı ekibi için takip talebi açıyorum ve internetsiz kalmaman için seçenek sunacağım.");
+    notify(id, "Yeni adresinizde şu an boş internet portu bulunmuyor", "Binadaki fiber kutusu dolu; sizin için altyapı durumunu takip edeceğiz.", "quiet");
     chain("relocation.infraFollowup", id, 1400);
   } else {
     step(id, "eligibility", "done", result === "eligible" ? "Uygun: fiber ve boş port var" : "Uygun: port tahsisi dış sağlayıcıdan istenecek");
     setStatus(id, "in_progress", { blocker: null, eta: null });
-    notify(id, "Yeni adresin uygun", result === "eligible" ? "Nakil sürecini başlatıyorum." : "Altyapı sağlayıcısından port tahsisi isteyeceğim; süreci ben takip edeceğim.");
+    notify(id, "Yeni adresiniz uygun", result === "eligible" ? "Nakil sürecinizi başlattık." : "Altyapı sağlayıcısından port istedik; süreci sizin için takip ediyoruz.");
     chain("relocation.transfer", id, 1400);
   }
 }
@@ -124,11 +124,11 @@ export function offerTemp(id: string) {
     id,
     {
       key: "relocation_temp",
-      prompt: "Sabit internet hazır olana kadar geçici mobil internet ister misin?",
-      detail: `${TEMP_MOBILE_OFFER.coverage}. Otomatik satın alınmaz; onay verirsen sipariş oluşturulur.`,
+      prompt: wf?.data["eligibility"] === "no_port" ? "Yeni adresinizde boş port yok. Hazır olana kadar geçici internet ister misiniz?" : "Sabit internetiniz hazır olana kadar geçici internet ister misiniz?",
+      detail: `${TEMP_MOBILE_OFFER.coverage}. Otomatik satın alınmaz; onay verirseniz sipariş oluşturulur.`,
       options: [
-        { id: "accept", label: "Geçici interneti istiyorum", desc: `${TEMP_MOBILE_OFFER.device} · ${TEMP_MOBILE_OFFER.price} · ${TEMP_MOBILE_OFFER.quota}`, primary: true, terms: TEMP_MOBILE_OFFER.terms },
-        { id: "decline", label: "İstemiyorum", desc: "Kurulum gününe kadar beklerim" },
+        { id: "accept", label: "Teklifi Kabul Et", desc: `${TEMP_MOBILE_OFFER.device} · ${TEMP_MOBILE_OFFER.price} · ${TEMP_MOBILE_OFFER.quota}`, primary: true, terms: TEMP_MOBILE_OFFER.terms },
+        { id: "decline", label: "Daha Sonra", desc: "Kurulum gününe kadar beklerim" },
       ],
     },
     wf?.data["eligibility"] === "no_port" ? "Port açılana kadar müşteri yeni adreste internetsiz kalabilir" : "Dış sağlayıcı gecikmesi taşınma tarihini aşabilir",
@@ -166,6 +166,7 @@ export function requestExternal(id: string) {
   if (kind === "external_operator") workOrder(id, { kind: "external_operator", title: "Dış operatörden port tahsisi", team: "Altyapı sağlayıcı (dış sistem)" }, "Bu adresin altyapısı başka bir sağlayıcıya ait");
   setWorkOrder(id, kind, "waiting_external");
   step(id, "external", "waiting", "Talep iletildi, yanıt bekleniyor");
+  notify(id, "Başvurunuzu ilgili ekibe ilettik", "Şimdi yanıt bekliyoruz. Gelişme olduğunda size haber vereceğiz.", "quiet");
   setStatus(id, "waiting_for_external_system", { eta: "Dış sistem yanıtı 1–3 iş günü (demo tahmini)" });
   chain("relocation.checkExternal", id, 8000);
 }
@@ -185,7 +186,7 @@ export function checkExternal(id: string) {
       escalate(id, kind === "external_operator" ? TEAMS.relocation : TEAMS.infra, `Dış sistem ${retries} kontrolde yanıt vermedi; gecikme insan takibine alındı`);
       return;
     }
-    notify(id, "Altyapı yanıtı gecikiyor", "Henüz yanıt gelmedi, başarı varsaymıyorum. Takibi sürdürüyorum; bir gelişme olunca haber vereceğim.");
+    notify(id, "Altyapı yanıtı gecikiyor", "Başvurunuzu ilgili ekibe ilettik. Şimdi yanıt bekliyoruz. Gelişme olduğunda size haber vereceğiz.");
     if (wf.data["eligibility"] === "eligible_external" && stepStatus(id, "temp_offer") === "pending") chain("relocation.offerTemp", id, 1400);
     else chain("relocation.checkExternal", id, 8000);
     return;
@@ -193,7 +194,7 @@ export function checkExternal(id: string) {
   setWorkOrder(id, kind, "done");
   step(id, "external", "done", kind === "external_operator" ? "Port tahsis edildi" : "Altyapı genişletildi, port açıldı (demo)");
   setStatus(id, "in_progress", { blocker: null, eta: null });
-  notify(id, "Yeni adresinde altyapı hazır", "Kurulum için randevu seçmeni isteyeceğim.");
+  notify(id, "Yeni adresinizde altyapı hazır", "Sıradaki adım kurulum randevusu.", "quiet");
   chain(stepStatus(id, "transfer") === "pending" ? "relocation.transfer" : "relocation.offerAppointment", id, 1400);
 }
 registerOp("relocation.checkExternal", checkExternal);
@@ -206,7 +207,7 @@ export function offerAppointment(id: string) {
     id,
     {
       key: "relocation_slot",
-      prompt: "Kurulum için sana uygun zamanı seç",
+      prompt: "Kurulum için size uygun zamanı seçin",
       detail: "Teknisyen yeni adreste fiber sonlandırma ve modem kurulumu yapacak (demo slotlar).",
       options: APPOINTMENT_SLOTS.map((s, i) => ({ id: s.id, label: s.label, primary: i === 0 })),
     },
@@ -220,7 +221,7 @@ registerDecision("relocation_slot", (id, opt) => {
   const wo = workOrder(id, { kind: "installation", title: "Yeni adres kurulum iş emri", team: TEAMS.field }, "Randevu seçildi; kurulum iş emri randevuya bağlanır");
   book(id, slot, wo.id);
   step(id, "appointment", "done", slot.label);
-  notify(id, "Randevun kaydedildi", `${slot.label} · Teknisyen gelmeden önce SMS alacaksın (demo).`);
+  notify(id, "Randevunuz kaydedildi", `${slot.label} · Teknisyen gelmeden önce SMS alacaksınız (demo).`, "quiet");
   chain("relocation.install", id, 4000);
 });
 
@@ -255,7 +256,7 @@ export function closeOldLine(id: string) {
   const temp = tempOfWorkflow(id);
   const slot = wf.decisions.find((d) => d.key === "relocation_slot");
   const woCount = getWf(id)?.workOrderIds.length ?? 0;
-  notify(id, "Taşınman tamamlandı 🎉", "Yeni adresinde internetin aktif. Eski hattın kapatıldı, ek ücret yansımadı.");
+  notify(id, "İnternetiniz kullanıma hazır", "Yeni adresinizde internetiniz aktif. İyi günlerde kullanın!");
   complete(id, {
     resolved: true,
     summary: "Nakil tamamlandı, yeni adreste internet aktif",
