@@ -5,16 +5,16 @@
  */
 import { DEMO_MOVE_DATE, DEMO_NEW_ADDRESS } from "@/data/mock";
 import {
+  activateHybrid,
   activateTemp,
+  checkHybrid,
   analyzeSpeed,
   applyBillingUpdate,
   askConfirm,
   assessScope,
-  checkCoverage,
   checkExternal,
   closeOldLine,
   detectAnomaly,
-  diagnoseOutage,
   explainBilling,
   fieldDone,
   financeResolve,
@@ -23,7 +23,6 @@ import {
   informBilling,
   injectAnomaly,
   ivrCheck,
-  offerAlternative,
   openUstaSms,
   offerAppointment,
   offerTemp,
@@ -31,25 +30,25 @@ import {
   openInfraFollowup,
   provisionTemp,
   requestExternal,
+  requestHybridDevice,
   requestPhoto,
-  restoreFixed,
+  restoreMain,
   retestSpeed,
   runBillingShield,
   runInstall,
   seedPaidButDebt,
   setConnectivity,
+  setOutageElapsed,
   startBillingReview,
-  startFixedOutage,
+  startOutage,
   startReconcile,
   startRelocation,
-  startRepair,
   startTransfer,
   startUstaCall,
-  toggleBox,
   tryRemoteFix,
-  verifyOutage,
   verifyProactive,
   verifyRelocation,
+  flushOps,
 } from "@/features/workflow";
 import { useWorkflowStore as W, type WorkflowState } from "@/features/workflow/store";
 import type { Actor, DemoConfig, StepStatus, Workflow } from "@/features/workflow/types";
@@ -145,6 +144,20 @@ const tempStep = (key: string, decision: string) => (c: Ctx): StepState => {
 };
 
 const detail = (c: Ctx) => (c.main ? `/surec/${c.main.id}` : null);
+
+/* ---------------- Hibrit İnternet helpers ---------------- */
+const hybridCheck = (c: Ctx): StepState => {
+  if (c.w.hybrid.status === "checking") return "running";
+  if (c.w.hybrid.checks) return "done";
+  return closed(c.main) ? "skipped" : "pending";
+};
+/** Done once the given activation attempt has an answer. */
+const activation = (attempt: number) => (c: Ctx): StepState => {
+  const h = c.w.hybrid;
+  if (h.attempts < attempt) return closed(c.main) ? "skipped" : "pending";
+  if (h.attempts === attempt && h.status === "activating") return "running";
+  return "done";
+};
 
 /* ---------------- shared relocation steps ---------------- */
 const relocationOpen: ScenarioStep = {
@@ -261,27 +274,32 @@ export const SCENARIOS: DemoScenario[] = [
   },
   {
     id: "B",
-    title: "Kesinti ve geçici Box",
-    summary: "Sabit hat kesilir. Sistem kesinti nedenini inceler, mobil internet uygunluğunu kontrol eder, TürkNet Box sunar; müşteri Box'ı uygulamadan açıp kapatır.",
-    features: ["Geçici İnternet / Box", "Hibrit", "Takip"],
+    title: "Kesinti ve ücretsiz Hibrit İnternet",
+    summary: "Kesinti tespit edilir, ilk 24 saat yalnızca arıza takibi yapılır. 24 saati aşınca aboneliğe dahil ücretsiz Hibrit İnternet sunulur; müşteri uygunluk kontrolü ve onayıyla etkinleştirir, ana bağlantı düzelince otomatik geri dönülür.",
+    features: ["Hibrit İnternet", "Kesinti Takibi", "Takip"],
     outcomes: [
-      { id: "line_temp", label: "Box kabul edilir", desc: "Müşteri Box'ı kabul eder; teslimat, aktivasyon ve uygulamadan aç/kapa gösterilir.", config: { outageType: "line" }, choices: { outage_alt: "temp_mobile" } },
-      { id: "line_hybrid", label: "Hibrit yedek seçilir", desc: "Uyumlu modemde yedek bağlantı açılır; sabit hat dönünce otomatik geri geçilir.", config: { outageType: "line" }, choices: { outage_alt: "hybrid" } },
-      { id: "regional", label: "Bölgesel arıza · teklif reddedilir", desc: "Bölgesel arıza; müşteriye bireysel arıza varmış gibi yönlendirme yapılmaz.", config: { outageType: "regional" }, choices: { outage_alt: "decline" } },
+      { id: "success", label: "Etkinleştirilir → ana bağlantıya dönüş", desc: "Cihaz, SIM ve kapsama uygun; müşteri ücretsiz etkinleştirir, arıza giderilince geri dönülür.", config: { hybridDevice: true, hybridCoverage: true, hybridActivation: "success" }, choices: {} },
+      { id: "no_device", label: "Uyumlu cihaz yok → Cihaz Talep Et", desc: "Cihaz olmadan yedek bağlantı açılmaz; cihaz gönderilir, teslimattan sonra etkinleştirilir.", config: { hybridDevice: false, hybridCoverage: true, hybridActivation: "success" }, choices: {} },
+      { id: "no_coverage", label: "Mobil kapsama yetersiz", desc: "Yedek bağlantı açılamaz; müşteri bilgilendirilir, ana arıza takibi sürer.", config: { hybridDevice: true, hybridCoverage: false, hybridActivation: "success" }, choices: {} },
+      { id: "fail_retry", label: "Aktivasyon başarısız → tekrar dene", desc: "İlk deneme başarısız olur; hata ve tekrar deneme gösterilir, ikinci denemede açılır.", config: { hybridDevice: true, hybridCoverage: true, hybridActivation: "fail" }, choices: {} },
+      { id: "early", label: "24 saat dolmadan çözülür", desc: "Arıza ilk 24 saatte giderilir; Hibrit İnternet teklifi hiç gösterilmez.", config: { hybridDevice: true, hybridCoverage: true, hybridActivation: "success" }, choices: {} },
     ],
     steps: [
-      { id: "signal", label: "Arıza sinyali: sabit bağlantı kesildi", why: "Ağ izleme oturum kaybını bildirdi; müşteri şikâyeti beklenmez", actor: "presenter", status: wfStep(main, "signal"), run: () => setId("main", startFixedOutage()), screen: () => "/baglanti" },
-      { id: "diagnose", label: "Kesinti türü teşhisi (bireysel / bölgesel)", why: "Bölgesel arızada müşteriye yanlış yönlendirme yapılmaması için kapsam belirlenir", actor: "system", status: wfStep(main, "diagnose"), run: (c) => c.main && diagnoseOutage(c.main.id) },
-      { id: "coverage", label: "Adres kapsaması ve modem uygunluğu", why: "Alternatif bağlantı ancak kapsama ve cihaz uygunsa önerilir", actor: "system", status: wfStep(main, "coverage"), run: (c) => c.main && checkCoverage(c.main.id) },
-      { id: "offer", label: "Box / hibrit yedek teklifi", why: "İki ürünün teknik ve ticari koşulları farklı; ayrı ayrı gösterilir", actor: "system", status: offered(main, "outage_alt"), run: (c) => c.main && offerAlternative(c.main.id), screen: detail },
-      { id: "decision", label: "Müşteri kararı", why: "Onay olmadan hiçbir hizmet aktifleşmez", actor: "customer", status: decisionState(main, "outage_alt"), decisionKey: "outage_alt" },
-      { id: "provision", label: "Box teslimatı / eSIM tanımlama", why: "Kabul edilen alternatif hazırlanır ve durumu takip edilir", actor: "system", status: tempStep("provision", "outage_alt"), run: (c) => c.temp && provisionTemp(c.temp.id) },
-      { id: "active", label: "Box / yedek bağlantı aktif", why: "Sabit hat dönene kadar müşteri bağlı kalır", actor: "system", status: tempStep("active", "outage_alt"), run: (c) => c.temp && activateTemp(c.temp.id), screen: () => "/baglanti" },
-      { id: "box_off", label: "Müşteri Box'ı uygulamadan kapatır", why: "Cihaz yönetimi uygulamadan yapılır (demo cihaz komutu)", actor: "customer", status: (c) => ((c.w.box?.toggles ?? 0) >= 1 ? "done" : "pending"), run: () => toggleBox(false), only: ["line_temp"] },
-      { id: "box_on", label: "Müşteri Box'ı tekrar açar", why: "Mobil internet yeniden bağlanır, kullanım takip edilir", actor: "customer", status: (c) => ((c.w.box?.toggles ?? 0) >= 2 ? "done" : "pending"), run: () => toggleBox(true), only: ["line_temp"] },
-      { id: "repair", label: "Onarım süreci başlar (saha / bölgesel ekip)", why: "Bireysel arızada saha iş emri açılır; bölgesel arızada açılmaz", actor: "team", status: reached(main, "repair"), run: (c) => c.main && startRepair(c.main.id) },
-      { id: "restore", label: "Sabit bağlantı geri döner, yedekten çıkılır", why: "Sabit hat geri geldiğinde uygun koşulda otomatik geri dönüş yapılır", actor: "system", status: wfStep(main, "restore"), run: (c) => c.main && restoreFixed(c.main.id), screen: () => "/baglanti" },
-      { id: "verify", label: "Çözüm doğrulanır, müşteri bilgilendirilir", why: "Doğrulama olmadan arıza kapatılmaz", actor: "system", status: wfStep(main, "verify"), run: (c) => c.main && verifyOutage(c.main.id), screen: detail },
+      { id: "signal", label: "Kesinti tespit edilir, push gönderilir", why: "Ağ izleme oturum kaybını bildirdi; müşteri şikâyeti beklenmez", actor: "presenter", status: wfStep(main, "signal"), run: () => setId("main", startOutage(0.3)), screen: () => "/" },
+      { id: "track", label: "İlk 24 saat: arıza takibi (teklif yok)", why: "Kural: 24 saatten kısa kesintide Hibrit İnternet CTA'sı gösterilmez", actor: "presenter", status: (c) => (c.s.flags["track"] ? "done" : closed(c.main) ? "skipped" : "pending"), run: () => { setOutageElapsed(6); flag("track"); }, screen: () => "/" },
+      { id: "h24", label: "Kesinti 24 saati aşar → ücretsiz teklif ve push", why: "24 saat içinde çözülemeyen kesintide aboneliğe dahil yedek bağlantı sunulur", actor: "presenter", status: wfStep(main, "hybrid_offer"), run: () => setOutageElapsed(25), screen: () => "/", only: ["success", "no_device", "no_coverage", "fail_retry"] },
+      { id: "open", label: "Müşteri “Hibrit İnterneti Etkinleştir”e dokunur", why: "Aktivasyon ekranı hizmeti ve ücretsiz olduğunu açıklar", actor: "customer", status: (c) => (c.s.flags["open"] || c.w.hybrid.checks ? "done" : "pending"), run: () => flag("open"), screen: () => "/hibrit", only: ["success", "no_device", "no_coverage", "fail_retry"] },
+      { id: "check", label: "Cihaz, SIM ve mobil kapsama kontrolü", why: "Hizmet yalnızca uyumlu cihaz, aktif SIM ve yeterli kapsama varsa çalışır", actor: "system", status: hybridCheck, run: () => checkHybrid(), screen: () => "/hibrit", only: ["success", "no_device", "no_coverage", "fail_retry"] },
+      { id: "device_req", label: "Müşteri “Cihaz Talep Et”e dokunur", why: "Cihaz olmadan yedek bağlantı aktifmiş gibi gösterilmez", actor: "customer", status: (c) => (c.w.hybrid.device ? "done" : "pending"), run: () => requestHybridDevice(), only: ["no_device"] },
+      { id: "device_ship", label: "Cihaz hazırlanır, yola çıkar, teslim edilir", why: "Lojistik iş emri ve teslimat takip edilir (demo)", actor: "external", status: (c) => (c.w.hybrid.device?.status === "delivered" ? "done" : c.w.hybrid.device && hasOp(c.main?.id, "hybrid.device") ? "running" : "pending"), only: ["no_device"] },
+      { id: "recheck", label: "Teslimat sonrası uygunluk yeniden kontrol edilir", why: "Cihaz geldikten sonra kontrol otomatik tekrarlanır", actor: "system", status: (c) => (c.w.hybrid.status === "checking" ? "running" : c.w.hybrid.checks?.device ? "done" : "pending"), run: () => checkHybrid(), only: ["no_device"] },
+      { id: "coverage_info", label: "Kapsama yetersiz: müşteri bilgilendirilir, takip sürer", why: "Kapsama olmadan yedek bağlantı açılmaz; ana arıza takibi kesintisiz sürer", actor: "system", status: (c) => (c.w.hybrid.status === "no_coverage" ? "done" : "pending"), run: () => flushOps(), only: ["no_coverage"] },
+      { id: "activate", label: "Müşteri “Ücretsiz Olarak Etkinleştir”e dokunur", why: "Hizmet müşterinin onayı olmadan etkinleşmez", actor: "customer", status: activation(1), run: () => activateHybrid(), only: ["success", "no_device", "fail_retry"] },
+      { id: "retry", label: "Aktivasyon başarısız → müşteri “Tekrar Dene”ye dokunur", why: "Başarısız etkinleştirme aktif gösterilmez; hata açıklanır ve tekrar deneme sunulur", actor: "customer", status: activation(2), run: () => { setConfig({ hybridActivation: "success" }); activateHybrid(); }, only: ["fail_retry"] },
+      { id: "active", label: "Yedek internet aktif: ana kesik, yedek bağlantı açık", why: "Müşteri arıza süresince internete bağlı kalır; kullanım demo verisiyle gösterilir", actor: "system", status: (c) => (c.w.hybrid.activatedAt ? "done" : "pending"), run: () => flushOps(), screen: () => "/hibrit", only: ["success", "no_device", "fail_retry"] },
+      { id: "restore", label: "Teknik ekip arızayı giderir, ana bağlantı geri gelir", why: "Onarım tamamlandığında ana bağlantı doğrulamaya alınır", actor: "team", status: wfStep(main, "restore"), run: () => restoreMain() },
+      { id: "switch", label: "Yedekten ana bağlantıya otomatik dönüş", why: "Ana bağlantı kararlı çalışınca yedek bağlantı kapatılır ve müşteri bilgilendirilir", actor: "system", status: wfStep(main, "switch_back"), run: () => flushOps(), screen: () => "/hibrit", only: ["success", "no_device", "fail_retry"] },
+      { id: "verify", label: "Bağlantı doğrulanır, müşteri bilgilendirilir", why: "Doğrulama olmadan kesinti kapatılmaz", actor: "system", status: wfStep(main, "verify"), run: () => flushOps(), screen: () => "/" },
     ],
   },
   {
