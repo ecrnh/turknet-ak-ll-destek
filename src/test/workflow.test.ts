@@ -51,6 +51,12 @@ describe("Talep algılama", () => {
     expect(detectIntent("Ödememi yaptım ama borç görünüyor")).toBe("billing");
     expect(detectIntent("Modemimde internet ışığı yanmıyor")).toBe("ai_usta");
     expect(detectIntent("geçici internet istiyorum")).toBe("temp_internet");
+    expect(detectIntent("Taşınacağım, internetimi yeni adresime taşımak istiyorum")).toBe("relocation");
+    expect(detectIntent("İnternetim çok yavaş")).toBe("speed");
+    expect(detectIntent("Faturamda bir tutarsızlık olduğunu düşünüyorum")).toBe("billing");
+    expect(detectIntent("İnternetim kesildi")).toBe("ai_usta");
+    expect(detectIntent("Devam eden işlemimin durumunu öğrenmek istiyorum")).toBe("track");
+    expect(detectIntent("merhaba")).toBeNull();
     expect(detectIntent("")).toBeNull();
   });
 });
@@ -145,6 +151,9 @@ describe("Fatura Kalkanı güvenlik sınırı", () => {
     seedPaidButDebt(true);
     W.setState((s) => ({ config: { ...s.config, reconciliation: "duplicate" } }));
     const { wfId } = runBillingShield();
+    drain();
+    expect(getWf(wfId)!.decision?.key).toBe("billing_start");
+    decide(wfId!, "start");
     drain();
     const wf = getWf(wfId)!;
     expect(wf.decision?.key).toBe("billing_refund");
