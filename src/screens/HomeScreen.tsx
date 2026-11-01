@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, MessageCircleQuestion, ReceiptText, Video, WifiOff } from "lucide-react";
 import { HomeTopBar } from "@/components/layout/headers";
-import { ActionTile, CampaignCard, ReferralCard, TileScroller } from "@/components/tn/cards";
+import { ActionTile, CampaignCard, TileScroller } from "@/components/tn/cards";
 import { NET_DOT, NET_LABEL, NET_TEXT } from "@/components/tn/NetStatus";
 import { SectionTitle } from "@/components/tn/primitives";
 import { INTERNET_OPS, SUBSCRIPTION_OPS, SUPPORT_OPS, USER } from "@/data/mock";
@@ -11,7 +11,6 @@ import { AgentActivityCard } from "@/features/aiAgents/components/AgentActivityC
 import { OutageHomeCard } from "@/features/workflow/components/hybrid";
 import { cn } from "@/lib/utils";
 import { HeroCarousel } from "./home/HeroCarousel";
-import { AutonomyCard } from "@/features/workflow/components/AutonomyCard";
 
 function StatusPill() {
   const status = useAppStore((s) => s.net.status);
@@ -80,14 +79,12 @@ export function HomeScreen() {
 
       <div className="space-y-4 px-4">
         <OutageHomeCard />
-        <AutonomyCard />
         {simple ? (
           <SimpleHome />
         ) : (
           <>
             <AgentActivityCard />
             <CampaignCard />
-            <ReferralCard />
           </>
         )}
       </div>
