@@ -412,9 +412,9 @@ export const TEMP_MOBILE_OFFER = {
   coverage: "Kadıköy Moda: 4.5G sinyal iyi (demo kapsama verisi)",
   delivery: "Kurye ile 1 iş günü (tahmini, demo)",
   terms: [
-    "Sabit internetin kurulana kadar geçerli; kurulumda otomatik sona erer.",
+    "Sabit internetiniz hazır olana kadar geçerlidir; kurulumda otomatik sona erer.",
     "Cihaz 15 gün içinde iade edilmezse cihaz bedeli faturaya yansır (demo koşul).",
-    "Onay vermeden sipariş verilmez, ücret yansımaz.",
+    "Siz onay vermeden sipariş verilmez, ücret yansımaz.",
     "Varsayımsal ürün konsepti: mobil operatör iş ortaklığı varsayılmıştır (demo).",
   ],
 };
