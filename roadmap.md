@@ -20,3 +20,11 @@
 - [x] Senaryolar: 2 = kesinti + Box aç/kapa, 3 = onaylı inceleme, 4 = IVR→SMS→AI Usta, 5 = proaktif + hız
 - [x] Panel: süreçlerin son durumu, onay gereken adımlar, bildirim türü
 - [x] Testler: tüm senaryo yolları uçtan uca + yeni kurallar; tarayıcı kontrolü (masaüstü + mobil)
+
+## Tur 3 — Ücretsiz Hibrit İnternet
+- [x] Hediye GB özelliğini tamamen kaldır (ekranlar, kartlar, bildirimler, panel, arama, sohbet, pano, testler)
+- [x] Eski ücretli hibrit teklifini ve Kesinti Yedekleme (yedek altyapı) akışını kaldır
+- [x] Kesinti takibi: ilk 24 saat yalnızca bilgi kartı + push; 24 saat sonra ücretsiz teklif + push
+- [x] Aktivasyon ekranı: açıklama, ücretsiz vurgusu, cihaz/SIM/kapsama kontrolü, onay
+- [x] Alternatifler: cihaz yok (Cihaz Talep Et + teslimat), kapsama yok, vazgeçme, başarısız + tekrar dene, ana bağlantıya dönüş
+- [x] Panel "Hibrit" sekmesi + Senaryo B (5 sonuç yolu); testler
