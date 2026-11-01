@@ -37,16 +37,16 @@ export function RelocationStartScreen() {
 
   return (
     <div>
-      <PageHeader title="İnternetini Taşı" />
+      <PageHeader title="İnternetinizi Taşıyın" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
           <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Otonom Taşınma</p>
-          <p className="mt-1 text-lg font-semibold leading-snug">Yeni adresini söyle; altyapı kontrolü, iş emirleri, randevu ve eski hattın kapatılmasını biz yönetelim.</p>
+          <p className="mt-1 text-lg font-semibold leading-snug">Yeni adresinizi söyleyin; altyapı kontrolü, randevu ve eski hattınızın kapatılmasını sizin için yönetelim.</p>
         </div>
 
         {existing && (
-          <Banner tone="info" title="Zaten aktif bir taşınma talebin var" action={<Link to="/surec/$id" params={{ id: existing.id }} className="font-semibold text-magenta">Talebi aç →</Link>}>
-            Aynı talep için yeni kayıt açılmaz; mevcut süreç takip ediliyor.
+          <Banner tone="info" title="Devam eden bir taşınma işleminiz var" action={<Link to="/surec/$id" params={{ id: existing.id }} className="font-semibold text-magenta">Detayları Gör →</Link>}>
+            Aynı talep için yeni kayıt açmıyoruz; mevcut işleminizi takip ediyoruz.
           </Banner>
         )}
 
@@ -54,7 +54,7 @@ export function RelocationStartScreen() {
           <div className="flex gap-3">
             <Home className="mt-0.5 size-5 text-muted-foreground" />
             <div className="text-sm">
-              <p className="text-[11px] font-semibold uppercase text-muted-foreground">Mevcut abonelik (sistemden)</p>
+              <p className="text-[11px] font-semibold uppercase text-muted-foreground">Mevcut aboneliğiniz</p>
               <p className="font-semibold text-foreground">
                 {CURRENT_ADDRESS.line}, {CURRENT_ADDRESS.district}
               </p>
@@ -100,13 +100,13 @@ export function RelocationStartScreen() {
             <Label htmlFor="ra-date">Taşınma tarihi</Label>
             <Input id="ra-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
-          <ToggleRow id="ra-temp" title="İnternetsiz kalmamak için seçenek göster" desc="Gerekirse geçici internet teklif edilir; onayın olmadan aktifleşmez." checked={wantsTemp} onChange={setWantsTemp} />
+          <ToggleRow id="ra-temp" title="İnternetsiz kalmamak için seçenek göster" desc="Gerekirse geçici internet önerilir; onayınız olmadan aktifleşmez." checked={wantsTemp} onChange={setWantsTemp} />
           <div className="flex gap-2 rounded-2xl bg-muted p-3 text-xs text-muted-foreground">
             <Info className="size-4 shrink-0 text-magenta" />
-            Eski adresindeki hizmet, yeni adreste bağlantın doğrulanmadan kapatılmaz.
+            Eski adresinizdeki hizmet, yeni adreste bağlantınız doğrulanmadan kapatılmaz.
           </div>
           <Button type="submit" size="xl" className="w-full" disabled={!valid || !!existing}>
-            Taşınma talebini başlat
+            Süreci Başlat
           </Button>
         </form>
         <DemoNote className="pb-2" />

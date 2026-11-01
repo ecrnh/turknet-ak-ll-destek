@@ -21,7 +21,7 @@ export function AiUstaStartScreen() {
             <img src={modemImg} alt="Modem" width={96} height={96} className="h-20 w-20 object-contain" />
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Görsel teknik destek</p>
-              <p className="text-lg font-semibold leading-snug">Modemini göster, adım adım birlikte çözelim.</p>
+              <p className="text-lg font-semibold leading-snug">Modeminizi gösterin, adım adım birlikte çözelim.</p>
             </div>
           </div>
         </div>
@@ -44,14 +44,14 @@ export function AiUstaStartScreen() {
 
         {regional && (
           <div className="rounded-2xl border border-warning/30 bg-warning-soft p-3.5 text-sm">
-            <p className="font-semibold">Bölgende bir arıza var</p>
-            <p className="text-muted-foreground">Sorun senden kaynaklı değil; modemine adım uygulatmıyoruz.</p>
+            <p className="font-semibold">Bölgenizde olası bir arıza var</p>
+            <p className="text-muted-foreground">Sorun sizden kaynaklı görünmüyor; modeminizde bir şey yapmanıza gerek yok.</p>
           </div>
         )}
 
         {active ? (
           <Link to="/surec/$id" params={{ id: active.id }} className="flex items-center justify-between rounded-card bg-card p-4 shadow-card">
-            <span className="font-semibold text-primary">Devam eden AI Usta oturumu</span>
+            <span className="font-semibold text-primary">Devam eden AI Usta oturumunuz</span>
             <StatusPill status={active.status} />
           </Link>
         ) : (
@@ -63,7 +63,7 @@ export function AiUstaStartScreen() {
               navigate({ to: "/surec/$id", params: { id } });
             }}
           >
-            <WifiOff /> İnternetim çalışmıyor
+            <WifiOff /> İnternetim Çalışmıyor
           </Button>
         )}
 
@@ -72,12 +72,13 @@ export function AiUstaStartScreen() {
             <ScanEye className="size-5" /> Nasıl çalışır?
           </p>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
-            <li>Bağlantını ve açık arıza kayıtlarını kontrol ederim.</li>
-            <li>Modem ışıklarının fotoğrafını isterim.</li>
-            <li>Sana tek bir güvenli adım gösteririm, sonucu birlikte doğrularız.</li>
-            <li>Çözülmezse yaptığımız her şeyi uzmana aktarırım; baştan anlatmazsın.</li>
+            <li>Bağlantınızı ve açık arıza kayıtlarını kontrol ederim.</li>
+            <li>Modem ışıklarınızın fotoğrafını isterim.</li>
+            <li>Size tek seferde bir güvenli adım gösteririm, sonucu birlikte doğrularız.</li>
+            <li>Çözülmezse yaptığımız her şeyi uzmana iletirim; sorunu baştan anlatmazsınız.</li>
           </ol>
         </div>
+        <p className="px-1 text-xs text-muted-foreground">Çağrı merkezini aradıysanız, size gönderilen SMS'teki bağlantı sizi doğrudan buraya getirir; sorununuzu tekrar anlatmanıza gerek kalmaz.</p>
         <DemoNote className="pb-2">Görsel analiz bu prototipte simülasyondur; gerçek bir görüntü modeli kullanılmaz.</DemoNote>
       </div>
     </div>
