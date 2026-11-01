@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { useNow } from "@/hooks/use-now";
 import { cn } from "@/lib/utils";
 import { HYBRID_OFFER_AFTER_H } from "@/features/workflow/rules";
+import { HYBRID_COPY } from "@/features/workflow/copy";
 import { openOutage, outageHours, restoreMain, setOutageElapsed, startOutage } from "@/features/workflow/services/hybrid";
 import { useWorkflowStore as W } from "@/features/workflow/store";
 import type { DemoConfig, HybridStatus } from "@/features/workflow/types";
@@ -45,7 +46,7 @@ export function HybridControls() {
   const hybrid = W((s) => s.hybrid);
   const config = W((s) => s.config);
   const fixed = W((s) => s.connectivity.fixed);
-  const now = useNow(5_000);
+  const now = Math.max(useNow(5_000), outage?.lastUpdateAt ?? 0);
   const ongoing = !!outage && !outage.restoredAt;
   const hours = ongoing ? Math.round(outageHours(outage, now)) : 0;
   const [draft, setDraft] = useState<number | null>(null);
@@ -67,7 +68,7 @@ export function HybridControls() {
         </div>
         <div className="col-span-2">
           <p className="text-muted-foreground">Hibrit İnternet</p>
-          <p className="font-bold text-foreground">{STATUS[hybrid.status]}{hybrid.device && hybrid.device.status !== "delivered" ? ` · cihaz: ${hybrid.device.status}` : ""}</p>
+          <p className="font-bold text-foreground">{STATUS[hybrid.status]}{hybrid.device ? ` · cihaz: ${HYBRID_COPY.device[hybrid.device.status].toLocaleLowerCase("tr-TR")}` : ""}</p>
         </div>
       </div>
 

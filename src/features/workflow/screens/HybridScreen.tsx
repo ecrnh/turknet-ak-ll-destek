@@ -22,7 +22,7 @@ export function HybridScreen() {
   const o = useWorkflowStore((s) => s.outage);
   const h = useWorkflowStore((s) => s.hybrid);
   const verify = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status);
-  const now = useNow(5_000);
+  const now = Math.max(useNow(5_000), o?.lastUpdateAt ?? 0);
 
   const ongoing = !!o && !o.restoredAt;
   const hours = ongoing ? outageHours(o, now) : 0;

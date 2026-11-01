@@ -135,7 +135,8 @@ export function OutageHomeCard() {
   const o = useWorkflowStore((s) => s.outage);
   const h = useWorkflowStore((s) => s.hybrid);
   const verifying = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status !== "done");
-  const now = useNow(30_000);
+  // Never behind the last state change (the presenter can move the outage start).
+  const now = Math.max(useNow(30_000), o?.lastUpdateAt ?? 0);
   if (!o || o.dismissed) return null;
 
   if (o.restoredAt) {
