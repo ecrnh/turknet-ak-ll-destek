@@ -255,17 +255,6 @@ export const SEARCH_INDEX: { title: string; to: string; keywords: string; isNew?
   { title: "Etki Panosu", to: "/dashboard", keywords: "dashboard kpi etki pano", section: "Sunum" },
 ];
 
-export const OPERATORS = ["Turkcell", "Vodafone", "Türk Telekom", "Diğer"] as const;
-export type Operator = (typeof OPERATORS)[number];
-
-export function detectOperator(phone: string): Operator {
-  const d = phone.replace(/\D/g, "").replace(/^0/, "");
-  if (/^53/.test(d)) return "Turkcell";
-  if (/^54/.test(d)) return "Vodafone";
-  if (/^5[05]/.test(d)) return "Türk Telekom";
-  return "Diğer";
-}
-
 export const LED_GUIDE = [
   { key: "power", name: "Power", states: [["Yeşil sabit", "Modem açık, normal"], ["Kapalı", "Elektrik yok, adaptörü kontrol et"]] },
   { key: "fiber", name: "DSL / Fiber (PON)", states: [["Yeşil sabit", "Hat bağlı"], ["Yanıp sönüyor", "Hat senkronize oluyor"], ["Kırmızı (LOS)", "Fiber kablo takılı değil / sinyal yok"]] },
@@ -341,7 +330,6 @@ export const SPEED_FIX_STEPS = [
   "Doğrulama ölçümü tamamlandı: 98 Mbps",
 ];
 
-export const OUTAGE_CAUSE = "Bölgesel fiber kesintisi (Ümraniye – Çakmak santrali)";
 
 /* ======================================================================
  * Otonom Müşteri Deneyimi Platformu — DEMO verileri.
