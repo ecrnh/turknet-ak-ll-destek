@@ -86,3 +86,52 @@ export const TEAM_FOR: Record<WorkflowType, string> = {
   proactive_fault: TEAMS.tech,
   speed_optimize: TEAMS.tech,
 };
+
+/* ---------------- Hibrit İnternet (free outage backup) ---------------- */
+export const HYBRID_COPY = {
+  name: "Hibrit İnternet",
+  included: "TürkNet aboneliğinize dahildir. Ek ücret ödemezsiniz.",
+  freeBadge: "Ücretsiz · aboneliğinize dahil",
+  detected: {
+    title: "İnternet bağlantınızda kesinti tespit ettik",
+    text: "Teknik ekibimiz sorunun çözümü için çalışıyor. Gelişmeleri sizin için takip ediyoruz.",
+  },
+  offer: {
+    title: "İnternetiniz henüz düzelmedi",
+    text: "Kesinti süresince internet erişiminizin devam etmesi için ücretsiz yedek bağlantınızı kullanabilirsiniz.",
+    cta: "Hibrit İnterneti Etkinleştir",
+  },
+  what: "Ana bağlantınız kesildiğinde yedek internet cihazınız mobil ağ üzerinden devreye girer. Böylece arıza giderilene kadar internete bağlı kalırsınız.",
+  how: [
+    "Kesinti 24 saati aşarsa ücretsiz olarak etkinleştirebilirsiniz.",
+    "Yedek cihazınız ve SIM'iniz mobil ağ üzerinden çalışır.",
+    "Ana bağlantınız düzelince otomatik olarak ana bağlantıya dönersiniz.",
+  ],
+  consent: "Ücretsiz Olarak Etkinleştir",
+  notNow: "Şimdi Değil",
+  active: {
+    title: "Yedek internetiniz aktif!",
+    text: "Ana bağlantınız düzelene kadar internet erişiminizi yedek bağlantınız üzerinden sürdürebilirsiniz.",
+  },
+  noDevice: {
+    title: "Uyumlu bir yedek cihaz gerekiyor",
+    text: "Hibrit İnternet, uyumlu bir yedek internet cihazı ve aktif SIM ile çalışır. Size ücretsiz bir cihaz gönderebiliriz.",
+    cta: "Cihaz Talep Et",
+  },
+  noCoverage: {
+    title: "Yedek bağlantı şu an kullanılamıyor",
+    text: "Bulunduğunuz konumda yedek bağlantı için yeterli mobil kapsama bulunamadı.",
+    after: "Arıza takibiniz devam ediyor. Ana bağlantınız düzeldiğinde size haber vereceğiz.",
+  },
+  failed: {
+    title: "Etkinleştirme tamamlanamadı",
+    text: "Yedek cihazınız mobil ağa bağlanamadı. Birkaç saniye sonra tekrar deneyebilirsiniz.",
+    cta: "Tekrar Dene",
+  },
+  restored: {
+    title: "Ana bağlantınız geri geldi",
+    text: "Bağlantınızı doğruladık ve yedek bağlantıdan ana bağlantınıza geri geçtik.",
+    plain: "Kesinti giderildi ve bağlantınızı doğruladık. Anlayışınız için teşekkür ederiz.",
+  },
+  device: { requested: "Talep alındı", preparing: "Hazırlanıyor", on_the_way: "Yolda", delivered: "Teslim edildi", cancelled: "İptal edildi" },
+} as const;
