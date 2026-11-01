@@ -138,8 +138,8 @@ export const HEALTH_COPY: Record<HealthCode, { title: string; text: string; tone
   checking: { title: "Teknik kontrol gerçekleştiriliyor", text: "Bağlantınızı uzaktan kontrol ediyoruz. Şu an sizden bir işlem yapmanız gerekmiyor.", tone: "info" },
   regional: { title: "Bölgesel bir kesinti ihtimali değerlendiriliyor", text: "Sorun sizden kaynaklı görünmüyor. Modeminize dokunmanıza gerek yok.", tone: "warn" },
   field: { title: "Teknik ekibin müdahalesi gerekiyor", text: "Uzaktan çözemedik. Teknik ekip için işlem kaydı oluşturduk.", tone: "warn" },
-  failover: { title: "Yedek internet bağlantısına geçildi", text: "Sabit internetiniz dönene kadar mobil bağlantı üzerinden internete bağlısınız.", tone: "info" },
-  down: { title: "Sabit internetinizde kesinti var", text: "Nedenini inceliyoruz. Gelişme olduğunda size haber vereceğiz.", tone: "bad" },
+  failover: { title: "Yedek internetiniz aktif", text: "Ana bağlantınız düzelene kadar internete Hibrit İnternet yedek bağlantınız üzerinden bağlısınız.", tone: "info" },
+  down: { title: "İnternet bağlantınızda kesinti var", text: "Teknik ekibimiz sorunun çözümü için çalışıyor. Gelişmeleri sizin için takip ediyoruz.", tone: "bad" },
 };
 
 const CONNECTIVITY_TYPES = ["outage_recovery", "proactive_fault", "speed_optimize", "ai_usta"];
@@ -151,6 +151,7 @@ export function connectionHealth(c: Pick<ConnectivityStatus, "fixed" | "mobile">
   if (open.some((w) => stepOf(w, "field") === "in_progress" || (w.type !== "ai_usta" && !!w.handoff))) return "field";
   if (open.some((w) => w.type === "outage_recovery" && w.data["outageType"] === "regional")) return "regional";
   if (c.fixed === "down" && c.mobile === "active") return "failover";
+  if (c.fixed === "down" && open.some((w) => w.type === "outage_recovery")) return "down";
   if (open.length) return "checking";
   if (c.fixed === "degraded") return "degraded";
   if (c.fixed === "down") return "down";
@@ -164,3 +165,26 @@ export function canToggleBox(box: { sim: string } | null | undefined): boolean {
 
 /** Speed is "significantly" below the package when under 60% of it. */
 export const isSpeedProblem = (measured: number, pkg: number) => measured < pkg * 0.6;
+
+/* ---------------- Hibrit İnternet ---------------- */
+/** The free backup connection is offered only when an outage is still unresolved after this many hours. */
+export const HYBRID_OFFER_AFTER_H = 24;
+
+export const outageElapsedH = (startedAt: number, now: number) => Math.max(0, (now - startedAt) / 3_600_000);
+
+export const hybridOfferOpen = (elapsedH: number) => elapsedH >= HYBRID_OFFER_AFTER_H;
+
+/** Hibrit İnternet needs a compatible backup device, an active SIM and enough mobile coverage. */
+export function hybridBlocker(c: { device: boolean; sim: boolean; coverage: boolean }): "no_device" | "no_coverage" | null {
+  if (!c.device || !c.sim) return "no_device";
+  if (!c.coverage) return "no_coverage";
+  return null;
+}
+
+/** Activation is only possible during an unresolved outage past 24 h, after a passed check. */
+export function canActivateHybrid(p: { elapsedH: number; fixed: ConnectivityStatus["fixed"]; status: string }): boolean {
+  return p.fixed === "down" && hybridOfferOpen(p.elapsedH) && (p.status === "ready" || p.status === "failed");
+}
+
+/** Demo usage of the backup connection (no real meter): a base amount plus ~24 MB per minute. */
+export const hybridUsageMb = (activatedAt: number | null, now: number) => (activatedAt ? Math.round(180 + Math.max(0, now - activatedAt) / 60_000 * 24) : 0);
