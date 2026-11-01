@@ -6,7 +6,7 @@
  * Never claims a speed above the physical line capacity.
  */
 import { SUBSCRIPTION, TEAMS } from "@/data/mock";
-import { chain, complete, createWorkflow, escalate, getWf, log, notify, registerOp, schedule, setData, setStatus, setWorkOrder, step, stepStatus, workOrder } from "../engine";
+import { chain, complete, createWorkflow, getWf, log, notify, registerOp, schedule, setData, setStatus, setWorkOrder, step, stepStatus, workOrder } from "../engine";
 import { MockNetworkAPI } from "../mockServices";
 import { useWorkflowStore as W } from "../store";
 import { setConnectivity } from "./connectivity";
@@ -172,8 +172,3 @@ export function verifyProactive(id: string) {
   });
 }
 registerOp("proactive.verify", verifyProactive);
-
-/** Not used automatically; lets support escalate a speed case with full context. */
-export function escalateSpeed(id: string) {
-  escalate(id, TEAMS.tech, "Hız sorunu uzaktan çözülemedi; uzman incelemesi istendi", "customer");
-}
