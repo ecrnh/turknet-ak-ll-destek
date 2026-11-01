@@ -10,6 +10,8 @@ import { useWorkflowStore } from "../store";
 import type { DeviceRequest, HybridChecks, OutageState } from "../types";
 
 export const fmtOutageDuration = (h: number) => (h < 1 ? `${Math.max(1, Math.round(h * 60))} dakika` : `${Math.floor(h)} saat`);
+/** "45 dakikadır" / "25 saattir" */
+export const fmtOngoing = (h: number) => (h < 1 ? `${Math.max(1, Math.round(h * 60))} dakikadır` : `${Math.floor(h)} saattir`);
 export const fmtUsage = (mb: number) => (mb < 1024 ? `${mb} MB` : `${(mb / 1024).toFixed(1).replace(".", ",")} GB`);
 
 export function FreeBadge({ onDark, className }: { onDark?: boolean; className?: string }) {
@@ -20,7 +22,7 @@ export function FreeBadge({ onDark, className }: { onDark?: boolean; className?:
 export function OutageMeta({ o, now, className }: { o: OutageState; now: number; className?: string }) {
   const rows: [string, string][] = [
     ["Başlangıç", fmtDateTime(o.startedAt)],
-    ["Süre", o.restoredAt ? `${fmtOutageDuration(outageHours(o, o.restoredAt))} sürdü` : `${fmtOutageDuration(outageHours(o, now))}dır sürüyor`],
+    ["Süre", o.restoredAt ? `${fmtOutageDuration(outageHours(o, o.restoredAt))} sürdü` : `${fmtOngoing(outageHours(o, now))} sürüyor`],
     ["Çözüm durumu", o.repairNote],
     ["Son güncelleme", fmtRelative(o.lastUpdateAt, now)],
   ];
