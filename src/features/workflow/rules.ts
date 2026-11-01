@@ -3,17 +3,21 @@
  * can be unit-tested (src/test/workflow.test.ts).
  */
 import { INTENT_KEYWORDS } from "@/data/mock";
-import type { BillingRecord, PaymentRecord, StepStatus, Workflow, WorkflowStatus, WorkflowStep } from "./types";
+import type { BillingRecord, ConnectivityStatus, PaymentRecord, StepStatus, Workflow, WorkflowStatus, WorkflowStep } from "./types";
 
+/**
+ * The single customer-facing wording for every status (short form for pills).
+ * Long sentences live in copy.ts and are derived from the same status.
+ */
 export const STATUS_LABEL: Record<WorkflowStatus, string> = {
   pending: "Sırada",
-  in_progress: "İşleniyor",
-  waiting_for_customer: "Kararın bekleniyor",
-  waiting_for_external_system: "Dış sistem yanıtı bekleniyor",
-  blocked: "Engel tespit edildi",
-  escalated: "Uzman ekibe aktarıldı",
+  in_progress: "Devam ediyor",
+  waiting_for_customer: "Kararınız bekleniyor",
+  waiting_for_external_system: "Yanıt bekleniyor",
+  blocked: "Şu an ilerleyemiyor",
+  escalated: "Uzman ekipte",
   completed: "Tamamlandı",
-  failed: "Başarısız",
+  failed: "Tamamlanamadı",
 };
 
 export const TERMINAL: WorkflowStatus[] = ["completed", "failed"];
@@ -57,7 +61,7 @@ export function findOpenByKey<T extends { dedupeKey: string; status: string }>(l
   return list.find((x) => x.dedupeKey === key && !closed.includes(x.status));
 }
 
-export type Intent = "billing" | "ai_usta" | "relocation" | "temp_internet" | "track";
+export type Intent = "billing" | "ai_usta" | "relocation" | "temp_internet" | "speed" | "track";
 
 /** Keyword-based intent detection for "Sen talebini söyle". Order of INTENT_KEYWORDS decides ties. */
 export function detectIntent(text: string): Intent | null {
@@ -123,3 +127,40 @@ export function shouldEscalateAfterRetry(retries: number): boolean {
 
 /** AI Usta hands over to live support after this many failed self-service steps. */
 export const AI_USTA_MAX_ATTEMPTS = 2;
+
+
+/* ---------------- Connection health (Bağlantım) ---------------- */
+export type HealthCode = "normal" | "degraded" | "checking" | "regional" | "field" | "failover" | "down";
+
+export const HEALTH_COPY: Record<HealthCode, { title: string; text: string; tone: "ok" | "warn" | "info" | "bad" }> = {
+  normal: { title: "Bağlantınız normal", text: "İnternet bağlantınızı sürekli izliyoruz. Bir sorun görürsek size haber veririz.", tone: "ok" },
+  degraded: { title: "Bağlantınızda performans düşüşü algılandı", text: "Hızınız paketinizin belirgin şekilde altında. Nedenini birlikte bulabiliriz.", tone: "warn" },
+  checking: { title: "Teknik kontrol gerçekleştiriliyor", text: "Bağlantınızı uzaktan kontrol ediyoruz. Şu an sizden bir işlem yapmanız gerekmiyor.", tone: "info" },
+  regional: { title: "Bölgesel bir kesinti ihtimali değerlendiriliyor", text: "Sorun sizden kaynaklı görünmüyor. Modeminize dokunmanıza gerek yok.", tone: "warn" },
+  field: { title: "Teknik ekibin müdahalesi gerekiyor", text: "Uzaktan çözemedik. Teknik ekip için işlem kaydı oluşturduk.", tone: "warn" },
+  failover: { title: "Yedek internet bağlantısına geçildi", text: "Sabit internetiniz dönene kadar mobil bağlantı üzerinden internete bağlısınız.", tone: "info" },
+  down: { title: "Sabit internetinizde kesinti var", text: "Nedenini inceliyoruz. Gelişme olduğunda size haber vereceğiz.", tone: "bad" },
+};
+
+const CONNECTIVITY_TYPES = ["outage_recovery", "proactive_fault", "speed_optimize", "ai_usta"];
+
+/** Derives the customer-facing health state. Never claims a certain diagnosis. */
+export function connectionHealth(c: Pick<ConnectivityStatus, "fixed" | "mobile">, workflows: Pick<Workflow, "type" | "status" | "steps" | "data" | "handoff">[]): HealthCode {
+  const open = workflows.filter((w) => CONNECTIVITY_TYPES.includes(w.type) && isActive(w));
+  const stepOf = (w: (typeof open)[number], k: string) => w.steps.find((s) => s.key === k)?.status;
+  if (open.some((w) => stepOf(w, "field") === "in_progress" || (w.type !== "ai_usta" && !!w.handoff))) return "field";
+  if (open.some((w) => w.type === "outage_recovery" && w.data["outageType"] === "regional")) return "regional";
+  if (c.fixed === "down" && c.mobile === "active") return "failover";
+  if (open.length) return "checking";
+  if (c.fixed === "degraded") return "degraded";
+  if (c.fixed === "down") return "down";
+  return "normal";
+}
+
+/** Box can only be switched on/off once its SIM is active (delivered and activated). */
+export function canToggleBox(box: { sim: string } | null | undefined): boolean {
+  return !!box && box.sim === "active";
+}
+
+/** Speed is "significantly" below the package when under 60% of it. */
+export const isSpeedProblem = (measured: number, pkg: number) => measured < pkg * 0.6;
