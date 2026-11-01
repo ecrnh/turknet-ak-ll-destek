@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, HeartPulse, QrCode, Video } from "lucide-react";
+import { ChevronRight, HeartPulse, QrCode, ScanEye, Video, Wifi } from "lucide-react";
 import modemImg from "@/assets/modem.png";
 import { PageHeader } from "@/components/layout/headers";
 import { FeedbackButton } from "@/components/tn/FeedbackButton";
@@ -23,6 +23,21 @@ export function HelpScreen() {
           <Link to="/dijital-onarim" className="mt-5 flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-primary px-5 text-[1.05rem] font-medium text-primary-foreground shadow-float">
             Dijital Onarımı Çalıştır <HeartPulse className="size-5" />
           </Link>
+        </div>
+
+        <div className="rounded-card bg-card p-5 shadow-card">
+          <h2 className="text-[1.25rem] font-semibold text-primary">Teknik Destek</h2>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Link to="/ai-usta" className="relative flex min-h-[112px] flex-col justify-between rounded-2xl bg-plum p-4 text-primary-foreground">
+              <NewBadge className="absolute right-3 top-3" />
+              <ScanEye className="size-7" strokeWidth={1.5} />
+              <span className="font-semibold leading-tight">AI Usta ile Çöz</span>
+            </Link>
+            <Link to="/baglanti" className="flex min-h-[112px] flex-col justify-between rounded-2xl border border-border p-4 text-primary">
+              <Wifi className="size-7" strokeWidth={1.5} />
+              <span className="font-semibold leading-tight">Bağlantım</span>
+            </Link>
+          </div>
         </div>
 
         <div className="rounded-card bg-card p-5 shadow-card">
