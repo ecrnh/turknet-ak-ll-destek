@@ -47,10 +47,10 @@ const KIND_FOR: Record<WorkflowType, NotifKind> = {
  * an unexpected delay, a newly started process or a resolved problem.
  * Routine progress is "quiet": visible in the app and history, no phone push.
  */
-export function notify(workflowId: string, title: string, body: string, level: "push" | "quiet" = "push") {
+export function notify(workflowId: string, title: string, body: string, level: "push" | "quiet" = "push", to?: string) {
   const wf = getWf(workflowId);
   W.setState((s) => ({ messages: [...s.messages, { id: newId("MSG"), workflowId, title, body, at: now(), level }] }));
-  if (level === "push") useAppStore.getState().notify({ kind: wf ? KIND_FOR[wf.type] : "support", title, body, to: `/surec/${workflowId}` });
+  if (level === "push") useAppStore.getState().notify({ kind: wf ? KIND_FOR[wf.type] : "support", title, body, to: to ?? `/surec/${workflowId}` });
   log(workflowId, "system", "notify", level === "push" ? `Bildirim gönderildi: “${title}”` : `Uygulama içi bilgi (bildirim gönderilmedi): “${title}”`, level === "push" ? undefined : "Rutin gelişme; yalnızca önemli aşamalarda bildirim gönderilir");
 }
 
