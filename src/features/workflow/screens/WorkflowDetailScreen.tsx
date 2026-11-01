@@ -75,16 +75,14 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
         {isConn && <HealthCard />}
 
         {isActive(wf) && (
-          <div className="grid grid-cols-2 gap-2">
-            {wf.status === "waiting_for_external_system" && wf.type === "relocation" ? (
-              <Button variant="outline" onClick={() => recheck(wf.id)}>
+          <div className="flex flex-wrap gap-2">
+            {wf.status === "waiting_for_external_system" && wf.type === "relocation" && (
+              <Button variant="outline" className="flex-1" onClick={() => recheck(wf.id)}>
                 <RefreshCw /> Tekrar Kontrol Et
               </Button>
-            ) : (
-              <span />
             )}
             {!wf.handoff && (
-              <Button variant="outline" onClick={() => escalate(wf.id, TEAM_FOR[wf.type], "Müşteri canlı destek istedi", "customer")}>
+              <Button variant="outline" className="flex-1" onClick={() => escalate(wf.id, TEAM_FOR[wf.type], "Müşteri canlı destek istedi", "customer")}>
                 <Headset /> Canlı Desteğe Bağlan
               </Button>
             )}
