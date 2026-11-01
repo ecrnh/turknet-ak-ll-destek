@@ -13,7 +13,7 @@ import { useWorkflowStore } from "../store";
 import type { Workflow } from "../types";
 import { StatusPill } from "./ui";
 
-const Box = ({ title, children, className }: { title?: string | undefined; children: React.ReactNode; className?: string }) => (
+const Box = ({ title, children, className }: { title?: string | undefined; children: React.ReactNode; className?: string | undefined }) => (
   <div className={cn("rounded-card bg-card p-5 shadow-card", className)}>
     {title && <p className="mb-3 text-sm font-semibold text-primary">{title}</p>}
     {children}
