@@ -75,9 +75,6 @@ export function BillingShieldScreen() {
           <Button size="xl" className="mt-5 w-full" onClick={run}>
             Faturamı İncele
           </Button>
-          <Button variant="outline" className="mt-2 w-full" onClick={run}>
-            “Ödememi yaptım ama borç görünüyor”
-          </Button>
         </div>
         <DemoNote className="pb-2">Fatura ve ödeme kayıtları örnek verilerdir; gerçek fatura sistemine bağlanılmaz.</DemoNote>
       </div>
