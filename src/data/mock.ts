@@ -237,7 +237,8 @@ export const SEARCH_INDEX: { title: string; to: string; keywords: string; isNew?
   { title: "Benim İçin Takip Et", to: "/takip", keywords: "takip süreç talep durum otonom", isNew: true, section: "Yeni" },
   { title: "AI Usta", to: "/ai-usta", keywords: "ai usta modem ışık çalışmıyor görsel fotoğraf", isNew: true, section: "Yeni" },
   { title: "Fatura Kalkanı", to: "/fatura-kalkani", keywords: "fatura borç ödeme mükerrer iade kalkan", isNew: true, section: "Yeni" },
-  { title: "Bağlantım · Geçici internet · Hibrit", to: "/baglanti", keywords: "bağlantı geçici mobil internet hibrit yedek", isNew: true, section: "Yeni" },
+  { title: "Hibrit İnternet · ücretsiz yedek bağlantı", to: "/hibrit", keywords: "hibrit yedek bağlantı kesinti 24 saat ücretsiz internet yok", isNew: true, section: "Yeni" },
+  { title: "Bağlantım", to: "/baglanti", keywords: "bağlantı durum sağlık geçici mobil internet box", isNew: true, section: "Yeni" },
   { title: "Yardım & Destek", to: "/yardim", keywords: "yardım destek", section: "Yardım" },
   { title: "Hız Testi", to: "/hiz-testi", keywords: "hız test speed", section: "İnternet" },
   { title: "Hız Yükseltme", to: "/islem/hiz-yukseltme", keywords: "hız yükselt paket fiber 1000", section: "Abonelik" },
@@ -246,10 +247,8 @@ export const SEARCH_INDEX: { title: string; to: string; keywords: string; isNew?
   { title: "Aile Yetkilendirme", to: "/aile", keywords: "aile yetki anne baba ebeveyn yetkili kişi", isNew: true, section: "Yeni" },
   { title: "QR ile Destek Talebi", to: "/qr", keywords: "qr kod temassız etiket tara", isNew: true, section: "Yeni" },
   { title: "QR Tara", to: "/qr/tara", keywords: "qr tara okut", isNew: true, section: "Yeni" },
-  { title: "Hediye İnternet Cüzdanım", to: "/hediye", keywords: "hediye gb kesinti telafi internet cüzdan", isNew: true, section: "Yeni" },
   { title: "AI Ajanlar", to: "/ajanlar", keywords: "ai yapay zeka ajan asistan otomatik", isNew: true, section: "Yeni" },
   { title: "Hız Koruyucu Ajan", to: "/ajanlar/hiz", keywords: "hız düşük yavaş ajan", isNew: true, section: "Yeni" },
-  { title: "Kesinti Yedekleme Ajanı", to: "/ajanlar/yedek", keywords: "yedek altyapı kesinti tekirdağ", isNew: true, section: "Yeni" },
   { title: "Bildirimler", to: "/bildirimler", keywords: "bildirim", section: "Hesap" },
   { title: "Tercihlerim / Büyük Yazı", to: "/tercihler", keywords: "tercih büyük yazı basit mod erişilebilirlik", section: "Hesap" },
   { title: "İşlem Geçmişi", to: "/islem-gecmisi", keywords: "işlem geçmiş", section: "Hesap" },
@@ -418,20 +417,6 @@ export const TEMP_MOBILE_OFFER = {
   ],
 };
 
-export const HYBRID_OFFER = {
-  title: "Hibrit yedek bağlantı",
-  device: "Mevcut modeminiz (ZTE F6640) + uzaktan tanımlanan eSIM",
-  price: "Örnek ücret: kesinti süresince ücretsiz, sonrası ₺49/ay opsiyonel (demo)",
-  quota: "Yedek modda 50 GB",
-  coverage: "Ümraniye Çakmak: 4.5G sinyal orta-iyi (demo kapsama verisi)",
-  delivery: "Cihaz gerekmez, uzaktan tanımlama ~2 dk (demo)",
-  terms: [
-    "Sabit hat kesilince modem mobil yedeğe otomatik geçer.",
-    "Sabit hat 5 dk kesintisiz çalışınca otomatik geri döner.",
-    "Yedek modda hız ve ping farklı olabilir; oyun/IPTV etkilenebilir.",
-  ],
-};
-
 export const BILLING_SEED = {
   bill: { id: "INV-2026-10", period: "Ekim 2026", amount: 749.9, due: "28 Eki 2026" },
   payment: { id: "PAY-88213", amount: 749.9, at: "27 Eki 2026 21:14", channel: "Kredi kartı (**** 4417)", ref: "BNK-5521907" },
@@ -474,7 +459,7 @@ export const MODEM_LED_DEMO = [
 export const INTENT_KEYWORDS: { intent: "billing" | "ai_usta" | "relocation" | "temp_internet" | "speed" | "track"; words: string[] }[] = [
   { intent: "billing", words: ["borç", "ödeme", "ödedim", "fatura", "mükerrer", "iade", "tahsil", "ücret", "tutarsız"] },
   { intent: "relocation", words: ["taşın", "nakil", "yeni adres", "adres değiş", "ev değiş", "taşı"] },
-  { intent: "temp_internet", words: ["geçici internet", "mobil internet", "hibrit", "yedek bağlantı", "box"] },
+  { intent: "temp_internet", words: ["geçici internet", "mobil internet", "hibrit", "yedek bağlantı", "yedek internet", "box"] },
   { intent: "speed", words: ["yavaş", "hız düş", "hızım", "düşük hız", "hız sorun", "donuyor", "kasıyor"] },
   { intent: "ai_usta", words: ["çalışmıyor", "kesildi", "kesinti", "ışık", "modem", "internet yok", "bağlantı yok", "kopuyor", "bağlanamıyorum", "gitti"] },
   { intent: "track", words: ["takip", "durum", "talebim", "işlemim", "ne oldu", "nerede", "devam eden"] },
