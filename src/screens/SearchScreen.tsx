@@ -51,7 +51,7 @@ export function SearchScreen() {
             </div>
             <p className="mb-3 mt-7 text-lg font-semibold text-primary">Yeni Özellikler</p>
             <div className="flex flex-wrap gap-3">
-              {["Görüntülü Destek", "QR ile Destek", "Hediye GB", "AI Ajanlar", "Aile Yetkilendirme"].map((p) => (
+              {["Görüntülü Destek", "QR ile Destek", "Hibrit İnternet", "AI Ajanlar", "Aile Yetkilendirme"].map((p) => (
                 <button key={p} onClick={() => setQ(p.split(" ")[0] ?? p)} className="min-h-12 rounded-full border-2 border-magenta/30 bg-magenta-soft px-5 font-semibold text-magenta">
                   {p}
                 </button>

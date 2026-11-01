@@ -122,7 +122,8 @@ export interface Appointment {
   at: number;
 }
 
-export type TempKind = "temp_mobile" | "hybrid";
+/** Temporary internet for relocation waits (TürkNet Box). The free Hibrit İnternet is a separate service (HybridService). */
+export type TempKind = "temp_mobile";
 export type TempStatus = "offered" | "accepted" | "declined" | "ordered" | "shipped" | "active" | "ended";
 
 export interface TemporaryInternetRequest {
@@ -227,7 +228,62 @@ export interface DemoConfig {
   addressCheck: "eligible" | "eligible_external" | "no_port" | "no_response";
   externalResponse: "ready" | "no_response";
   outageType: "line" | "regional";
+  /** Hibrit İnternet demo world: compatible backup device + active SIM present. */
+  hybridDevice: boolean;
+  /** Enough mobile coverage at the customer address. */
+  hybridCoverage: boolean;
+  /** Result of the next activation attempt. */
+  hybridActivation: "success" | "fail";
   reconciliation: "settled" | "duplicate";
   aiFix: "fixed" | "not_fixed";
   proactive: "remote_fix" | "field";
+}
+
+/* ---------------- Hibrit İnternet (free outage backup, included in the subscription) ---------------- */
+export interface OutageState {
+  wfId: string;
+  /** Simulated start; the presenter moves it to change the elapsed time. */
+  startedAt: number;
+  lastUpdateAt: number;
+  /** Customer-facing repair status line. */
+  repairNote: string;
+  restoredAt: number | null;
+  /** Restored card dismissed by the customer. */
+  dismissed: boolean;
+}
+
+export type HybridStatus =
+  | "unavailable" // no outage or outage under 24 h
+  | "offered" // outage over 24 h, customer may activate
+  | "checking" // device / SIM / coverage check running
+  | "ready" // checks passed, waiting for customer consent
+  | "no_device"
+  | "no_coverage"
+  | "activating"
+  | "failed"
+  | "active"
+  | "ended";
+
+export interface HybridChecks {
+  device: boolean;
+  sim: boolean;
+  coverage: boolean;
+}
+
+export interface DeviceRequest {
+  id: string;
+  status: "requested" | "preparing" | "on_the_way" | "delivered" | "cancelled";
+  trackingNo: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface HybridService {
+  status: HybridStatus;
+  checks: HybridChecks | null;
+  attempts: number;
+  activatedAt: number | null;
+  endedAt: number | null;
+  declinedAt: number | null;
+  device: DeviceRequest | null;
 }

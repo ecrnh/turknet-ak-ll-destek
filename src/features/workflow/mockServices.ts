@@ -71,3 +71,14 @@ export const MockLogisticsAPI = {
   name: "Kurye / cihaz gönderim (mock)",
   trackingNo: () => `KRY-${Math.floor(100000 + Math.random() * 900000)}`,
 };
+
+export const MockHybridAPI = {
+  name: "Hibrit İnternet cihaz / SIM / kapsama servisi (mock)",
+  checks() {
+    const c = cfg();
+    return { device: c.hybridDevice, sim: c.hybridDevice, coverage: c.hybridCoverage };
+  },
+  activationSucceeds(): boolean {
+    return cfg().hybridActivation === "success";
+  },
+};

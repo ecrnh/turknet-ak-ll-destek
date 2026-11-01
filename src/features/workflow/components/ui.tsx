@@ -336,7 +336,7 @@ export function RecordsList({ wf }: { wf: Workflow }) {
         <Link key={t.id} to="/surec/$id" params={{ id: t.workflowId }} className="flex items-center gap-3 py-3">
           <Smartphone className="size-5 shrink-0 text-primary" strokeWidth={1.75} />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">{t.kind === "hybrid" ? "Hibrit yedek" : "TürkNet Box"}</p>
+            <p className="text-sm font-semibold text-foreground">TürkNet Box</p>
             <p className="text-[11px] text-muted-foreground">
               {t.id} · {t.price}
             </p>

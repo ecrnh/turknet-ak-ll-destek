@@ -2,7 +2,7 @@ import { CheckCircle2, EyeOff, Headset, Pause, Play, PlugZap, RotateCcw, SkipFor
 import { useEffect, useRef, useState } from "react";
 import { DemoPanel } from "@/features/demo/DemoPanel";
 import { checkExternal, decide, escalate, flushOps, recheckRelocation, stepStatus } from "@/features/workflow";
-import { MOCK_LABEL, MockBillingAPI, MockInfraAPI, MockLogisticsAPI, MockNetworkAPI, MockProviderAPI, MockVisionAPI } from "@/features/workflow/mockServices";
+import { MOCK_LABEL, MockBillingAPI, MockHybridAPI, MockInfraAPI, MockLogisticsAPI, MockNetworkAPI, MockProviderAPI, MockVisionAPI } from "@/features/workflow/mockServices";
 import { STATUS_LABEL, isActive } from "@/features/workflow/rules";
 import { useWorkflowStore } from "@/features/workflow/store";
 import { ActorChip, AuditList, StatusPill, StepIcon } from "@/features/workflow/components/ui";
@@ -11,8 +11,9 @@ import { cn } from "@/lib/utils";
 import { buildCtx, cursorOf, next, resetScenario, setPlaying, startScenario, visibleSteps } from "./player";
 import { SCENARIOS, scenarioById } from "./scenarios";
 import { useScenarioStore } from "./store";
+import { HybridControls } from "./HybridControls";
 
-type Tab = "scenario" | "log" | "notif" | "classic";
+type Tab = "scenario" | "hybrid" | "log" | "notif" | "classic";
 
 const clock = (t: number) => new Date(t).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
@@ -67,10 +68,11 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-1 rounded-full bg-muted p-1 text-[11px] font-semibold">
+      <div className="grid grid-cols-5 gap-0.5 rounded-full bg-muted p-1 text-[10px] font-semibold">
         {(
           [
             ["scenario", "Senaryo"],
+            ["hybrid", "Hibrit"],
             ["log", `Günlük ${w.audit.length}`],
             ["notif", `Bildirim ${w.messages.length}`],
             ["classic", "Diğer"],
@@ -233,7 +235,7 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
                 ))}
               </ul>
               <p className="mt-2 text-[10px] text-muted-foreground">
-                {w.workOrders.filter((o) => o.status !== "done" && o.status !== "cancelled").length} açık iş emri · {w.workflows.filter((x) => x.decision).length} karar bekliyor · {w.box ? `Box ${w.box.power === "on" ? "açık" : "kapalı"}` : "Box yok"}
+                {w.workOrders.filter((o) => o.status !== "done" && o.status !== "cancelled").length} açık iş emri · {w.workflows.filter((x) => x.decision).length} karar bekliyor · {w.hybrid.status === "active" ? "Hibrit İnternet aktif" : w.box ? `Box ${w.box.power === "on" ? "açık" : "kapalı"}` : "Yedek bağlantı yok"}
               </p>
             </div>
           )}
@@ -242,7 +244,7 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
             <p className="font-semibold text-foreground">Entegrasyon durumu</p>
             <p>Gerçek entegrasyon: yok. Tüm dış sistemler mock servis:</p>
             <ul className="mt-1 space-y-0.5">
-              {[MockInfraAPI.name, MockProviderAPI.name, MockBillingAPI.name, MockNetworkAPI.name, MockVisionAPI.name, MockLogisticsAPI.name].map((n) => (
+              {[MockInfraAPI.name, MockProviderAPI.name, MockBillingAPI.name, MockNetworkAPI.name, MockHybridAPI.name, MockVisionAPI.name, MockLogisticsAPI.name].map((n) => (
                 <li key={n}>
                   <span className="mr-1 rounded bg-warning-soft px-1 font-bold text-warning">MOCK</span>
                   {n}
@@ -279,6 +281,7 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
         </div>
       )}
 
+      {tab === "hybrid" && <HybridControls />}
       {tab === "classic" && <DemoPanel />}
     </div>
   );

@@ -7,12 +7,13 @@ import { detectIntent, type Intent } from "../rules";
 import { startAiUsta } from "../services/aiUsta";
 import { runBillingShield } from "../services/billing";
 import { startSpeedCheck } from "../services/proactive";
+import { openOutage } from "../services/hybrid";
 
 const LABEL: Record<Intent, string> = {
   relocation: "Taşınma",
   billing: "Fatura Kalkanı",
   ai_usta: "AI Usta",
-  temp_internet: "Bağlantım · geçici internet",
+  temp_internet: "Bağlantım · Hibrit İnternet",
   speed: "Hız kontrolü",
   track: "İşlemlerim",
 };
@@ -48,11 +49,13 @@ export function IntentBox({ onDark, className }: { onDark?: boolean; className?:
         return r.wfId ? navigate({ to: "/surec/$id", params: { id: r.wfId } }) : navigate({ to: "/fatura-kalkani" });
       }
       case "ai_usta":
+        // A known outage is already being tracked: no modem steps for the customer.
+        if (openOutage()) return navigate({ to: "/hibrit" });
         return navigate({ to: "/surec/$id", params: { id: startAiUsta() } });
       case "speed":
         return navigate({ to: "/surec/$id", params: { id: startSpeedCheck() } });
       case "temp_internet":
-        return navigate({ to: "/baglanti" });
+        return navigate({ to: openOutage() ? "/hibrit" : "/baglanti" });
       case "track":
         return navigate({ to: "/takip" });
     }

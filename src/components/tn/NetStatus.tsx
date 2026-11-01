@@ -4,17 +4,13 @@ import { cn } from "@/lib/utils";
 export const NET_LABEL: Record<NetStatus, string> = {
   online: "Çevrimiçi",
   slow: "Yavaş",
-  outage: "Kesinti",
-  backup: "Yedek Altyapıda",
-  down: "Bağlantı Yok",
-  mobile: "Mobil Yedekte",
+  down: "Kesinti",
+  mobile: "Yedek Bağlantıda",
 };
 
 export const NET_DOT: Record<NetStatus, string> = {
   online: "bg-success",
   slow: "bg-warning",
-  outage: "bg-destructive",
-  backup: "bg-orange",
   down: "bg-destructive",
   mobile: "bg-orange",
 };
@@ -22,8 +18,6 @@ export const NET_DOT: Record<NetStatus, string> = {
 export const NET_TEXT: Record<NetStatus, string> = {
   online: "text-success",
   slow: "text-warning",
-  outage: "text-destructive",
-  backup: "text-orange",
   down: "text-destructive",
   mobile: "text-orange",
 };

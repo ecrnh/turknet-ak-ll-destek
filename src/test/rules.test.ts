@@ -1,37 +1,34 @@
 import { describe, expect, it } from "vitest";
-import { clampShare, giftForOutage } from "@/features/giftData/gift";
-import { detectOperator } from "@/data/mock";
+import { canActivateHybrid, HYBRID_OFFER_AFTER_H, hybridBlocker, hybridOfferOpen, outageElapsedH } from "@/features/workflow/rules";
 
-describe("Kesinti telafisi eşikleri", () => {
-  it("6 saatin altında hediye yok", () => {
-    expect(giftForOutage(5)).toBe(0);
+describe("Ücretsiz Hibrit İnternet · 24 saat kuralı", () => {
+  it("teklif 24 saatten önce açılmaz, 24 saatte açılır", () => {
+    expect(HYBRID_OFFER_AFTER_H).toBe(24);
+    expect(hybridOfferOpen(23.9)).toBe(false);
+    expect(hybridOfferOpen(24)).toBe(true);
   });
-  it("6 saat → 5 GB", () => {
-    expect(giftForOutage(6)).toBe(5);
-    expect(giftForOutage(10)).toBe(5);
-  });
-  it("24 saat → 10 GB", () => {
-    expect(giftForOutage(24)).toBe(10);
-  });
-  it("72 saat ve üzeri → 20 GB", () => {
-    expect(giftForOutage(72)).toBe(20);
-    expect(giftForOutage(96)).toBe(20);
+  it("geçen süre başlangıç zamanından hesaplanır", () => {
+    const start = Date.UTC(2026, 10, 1, 10);
+    expect(outageElapsedH(start, start + 25 * 3_600_000)).toBe(25);
   });
 });
 
-describe("GB paylaşımı", () => {
-  it("kalan GB'den fazlası paylaşılamaz", () => {
-    expect(clampShare(8, 3.6)).toBe(3.6);
+describe("Ücretsiz Hibrit İnternet · uygunluk", () => {
+  it("uyumlu cihaz veya aktif SIM yoksa cihaz gerekir", () => {
+    expect(hybridBlocker({ device: false, sim: false, coverage: true })).toBe("no_device");
+    expect(hybridBlocker({ device: true, sim: false, coverage: true })).toBe("no_device");
   });
-  it("10 GB'nin 3'ü anneye verilebilir", () => {
-    expect(clampShare(3, 8.6)).toBe(3);
+  it("kapsama yetersizse yedek bağlantı açılamaz", () => {
+    expect(hybridBlocker({ device: true, sim: true, coverage: false })).toBe("no_coverage");
   });
-});
-
-describe("Operatör otomatik tespiti", () => {
-  it("053x Turkcell, 054x Vodafone, 050x/055x Türk Telekom", () => {
-    expect(detectOperator("0532 418 22 17")).toBe("Turkcell");
-    expect(detectOperator("0544 210 33 81")).toBe("Vodafone");
-    expect(detectOperator("0505 111 22 33")).toBe("Türk Telekom");
+  it("cihaz, SIM ve kapsama uygunsa engel yok", () => {
+    expect(hybridBlocker({ device: true, sim: true, coverage: true })).toBeNull();
+  });
+  it("etkinleştirme yalnızca 24 saati aşan, sürmekte olan kesintide ve kontrol geçtikten sonra yapılır", () => {
+    expect(canActivateHybrid({ elapsedH: 25, fixed: "down", status: "ready" })).toBe(true);
+    expect(canActivateHybrid({ elapsedH: 25, fixed: "down", status: "failed" })).toBe(true);
+    expect(canActivateHybrid({ elapsedH: 10, fixed: "down", status: "ready" })).toBe(false);
+    expect(canActivateHybrid({ elapsedH: 25, fixed: "up", status: "ready" })).toBe(false);
+    expect(canActivateHybrid({ elapsedH: 25, fixed: "down", status: "no_device" })).toBe(false);
   });
 });

@@ -17,7 +17,7 @@ export function DigitalRepairScreen() {
   const setNet = useAppStore((s) => s.setNet);
   const addRecord = useAppStore((s) => s.addRecord);
   const flow = useFlow("digital_repair");
-  const outage = net.status === "outage";
+  const outage = net.status === "down" || net.status === "mobile";
   const done = i >= STEPS.length;
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export function DigitalRepairScreen() {
       if (net.status === "slow") setNet({ status: "online", speed: 94 });
       addRecord({ channel: "Dijital Onarım", title: "Dijital Onarım tamamlandı", summary: "Hat profili yenilendi, bağlantı sağlıklı.", status: "Tamamlandı", details: STEPS, fieldVisitAvoided: true });
     } else {
-      addRecord({ channel: "Dijital Onarım", title: "Dijital Onarım: bölgesel kesinti", summary: "Sorun modemde değil, bölgesel arıza tespit edildi.", status: "Bilgilendirildi", details: STEPS });
+      addRecord({ channel: "Dijital Onarım", title: "Dijital Onarım: kesinti", summary: "Sorun modemde değil, hatta kesinti tespit edildi.", status: "Bilgilendirildi", details: STEPS });
     }
     flow.complete({ outage });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,7 +75,7 @@ export function DigitalRepairScreen() {
         </Link>
         {done && outage && (
           <Banner tone="warning" title="Sorun senden kaynaklı değil">
-            Ekiplerimiz bölgesel arıza üzerinde çalışıyor. <Link to="/hediye" className="font-semibold text-magenta">Hediye internetini gör</Link>
+            Teknik ekibimiz arıza üzerinde çalışıyor. <Link to="/hibrit" className="font-semibold text-magenta">Kesinti durumunu gör</Link>
           </Banner>
         )}
         {done && !outage && (

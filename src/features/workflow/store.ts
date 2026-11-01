@@ -9,6 +9,8 @@ import type {
   ConnectivityStatus,
   CustomerNotification,
   DemoConfig,
+  HybridService,
+  OutageState,
   PaymentRecord,
   ScheduledOp,
   SmsMessage,
@@ -36,6 +38,8 @@ export interface WorkflowState {
   audit: AuditEvent[];
   ops: ScheduledOp[];
   config: DemoConfig;
+  outage: OutageState | null;
+  hybrid: HybridService;
   /** Automatic external re-checks. Off while a presenter drives a scenario step by step. */
   autoFollowUp: boolean;
   reset: () => void;
@@ -45,6 +49,9 @@ export const defaultConfig = (): DemoConfig => ({
   addressCheck: "eligible",
   externalResponse: "ready",
   outageType: "line",
+  hybridDevice: true,
+  hybridCoverage: true,
+  hybridActivation: "success",
   reconciliation: "settled",
   aiFix: "fixed",
   proactive: "remote_fix",
@@ -60,6 +67,8 @@ export const initialConnectivity = (): ConnectivityStatus => ({
   history: [],
 });
 
+export const initialHybrid = (): HybridService => ({ status: "unavailable", checks: null, attempts: 0, activatedAt: null, endedAt: null, declinedAt: null, device: null });
+
 const initial = () => ({
   workflows: [] as Workflow[],
   workOrders: [] as WorkOrder[],
@@ -74,8 +83,13 @@ const initial = () => ({
   audit: [] as AuditEvent[],
   ops: [] as ScheduledOp[],
   config: defaultConfig(),
+  outage: null as OutageState | null,
+  hybrid: initialHybrid(),
   autoFollowUp: true,
 });
+
+/** Older saved demos lack the new config keys; fill them so the demo never reads undefined. */
+const upgrade = (p: Partial<WorkflowState>) => ({ ...p, config: { ...defaultConfig(), ...(p.config ?? {}) }, hybrid: { ...initialHybrid(), ...(p.hybrid ?? {}) } });
 
 export const useWorkflowStore = create<WorkflowState>()(
   persist(
@@ -87,9 +101,9 @@ export const useWorkflowStore = create<WorkflowState>()(
       name: "tn-workflow",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      version: 2,
-      migrate: (persisted) => ({ ...initial(), ...(persisted as object) }) as WorkflowState,
-      merge: (persisted, current) => ({ ...current, ...initial(), ...(persisted as object), reset: current.reset }),
+      version: 3,
+      migrate: (persisted) => ({ ...initial(), ...upgrade(persisted as Partial<WorkflowState>) }) as WorkflowState,
+      merge: (persisted, current) => ({ ...current, ...initial(), ...upgrade((persisted ?? {}) as Partial<WorkflowState>), reset: current.reset }),
     },
   ),
 );

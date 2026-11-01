@@ -8,7 +8,7 @@ import { INTERNET_OPS, SUBSCRIPTION_OPS, SUPPORT_OPS, USER } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
 import { useActingAccount } from "@/features/family/store";
 import { AgentActivityCard } from "@/features/aiAgents/components/AgentActivityCard";
-import { OutageStatusCard } from "@/features/giftData/components/OutageStatusCard";
+import { OutageHomeCard } from "@/features/workflow/components/hybrid";
 import { cn } from "@/lib/utils";
 import { HeroCarousel } from "./home/HeroCarousel";
 import { AutonomyCard } from "@/features/workflow/components/AutonomyCard";
@@ -16,7 +16,7 @@ import { AutonomyCard } from "@/features/workflow/components/AutonomyCard";
 function StatusPill() {
   const status = useAppStore((s) => s.net.status);
   const acting = useActingAccount();
-  const to = status === "backup" ? "/ajanlar/yedek" : status === "outage" ? "/hediye" : status === "slow" ? "/ajanlar/hiz" : "/hiz-testi";
+  const to = status === "down" || status === "mobile" ? "/hibrit" : status === "slow" ? "/ajanlar/hiz" : "/hiz-testi";
   return (
     <div className="mx-auto -mt-1 flex w-[88%] overflow-hidden rounded-full bg-primary-deep/85 text-primary-foreground shadow-float backdrop-blur">
       <Link to="/hesabim" className="flex flex-1 flex-col justify-center rounded-full border border-primary-foreground/10 bg-primary/40 px-5 py-2.5">
@@ -67,8 +67,6 @@ function SimpleHome() {
 
 export function HomeScreen() {
   const simple = useAppStore((s) => s.prefs.simpleMode);
-  const status = useAppStore((s) => s.net.status);
-  const out = status === "outage" || status === "backup";
 
   return (
     <div>
@@ -81,7 +79,7 @@ export function HomeScreen() {
       </div>
 
       <div className="space-y-4 px-4">
-        {out && <OutageStatusCard />}
+        <OutageHomeCard />
         <AutonomyCard />
         {simple ? (
           <SimpleHome />

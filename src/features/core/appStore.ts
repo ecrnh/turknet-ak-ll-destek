@@ -3,9 +3,9 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { uid } from "@/lib/format";
 import { USER } from "@/data/mock";
 
-export type NetStatus = "online" | "slow" | "outage" | "backup" | "down" | "mobile";
+export type NetStatus = "online" | "slow" | "down" | "mobile";
 export type Channel = "Görüntülü" | "QR" | "Ajan" | "Chat" | "Dijital Onarım" | "Otonom";
-export type NotifKind = "agent" | "gift" | "support" | "family" | "campaign" | "bill";
+export type NotifKind = "agent" | "support" | "family" | "campaign" | "bill";
 
 export interface AppNotification {
   id: string;
@@ -72,7 +72,6 @@ interface NetState {
 interface Prefs {
   bigText: boolean;
   simpleMode: boolean;
-  backupConsent: boolean | null;
   push: boolean;
   demoPanel: boolean;
 }
@@ -122,8 +121,8 @@ const seedNotifications = (): AppNotification[] => [
   { id: "n8", kind: "campaign", title: "Arkadaşını Getir", body: "Sayende 1 kişi Turknet'li oldu. 1 ay ücretsiz internet kazandın.", time: T("2026-09-03T18:00:00+03:00"), read: false, to: "/islem/arkadasini-getir" },
   { id: "n9", kind: "support", title: "Yeni: QR ile Destek", body: "Modemindeki QR'ı okut, arızanı form doldurmadan bildir.", time: T("2026-09-02T10:00:00+03:00"), read: false, to: "/qr" },
   { id: "n10", kind: "support", title: "Yeni: Görüntülü Destek", body: "Uzmanımız kameradan modemini görsün, birlikte çözelim.", time: T("2026-09-01T10:00:00+03:00"), read: false, to: "/goruntulu-destek" },
-  { id: "n11", kind: "gift", title: "Her Hatta Hediye İnternet", body: "Kesinti 6 saati geçerse hattına GB hediye ediyoruz.", time: T("2026-08-30T10:00:00+03:00"), read: false, to: "/hediye" },
-  { id: "n12", kind: "agent", title: "AI Ajanların hazır", body: "Hız Koruyucu ve Kesinti Yedekleme ajanların aktif.", time: T("2026-08-29T10:00:00+03:00"), read: false, to: "/ajanlar" },
+  { id: "n11", kind: "support", title: "Yeni: Ücretsiz Hibrit İnternet", body: "Kesinti 24 saati aşarsa aboneliğinize dahil yedek bağlantınızı uygulamadan etkinleştirebilirsiniz.", time: T("2026-08-30T10:00:00+03:00"), read: false, to: "/hibrit" },
+  { id: "n12", kind: "agent", title: "AI Ajanların hazır", body: "Hız Koruyucu ve Kesinti Takibi ajanların aktif.", time: T("2026-08-29T10:00:00+03:00"), read: false, to: "/ajanlar" },
 ];
 
 const seedRecords = (): SupportRecord[] => [
@@ -159,7 +158,7 @@ const initial = () => ({
   notifications: seedNotifications(),
   records: seedRecords(),
   history: seedHistory(),
-  prefs: { bigText: false, simpleMode: false, backupConsent: null, push: true, demoPanel: true },
+  prefs: { bigText: false, simpleMode: false, push: true, demoPanel: true },
   savedFieldVisits: 0,
   feedback: [] as FeedbackItem[],
   ratings: [] as Rating[],
@@ -201,6 +200,19 @@ export const useAppStore = create<AppState>()(
       name: "tn-app",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
+      version: 1,
+      /** v0 demos saved gift-internet notifications and old outage states; drop them. */
+      migrate: (persisted) => {
+        const p = persisted as Partial<AppState> & { prefs?: Record<string, unknown> };
+        const legacy = (to?: string) => !!to && (to.startsWith("/hediye") || to === "/ajanlar/yedek");
+        const status = p.net?.status as string | undefined;
+        return {
+          ...p,
+          net: p.net && (status === "outage" || status === "backup") ? { ...p.net, status: "online" } : p.net,
+          notifications: (p.notifications ?? []).filter((n) => (n.kind as string) !== "gift" && !legacy(n.to)),
+          records: (p.records ?? []).filter((r) => !legacy(r.to)),
+        } as AppState;
+      },
       partialize: (s) => {
         const { helpOpen: _h, helpPrefill: _p, push: _push, ...rest } = s;
         return rest;

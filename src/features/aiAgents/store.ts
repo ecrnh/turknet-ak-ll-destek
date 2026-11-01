@@ -19,14 +19,12 @@ interface AgentsState {
   enabled: Record<AgentId, boolean>;
   actions: AgentAction[];
   speedRun: { status: SpeedRunStatus; stepIndex: number; before: number; after: number; at: number | null };
-  backup: { active: boolean; since: number | null; returning: boolean };
   stats: { solved: number; minutesSaved: number; callsPrevented: number };
   toggle: (id: AgentId, v: boolean) => void;
   addAction: (a: Omit<AgentAction, "id" | "time">) => void;
   undo: (id: string) => void;
   noRepeat: (id: string) => void;
   setSpeedRun: (p: Partial<AgentsState["speedRun"]>) => void;
-  setBackup: (p: Partial<AgentsState["backup"]>) => void;
   addStats: (solved: number, minutes: number, calls: number) => void;
   reset: () => void;
 }
@@ -41,7 +39,6 @@ const initial = () => ({
     { id: "a3", agent: "speed" as AgentId, title: "Wi-Fi kanal optimizasyonu", detail: "Akşam yoğunluğu öncesi kanal 1 → 11", time: T("2026-09-28T19:40:00+03:00") },
   ],
   speedRun: { status: "idle" as SpeedRunStatus, stepIndex: -1, before: 20, after: 98, at: null as number | null },
-  backup: { active: false, since: null as number | null, returning: false },
   stats: { solved: 7, minutesSaved: 96, callsPrevented: 4 },
 });
 
@@ -54,7 +51,6 @@ export const useAgentsStore = create<AgentsState>()(
       undo: (id) => set((s) => ({ actions: s.actions.map((a) => (a.id === id ? { ...a, undone: true } : a)) })),
       noRepeat: (id) => set((s) => ({ actions: s.actions.map((a) => (a.id === id ? { ...a, noRepeat: true } : a)) })),
       setSpeedRun: (p) => set((s) => ({ speedRun: { ...s.speedRun, ...p } })),
-      setBackup: (p) => set((s) => ({ backup: { ...s.backup, ...p } })),
       addStats: (solved, minutes, calls) =>
         set((s) => ({ stats: { solved: s.stats.solved + solved, minutesSaved: s.stats.minutesSaved + minutes, callsPrevented: s.stats.callsPrevented + calls } })),
       reset: () => set(initial()),

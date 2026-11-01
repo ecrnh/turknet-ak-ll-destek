@@ -19,6 +19,7 @@ import { Route as DestekKayitlariRouteImport } from './routes/destek-kayitlari'
 import { Route as DijitalOnarimRouteImport } from './routes/dijital-onarim'
 import { Route as FaturaKalkaniRouteImport } from './routes/fatura-kalkani'
 import { Route as HesabimRouteImport } from './routes/hesabim'
+import { Route as HibritRouteImport } from './routes/hibrit'
 import { Route as HizTestiRouteImport } from './routes/hiz-testi'
 import { Route as IslemGecmisiRouteImport } from './routes/islem-gecmisi'
 import { Route as IslemlerRouteImport } from './routes/islemler'
@@ -30,14 +31,11 @@ import { Route as AileIndexRouteImport } from './routes/aile.index'
 import { Route as AileYeniRouteImport } from './routes/aile.yeni'
 import { Route as AjanlarIndexRouteImport } from './routes/ajanlar.index'
 import { Route as AjanlarHizRouteImport } from './routes/ajanlar.hiz'
-import { Route as AjanlarYedekRouteImport } from './routes/ajanlar.yedek'
 import { Route as FaturalarIndexRouteImport } from './routes/faturalar.index'
 import { Route as FaturalarGecmisRouteImport } from './routes/faturalar.gecmis'
 import { Route as GoruntuluDestekIndexRouteImport } from './routes/goruntulu-destek.index'
 import { Route as GoruntuluDestekGorusmeRouteImport } from './routes/goruntulu-destek.gorusme'
 import { Route as GoruntuluDestekSonucRouteImport } from './routes/goruntulu-destek.sonuc'
-import { Route as HediyeIndexRouteImport } from './routes/hediye.index'
-import { Route as HediyeAktiflestirRouteImport } from './routes/hediye.aktiflestir'
 import { Route as IslemSlugRouteImport } from './routes/islem.$slug'
 import { Route as QrIndexRouteImport } from './routes/qr.index'
 import { Route as QrAnalizRouteImport } from './routes/qr.analiz'
@@ -95,6 +93,11 @@ const HesabimRoute = HesabimRouteImport.update({
   path: '/hesabim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HibritRoute = HibritRouteImport.update({
+  id: '/hibrit',
+  path: '/hibrit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HizTestiRoute = HizTestiRouteImport.update({
   id: '/hiz-testi',
   path: '/hiz-testi',
@@ -150,11 +153,6 @@ const AjanlarHizRoute = AjanlarHizRouteImport.update({
   path: '/ajanlar/hiz',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AjanlarYedekRoute = AjanlarYedekRouteImport.update({
-  id: '/ajanlar/yedek',
-  path: '/ajanlar/yedek',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FaturalarIndexRoute = FaturalarIndexRouteImport.update({
   id: '/faturalar/',
   path: '/faturalar/',
@@ -178,16 +176,6 @@ const GoruntuluDestekGorusmeRoute = GoruntuluDestekGorusmeRouteImport.update({
 const GoruntuluDestekSonucRoute = GoruntuluDestekSonucRouteImport.update({
   id: '/goruntulu-destek/sonuc',
   path: '/goruntulu-destek/sonuc',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HediyeIndexRoute = HediyeIndexRouteImport.update({
-  id: '/hediye/',
-  path: '/hediye/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HediyeAktiflestirRoute = HediyeAktiflestirRouteImport.update({
-  id: '/hediye/aktiflestir',
-  path: '/hediye/aktiflestir',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IslemSlugRoute = IslemSlugRouteImport.update({
@@ -232,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/dijital-onarim': typeof DijitalOnarimRoute
   '/fatura-kalkani': typeof FaturaKalkaniRoute
   '/hesabim': typeof HesabimRoute
+  '/hibrit': typeof HibritRoute
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
@@ -241,11 +230,9 @@ export interface FileRoutesByFullPath {
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
   '/ajanlar/hiz': typeof AjanlarHizRoute
-  '/ajanlar/yedek': typeof AjanlarYedekRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
-  '/hediye/aktiflestir': typeof HediyeAktiflestirRoute
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
   '/qr/tara': typeof QrTaraRoute
@@ -254,7 +241,6 @@ export interface FileRoutesByFullPath {
   '/ajanlar/': typeof AjanlarIndexRoute
   '/faturalar/': typeof FaturalarIndexRoute
   '/goruntulu-destek/': typeof GoruntuluDestekIndexRoute
-  '/hediye/': typeof HediyeIndexRoute
   '/qr/': typeof QrIndexRoute
   '/qr/talep/$id': typeof QrTalepIdRoute
 }
@@ -269,6 +255,7 @@ export interface FileRoutesByTo {
   '/dijital-onarim': typeof DijitalOnarimRoute
   '/fatura-kalkani': typeof FaturaKalkaniRoute
   '/hesabim': typeof HesabimRoute
+  '/hibrit': typeof HibritRoute
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
@@ -278,11 +265,9 @@ export interface FileRoutesByTo {
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
   '/ajanlar/hiz': typeof AjanlarHizRoute
-  '/ajanlar/yedek': typeof AjanlarYedekRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
-  '/hediye/aktiflestir': typeof HediyeAktiflestirRoute
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
   '/qr/tara': typeof QrTaraRoute
@@ -291,7 +276,6 @@ export interface FileRoutesByTo {
   '/ajanlar': typeof AjanlarIndexRoute
   '/faturalar': typeof FaturalarIndexRoute
   '/goruntulu-destek': typeof GoruntuluDestekIndexRoute
-  '/hediye': typeof HediyeIndexRoute
   '/qr': typeof QrIndexRoute
   '/qr/talep/$id': typeof QrTalepIdRoute
 }
@@ -307,6 +291,7 @@ export interface FileRoutesById {
   '/dijital-onarim': typeof DijitalOnarimRoute
   '/fatura-kalkani': typeof FaturaKalkaniRoute
   '/hesabim': typeof HesabimRoute
+  '/hibrit': typeof HibritRoute
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
@@ -316,11 +301,9 @@ export interface FileRoutesById {
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
   '/ajanlar/hiz': typeof AjanlarHizRoute
-  '/ajanlar/yedek': typeof AjanlarYedekRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
-  '/hediye/aktiflestir': typeof HediyeAktiflestirRoute
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
   '/qr/tara': typeof QrTaraRoute
@@ -329,7 +312,6 @@ export interface FileRoutesById {
   '/ajanlar/': typeof AjanlarIndexRoute
   '/faturalar/': typeof FaturalarIndexRoute
   '/goruntulu-destek/': typeof GoruntuluDestekIndexRoute
-  '/hediye/': typeof HediyeIndexRoute
   '/qr/': typeof QrIndexRoute
   '/qr/talep/$id': typeof QrTalepIdRoute
 }
@@ -346,6 +328,7 @@ export interface FileRouteTypes {
     | '/dijital-onarim'
     | '/fatura-kalkani'
     | '/hesabim'
+    | '/hibrit'
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
@@ -355,11 +338,9 @@ export interface FileRouteTypes {
     | '/yardim'
     | '/aile/yeni'
     | '/ajanlar/hiz'
-    | '/ajanlar/yedek'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
     | '/goruntulu-destek/sonuc'
-    | '/hediye/aktiflestir'
     | '/islem/$slug'
     | '/qr/analiz'
     | '/qr/tara'
@@ -368,7 +349,6 @@ export interface FileRouteTypes {
     | '/ajanlar/'
     | '/faturalar/'
     | '/goruntulu-destek/'
-    | '/hediye/'
     | '/qr/'
     | '/qr/talep/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -383,6 +363,7 @@ export interface FileRouteTypes {
     | '/dijital-onarim'
     | '/fatura-kalkani'
     | '/hesabim'
+    | '/hibrit'
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
@@ -392,11 +373,9 @@ export interface FileRouteTypes {
     | '/yardim'
     | '/aile/yeni'
     | '/ajanlar/hiz'
-    | '/ajanlar/yedek'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
     | '/goruntulu-destek/sonuc'
-    | '/hediye/aktiflestir'
     | '/islem/$slug'
     | '/qr/analiz'
     | '/qr/tara'
@@ -405,7 +384,6 @@ export interface FileRouteTypes {
     | '/ajanlar'
     | '/faturalar'
     | '/goruntulu-destek'
-    | '/hediye'
     | '/qr'
     | '/qr/talep/$id'
   id:
@@ -420,6 +398,7 @@ export interface FileRouteTypes {
     | '/dijital-onarim'
     | '/fatura-kalkani'
     | '/hesabim'
+    | '/hibrit'
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
@@ -429,11 +408,9 @@ export interface FileRouteTypes {
     | '/yardim'
     | '/aile/yeni'
     | '/ajanlar/hiz'
-    | '/ajanlar/yedek'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
     | '/goruntulu-destek/sonuc'
-    | '/hediye/aktiflestir'
     | '/islem/$slug'
     | '/qr/analiz'
     | '/qr/tara'
@@ -442,7 +419,6 @@ export interface FileRouteTypes {
     | '/ajanlar/'
     | '/faturalar/'
     | '/goruntulu-destek/'
-    | '/hediye/'
     | '/qr/'
     | '/qr/talep/$id'
   fileRoutesById: FileRoutesById
@@ -458,6 +434,7 @@ export interface RootRouteChildren {
   DijitalOnarimRoute: typeof DijitalOnarimRoute
   FaturaKalkaniRoute: typeof FaturaKalkaniRoute
   HesabimRoute: typeof HesabimRoute
+  HibritRoute: typeof HibritRoute
   HizTestiRoute: typeof HizTestiRoute
   IslemGecmisiRoute: typeof IslemGecmisiRoute
   IslemlerRoute: typeof IslemlerRoute
@@ -467,11 +444,9 @@ export interface RootRouteChildren {
   YardimRoute: typeof YardimRoute
   AileYeniRoute: typeof AileYeniRoute
   AjanlarHizRoute: typeof AjanlarHizRoute
-  AjanlarYedekRoute: typeof AjanlarYedekRoute
   FaturalarGecmisRoute: typeof FaturalarGecmisRoute
   GoruntuluDestekGorusmeRoute: typeof GoruntuluDestekGorusmeRoute
   GoruntuluDestekSonucRoute: typeof GoruntuluDestekSonucRoute
-  HediyeAktiflestirRoute: typeof HediyeAktiflestirRoute
   IslemSlugRoute: typeof IslemSlugRoute
   QrAnalizRoute: typeof QrAnalizRoute
   QrTaraRoute: typeof QrTaraRoute
@@ -480,7 +455,6 @@ export interface RootRouteChildren {
   AjanlarIndexRoute: typeof AjanlarIndexRoute
   FaturalarIndexRoute: typeof FaturalarIndexRoute
   GoruntuluDestekIndexRoute: typeof GoruntuluDestekIndexRoute
-  HediyeIndexRoute: typeof HediyeIndexRoute
   QrIndexRoute: typeof QrIndexRoute
   QrTalepIdRoute: typeof QrTalepIdRoute
 }
@@ -555,6 +529,13 @@ declare module '@tanstack/react-router' {
       path: '/hesabim'
       fullPath: '/hesabim'
       preLoaderRoute: typeof HesabimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hibrit': {
+      id: '/hibrit'
+      path: '/hibrit'
+      fullPath: '/hibrit'
+      preLoaderRoute: typeof HibritRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hiz-testi': {
@@ -634,13 +615,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AjanlarHizRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ajanlar/yedek': {
-      id: '/ajanlar/yedek'
-      path: '/ajanlar/yedek'
-      fullPath: '/ajanlar/yedek'
-      preLoaderRoute: typeof AjanlarYedekRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/faturalar/': {
       id: '/faturalar/'
       path: '/faturalar'
@@ -674,20 +648,6 @@ declare module '@tanstack/react-router' {
       path: '/goruntulu-destek/sonuc'
       fullPath: '/goruntulu-destek/sonuc'
       preLoaderRoute: typeof GoruntuluDestekSonucRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hediye/': {
-      id: '/hediye/'
-      path: '/hediye'
-      fullPath: '/hediye/'
-      preLoaderRoute: typeof HediyeIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hediye/aktiflestir': {
-      id: '/hediye/aktiflestir'
-      path: '/hediye/aktiflestir'
-      fullPath: '/hediye/aktiflestir'
-      preLoaderRoute: typeof HediyeAktiflestirRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/islem/$slug': {
@@ -746,6 +706,7 @@ const rootRouteChildren: RootRouteChildren = {
   DijitalOnarimRoute: DijitalOnarimRoute,
   FaturaKalkaniRoute: FaturaKalkaniRoute,
   HesabimRoute: HesabimRoute,
+  HibritRoute: HibritRoute,
   HizTestiRoute: HizTestiRoute,
   IslemGecmisiRoute: IslemGecmisiRoute,
   IslemlerRoute: IslemlerRoute,
@@ -755,11 +716,9 @@ const rootRouteChildren: RootRouteChildren = {
   YardimRoute: YardimRoute,
   AileYeniRoute: AileYeniRoute,
   AjanlarHizRoute: AjanlarHizRoute,
-  AjanlarYedekRoute: AjanlarYedekRoute,
   FaturalarGecmisRoute: FaturalarGecmisRoute,
   GoruntuluDestekGorusmeRoute: GoruntuluDestekGorusmeRoute,
   GoruntuluDestekSonucRoute: GoruntuluDestekSonucRoute,
-  HediyeAktiflestirRoute: HediyeAktiflestirRoute,
   IslemSlugRoute: IslemSlugRoute,
   QrAnalizRoute: QrAnalizRoute,
   QrTaraRoute: QrTaraRoute,
@@ -768,7 +727,6 @@ const rootRouteChildren: RootRouteChildren = {
   AjanlarIndexRoute: AjanlarIndexRoute,
   FaturalarIndexRoute: FaturalarIndexRoute,
   GoruntuluDestekIndexRoute: GoruntuluDestekIndexRoute,
-  HediyeIndexRoute: HediyeIndexRoute,
   QrIndexRoute: QrIndexRoute,
   QrTalepIdRoute: QrTalepIdRoute,
 }

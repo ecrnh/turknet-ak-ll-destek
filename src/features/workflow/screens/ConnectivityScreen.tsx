@@ -1,24 +1,33 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Gauge, Router, ScanEye, Smartphone } from "lucide-react";
-import { useState } from "react";
+import { ChevronRight, Gauge, Router, ScanEye } from "lucide-react";
 import { PageHeader } from "@/components/layout/headers";
 import { SectionTitle } from "@/components/tn/primitives";
-import { HYBRID_OFFER, TEMP_MOBILE_OFFER } from "@/data/mock";
 import { startSpeedCheck, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
 import { BoxCard, ConnectivityPanel, HealthCard } from "../components/panels";
 import { DemoNote, TechDetails, WorkflowCard } from "../components/ui";
+import { FreeBadge } from "../components/hybrid";
+import { HYBRID_COPY } from "../copy";
 
 const TYPES = ["outage_recovery", "proactive_fault", "speed_optimize", "temp_internet", "ai_usta"];
 
-/** Bağlantım: health, speed, outage state, Box / hybrid and temporary internet in one place. */
+/** Bağlantım: health, speed, outage state, Hibrit İnternet entry and the relocation Box in one place. */
 export function ConnectivityScreen() {
   const navigate = useNavigate();
   const workflows = useWorkflowStore((s) => s.workflows);
-  const connectivity = useWorkflowStore((s) => s.connectivity);
+  const hybrid = useWorkflowStore((s) => s.hybrid);
+  const outage = useWorkflowStore((s) => s.outage);
   const related = workflows.filter((w) => TYPES.includes(w.type) && isActive(w)).sort((a, b) => b.updatedAt - a.updatedAt);
-  const offerWf = workflows.find((w) => isActive(w) && (w.decision?.key === "outage_alt" || w.decision?.key === "relocation_temp"));
-  const [showTemp, setShowTemp] = useState(false);
+  const relocationOffer = workflows.find((w) => isActive(w) && w.decision?.key === "relocation_temp");
+  const ongoing = !!outage && !outage.restoredAt;
+  const hybridLine =
+    hybrid.status === "active"
+      ? HYBRID_COPY.active.title
+      : ongoing && hybrid.status !== "unavailable"
+        ? "Kesintiniz 24 saati aştı. Ücretsiz yedek bağlantınızı etkinleştirebilirsiniz."
+        : ongoing
+          ? "Kesinti 24 saati aşarsa ücretsiz yedek bağlantınızı buradan etkinleştirebilirsiniz."
+          : "Kesinti 24 saati aşarsa aboneliğinize dahil yedek bağlantınızla internete bağlı kalırsınız.";
 
   return (
     <div>
@@ -57,73 +66,30 @@ export function ConnectivityScreen() {
 
         <BoxCard />
 
-        {connectivity.hybridEnabled && (
-          <div className="rounded-card bg-card p-5 shadow-card">
-            <p className="flex items-center gap-2 font-semibold text-primary">
-              <Router className="size-5" /> Hibrit bağlantı
-            </p>
-            <ol className="mt-3 flex items-center gap-1 text-[11px] font-semibold">
-              {[
-                ["Sabit aktif", connectivity.mode === "fixed" && connectivity.fixed === "up"],
-                ["Mobil yedek aktif", connectivity.mode === "hybrid_backup"],
-                ["Bağlantı geri döndü", connectivity.mode === "fixed" && connectivity.mobile === "standby"],
-              ].map(([l, on]) => (
-                <li key={l as string} className={`flex-1 rounded-xl px-2 py-2 text-center ${on ? "bg-magenta text-magenta-foreground" : "bg-muted text-muted-foreground"}`}>
-                  {l as string}
-                </li>
-              ))}
-            </ol>
-          </div>
-        )}
-
         <SectionTitle className="mt-5">İnternetsiz kalmayın</SectionTitle>
-        <div className="rounded-card bg-card p-5 shadow-card">
-          <p className="font-semibold text-primary">Geçici internet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Sabit internetiniz kesildiğinde veya yeni adresinizde kurulum beklerken bağlantıda kalabilirsiniz.</p>
-          {offerWf ? (
-            <Link to="/surec/$id" params={{ id: offerWf.id }} className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-float">
-              Size Özel Teklifi İnceleyin
-            </Link>
-          ) : (
-            <button type="button" onClick={() => setShowTemp((v) => !v)} className="mt-4 flex min-h-12 w-full items-center justify-center gap-1 rounded-full border border-primary/20 text-sm font-semibold text-primary">
-              Geçici İnterneti İncele <ChevronRight className="size-4" />
-            </button>
-          )}
-          {!offerWf && showTemp && (
-            <div className="mt-4 space-y-3">
-              <p className="rounded-2xl bg-muted p-3 text-xs text-muted-foreground">
-                {connectivity.fixed === "up" ? "Sabit internetiniz şu an çalışıyor. Bir kesinti veya taşınma olduğunda size uygun seçeneği otomatik olarak sunarız." : "Uygunluğunuzu kontrol ediyoruz; size uygun teklif işlem sayfanızda görünecek."}
-              </p>
-              {[
-                { o: TEMP_MOBILE_OFFER, Icon: Smartphone, use: "Ayrı, SIM kartlı cihaz · uygulamadan açıp kapatılır" },
-                { o: HYBRID_OFFER, Icon: Router, use: "Mevcut modeminiz kesintide otomatik yedeğe geçer" },
-              ].map(({ o, Icon, use }) => (
-                <div key={o.title} className="rounded-2xl border border-border p-4">
-                  <p className="flex items-center gap-2 text-sm font-semibold text-primary">
-                    <Icon className="size-4" /> {o.title}
-                  </p>
-                  <p className="mt-0.5 text-xs font-semibold text-magenta">{use}</p>
-                  <dl className="mt-2 space-y-1 text-xs">
-                    {[
-                      ["Cihaz", o.device],
-                      ["Ücret", o.price],
-                      ["Kota", o.quota],
-                    ].map(([k, v]) => (
-                      <div key={k} className="flex gap-2">
-                        <dt className="w-12 shrink-0 text-muted-foreground">{k}</dt>
-                        <dd className="text-foreground">{v}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              ))}
+        <Link to="/hibrit" className="block rounded-card bg-card p-5 shadow-card">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-icon-box text-primary">
+              <Router className="size-6" strokeWidth={1.5} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-primary">Hibrit İnternet</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{hybridLine}</p>
+              <FreeBadge className="mt-2" />
             </div>
-          )}
-        </div>
+            <ChevronRight className="mt-1 size-5 text-muted-foreground" />
+          </div>
+        </Link>
+
+        {relocationOffer && (
+          <Link to="/surec/$id" params={{ id: relocationOffer.id }} className="flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-float">
+            Taşınma İçin Geçici İnternet Teklifini İnceleyin
+          </Link>
+        )}
 
         <TechDetails>
           <ConnectivityPanel />
-          <DemoNote>Kapsama, cihaz, hız ve fiyat bilgileri demo verisidir; gerçek operatör anlaşması veya cihaz bağlantısı yoktur.</DemoNote>
+          <DemoNote>Kapsama, cihaz ve hız bilgileri demo verisidir; gerçek operatör anlaşması veya cihaz bağlantısı yoktur.</DemoNote>
         </TechDetails>
         <div className="pb-2" />
       </div>

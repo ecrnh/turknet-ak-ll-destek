@@ -1,10 +1,9 @@
 import { useAppStore } from "@/features/core/appStore";
 import { useAgentsStore } from "@/features/aiAgents/store";
-import { useGiftStore } from "@/features/giftData/store";
 import { useFamilyStore } from "@/features/family/store";
 import { useQrStore } from "@/features/qrSupport/store";
 import { useVideoStore } from "@/features/videoSupport/store";
-import { BACKUP_POP, SPEED_FIX_STEPS, USER } from "@/data/mock";
+import { SPEED_FIX_STEPS } from "@/data/mock";
 import { track } from "@/lib/analytics";
 import { useWorkflowStore } from "@/features/workflow/store";
 import { useScenarioStore } from "@/features/scenario/store";
@@ -12,7 +11,6 @@ import { initialScenario } from "@/features/scenario/store";
 
 const app = () => useAppStore.getState();
 const agents = () => useAgentsStore.getState();
-const gift = () => useGiftStore.getState();
 
 let timers: ReturnType<typeof setTimeout>[] = [];
 const later = (ms: number, fn: () => void) => timers.push(setTimeout(fn, ms));
@@ -63,72 +61,6 @@ export function simulateSpeedDrop() {
   }
 }
 
-export function switchToBackup() {
-  const net = app().net;
-  if (net.status !== "outage" && net.status !== "backup") {
-    startOutage(Math.max(gift().outageHours, 10));
-  }
-  app().setNet({ status: "backup", speed: 92, ping: 8 + BACKUP_POP.pingDelta });
-  agents().setBackup({ active: true, since: Date.now(), returning: false });
-  agents().addAction({ agent: "backup", title: `Seni ${BACKUP_POP.region} altyapısından bağladım`, detail: `${USER.location} hattında arıza var. Ping +${BACKUP_POP.pingDelta} ms, ana hat düzelince geri döneceğim.` });
-  agents().addStats(1, 40, 1);
-  app().addRecord({
-    channel: "Ajan",
-    title: "Yedek altyapıya geçici bağlantı",
-    summary: `Kesinti süresince ${BACKUP_POP.name} üzerinden bağlandın.`,
-    status: "Aktif",
-    details: [`Bağlanılan: ${BACKUP_POP.name}`, `Ping farkı: +${BACKUP_POP.pingDelta} ms`, "Otomatik geri dönüş: açık"],
-    to: "/ajanlar/yedek",
-  });
-  app().notify({ kind: "agent", title: "Geçici bağlantı aktif", body: `İnternetin ${BACKUP_POP.region} altyapısından çalışıyor. Ana hat düzelince otomatik geri döneceğim.`, to: "/ajanlar/yedek" });
-}
-
-export function startOutage(hours: number) {
-  clearScenarioTimers();
-  const now = Date.now();
-  const wasOut = ["outage", "backup"].includes(app().net.status);
-  if (!wasOut) {
-    app().setNet({ status: "outage", speed: 0, outageStartedAt: now - hours * 3_600_000, etaAt: now + 4 * 3_600_000, lastUpdate: now });
-  } else {
-    app().setNet({ outageStartedAt: now - hours * 3_600_000, lastUpdate: now });
-  }
-  const { prev, next } = gift().setOutage(hours);
-  if (next > prev) {
-    app().notify({
-      kind: "gift",
-      title: prev === 0 ? `Sakin ol, farkındayız. Sana ${next} GB hediye ettik` : `Hediyen ${next} GB'a yükseldi`,
-      body: prev === 0 ? "Sorunu çözmek için çalışıyoruz. Hediyeni hangi operatörü kullanırsan kullan hattına tanımlayalım." : `Kesinti ${hours} saati geçti, hediye internetine ${next - prev} GB ekledik.`,
-      to: "/hediye",
-    });
-  } else if (!wasOut) {
-    app().notify({ kind: "support", title: "Bölgende kesinti var", body: "Ekiplerimiz çalışıyor. Tahmini düzelme: 4 saat.", to: "/hediye" });
-  }
-  if (!wasOut && agents().enabled.backup) {
-    const consent = app().prefs.backupConsent;
-    if (consent === true) later(3500, switchToBackup);
-    else if (consent === null)
-      app().notify({ kind: "agent", title: "Yedek altyapıdan bağlanayım mı?", body: "Kesinti sürerken seni Tekirdağ altyapısından geçici bağlayabilirim. İzin vermek için dokun.", to: "/ajanlar/yedek" }, false);
-  }
-}
-
-export function restoreLine() {
-  clearScenarioTimers();
-  const wasBackup = agents().backup.active;
-  const wasDown = ["outage", "backup"].includes(app().net.status);
-  if (wasBackup) {
-    agents().setBackup({ returning: true });
-    later(2600, () => agents().setBackup({ active: false, returning: false, since: null }));
-    agents().addAction({ agent: "backup", title: "Ana hatta geri döndüm", detail: "Ümraniye hattı düzeldi, yedek bağlantı kapatıldı." });
-    const rec = app().records.find((r) => r.title === "Yedek altyapıya geçici bağlantı" && r.status === "Aktif");
-    if (rec) app().updateRecord(rec.id, { status: "Tamamlandı" });
-  }
-  app().setNet({ status: "online", speed: 96, ping: 8, outageStartedAt: null, etaAt: null, lastUpdate: Date.now() });
-  if (wasDown) {
-    gift().setRestored(true);
-    app().notify({ kind: "support", title: "Hizmet geri geldi", body: "Yaşadığın kesinti için özür dileriz. Hediye internetin 30 gün geçerli.", to: "/hediye" });
-  }
-}
-
 export function elderVideoScenario() {
   useFamilyStore.getState().switchTo("ayse");
   useVideoStore.getState().setTopic("cable");
@@ -143,7 +75,6 @@ export function resetAll() {
   clearScenarioTimers();
   useAppStore.getState().reset();
   useAgentsStore.getState().reset();
-  useGiftStore.getState().reset();
   useFamilyStore.getState().reset();
   useQrStore.getState().reset();
   useVideoStore.getState().reset();
@@ -155,7 +86,6 @@ export async function rehydrateAll() {
   await Promise.all([
     useAppStore.persist.rehydrate(),
     useAgentsStore.persist.rehydrate(),
-    useGiftStore.persist.rehydrate(),
     useFamilyStore.persist.rehydrate(),
     useQrStore.persist.rehydrate(),
     useVideoStore.persist.rehydrate(),

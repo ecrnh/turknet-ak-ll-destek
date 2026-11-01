@@ -73,10 +73,10 @@ export const useQrStore = create<QrState>()(
 
 /** Builds the mock diagnostic result. Live network state changes the line checks. */
 export function buildScan(netStatus: string): ScanResult {
-  const outage = netStatus === "outage";
+  const outage = netStatus === "down" || netStatus === "mobile";
   const checks: CheckResult[] = [
     outage
-      ? { key: "line", label: "Hat durumu", state: "fail", value: "Bağlantı yok", note: "Bölgesel kesinti tespit edildi" }
+      ? { key: "line", label: "Hat durumu", state: "fail", value: "Bağlantı yok", note: "Ana bağlantıda kesinti tespit edildi" }
       : { key: "line", label: "Hat durumu", state: "ok", value: "Bağlı (GPON)" },
     { key: "signal", label: "Sinyal gücü", state: outage ? "fail" : "ok", value: outage ? "—" : "Senkron 100/50 Mbps" },
     { key: "optic", label: "Optik güç seviyesi", state: "warn", value: "-27,4 dBm", note: "Optik sinyal seviyesi düşük (ideal: -8 ile -25 dBm)" },

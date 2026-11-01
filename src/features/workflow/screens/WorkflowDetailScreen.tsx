@@ -67,6 +67,11 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
         <HandoffCard wf={wf} />
         <OutcomeCard wf={wf} />
 
+        {wf.type === "outage_recovery" && (
+          <Link to="/hibrit" className="flex min-h-12 items-center justify-center rounded-full border border-primary/20 bg-card text-sm font-semibold text-primary">
+            Hibrit İnternet Durumunu Gör
+          </Link>
+        )}
         {wf.type === "relocation" && <RelocationPanel wf={wf} />}
         {wf.type === "temp_internet" && <TempPanel wf={wf} />}
         {wf.type === "billing_check" && <BillingPanel wf={wf} />}
