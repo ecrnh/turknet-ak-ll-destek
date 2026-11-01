@@ -138,7 +138,7 @@ export function HybridScreen() {
                 <Button size="xl" className="mt-4 w-full rounded-full" onClick={() => activateHybrid()}>
                   {C.failed.cta}
                 </Button>
-                <button type="button" onClick={() => useWorkflowStore.getState().workflows && navigate({ to: "/yardim" })} className="mt-2 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-primary">
+                <button type="button" onClick={() => navigate({ to: "/yardim" })} className="mt-2 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-primary">
                   Destek Al
                 </button>
               </Card>
