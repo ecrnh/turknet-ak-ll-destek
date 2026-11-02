@@ -217,7 +217,7 @@ export const useAppStore = create<AppState>()(
       name: "tn-app",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      version: 2,
+      version: 3,
       /** v0 saved gift-internet notifications and old outage states (dropped); v1 used pre-GIGA assistant names (renamed). */
       migrate: (persisted) => {
         const p = persisted as Partial<AppState> & { prefs?: Record<string, unknown> };
