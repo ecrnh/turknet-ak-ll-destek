@@ -3,9 +3,9 @@
  */
 
 export const USER = {
-  firstName: "Ecren",
-  name: "ECREN KOYUNCU",
-  initials: "EK",
+  firstName: "Çağrı",
+  name: "ÇAĞRI KOYUNCU",
+  initials: "ÇK",
   subscriberNo: "4896005",
   location: "İstanbul/Ümraniye",
   phone: "0532 418 22 17",
@@ -27,24 +27,20 @@ export const MANAGED_ACCOUNTS = [
     location: "İstanbul/Kadıköy",
     phone: "0533 761 40 09",
     packageName: "Fiber 50 Mbps Limitsiz",
-    scopes: { view: true, tech: true, appointments: true, bills: true, finance: false },
+    scopes: { ticket: true, video: true, bills: true, plan: true, payment: false, cancel: false },
     grantedAt: new Date("2026-09-14T10:20:00+03:00").getTime(),
   },
 ];
 
-/**
- * Family authorization permission groups. Financial actions (payment, cancellation,
- * refund, subscription change) are never granted outright: "finance" only lets the
- * family member *request* them, and every request needs the owner's approval.
- */
-export type ScopeKey = "view" | "tech" | "appointments" | "bills" | "finance";
+export type ScopeKey = "ticket" | "video" | "bills" | "plan" | "payment" | "cancel";
 
-export const SCOPES: { key: ScopeKey; label: string; desc: string; items: string[]; default: boolean; sensitive?: boolean }[] = [
-  { key: "view", label: "İşlemleri görüntüleme", desc: "Aboneliği ve devam eden işlemleri görür", items: ["Mevcut abonelik", "Aktif talepler", "Randevu detayları", "Devam eden süreçlerin takibi"], default: true },
-  { key: "tech", label: "Teknik destek işlemleri", desc: "Arıza çözümünü başlatır ve takip eder", items: ["Adım adım arıza çözümü", "Bağlantı durumunu görme", "Teknik destek isteme", "Teknik süreçleri takip etme"], default: true },
-  { key: "appointments", label: "Randevu yönetimi", desc: "Randevuları görür, uygun zaman seçer", items: ["Mevcut randevuları görme", "Uygun randevu zamanı seçme", "Randevu değişikliği isteme"], default: true },
-  { key: "bills", label: "Faturaları görüntüleme", desc: "Yalnızca siz açarsanız faturaları görür", items: ["Fatura tutarı ve son ödeme tarihi", "Ödeme durumu"], default: false },
-  { key: "finance", label: "Finansal işlem talebi", desc: "Ödeme, iptal, iade ve paket değişikliği isteyebilir; her biri sizin onayınızla yapılır", items: ["Fatura ödeme", "Abonelik iptali", "İade talebi", "Paket değişikliği"], default: false, sensitive: true },
+export const SCOPES: { key: ScopeKey; label: string; desc: string; default: boolean }[] = [
+  { key: "ticket", label: "Destek talebi oluştur", desc: "Arıza ve destek kaydı açabilir", default: true },
+  { key: "video", label: "Görüntülü destek başlat", desc: "Uzmanla görüntülü görüşme yapabilir", default: true },
+  { key: "bills", label: "Fatura görüntüle", desc: "Faturaları görür, ödeme yapamaz", default: true },
+  { key: "plan", label: "Hız / paket değişikliği", desc: "Paket ve hız talebi oluşturabilir", default: false },
+  { key: "payment", label: "Fatura ödeme", desc: "Kart ile ödeme yapabilir", default: false },
+  { key: "cancel", label: "Abonelik iptali", desc: "Aboneliği iptal edebilir", default: false },
 ];
 
 export const RELATIONS = ["Anne", "Baba", "Eş", "Çocuk", "Diğer"] as const;
@@ -360,9 +356,6 @@ export interface DemoAddress {
   line: string;
   district: string;
   city: string;
-  neighborhood?: string;
-  street?: string;
-  building?: string;
 }
 
 export const CURRENT_ADDRESS: DemoAddress & { port: string } = {
@@ -378,30 +371,15 @@ export const DEMO_NEW_ADDRESS: DemoAddress = {
   line: "Caferağa Mah. Moda Cd. No:48 D:3",
   district: "Kadıköy",
   city: "İstanbul",
-  neighborhood: "Caferağa Mah.",
-  street: "Moda Cd.",
-  building: "No:48 D:3",
 };
 
-export const DEMO_MOVE_DATE = "2026-11-03";
+export const DEMO_MOVE_DATE = "2026-11-10";
 
-/** Demo appointment calendar: dates × time windows. Slot ids stay stable ("slot-1" = 3 Kasım 16.00–18.00). */
-export const APPOINTMENT_DATES = [
-  { id: "d1", label: "3 Kasım", day: "Salı" },
-  { id: "d2", label: "4 Kasım", day: "Çarşamba" },
-  { id: "d3", label: "5 Kasım", day: "Perşembe" },
-] as const;
-export const APPOINTMENT_WINDOWS = [
-  { id: "w3", label: "16.00–18.00" },
-  { id: "w1", label: "09.00–12.00" },
-  { id: "w2", label: "12.00–15.00" },
-] as const;
-export const APPOINTMENT_SLOTS = APPOINTMENT_DATES.flatMap((d, di) =>
-  APPOINTMENT_WINDOWS.map((w, wi) => ({ id: `slot-${di * APPOINTMENT_WINDOWS.length + wi + 1}`, dateId: d.id, windowId: w.id, label: `${d.label} ${d.day} · ${w.label}` })),
-);
-
-/** Simulated field teams near the new address (no real dispatch system). */
-export const FIELD_TEAMS = ["Kadıköy Saha Ekibi 2", "Kadıköy Saha Ekibi 5", "Üsküdar Saha Ekibi 1"] as const;
+export const APPOINTMENT_SLOTS = [
+  { id: "slot-1", label: "12 Kas Perşembe · 09:00–12:00" },
+  { id: "slot-2", label: "12 Kas Perşembe · 13:00–17:00" },
+  { id: "slot-3", label: "13 Kas Cuma · 09:00–12:00" },
+];
 
 export const TEAMS = {
   infra: "Altyapı Planlama Ekibi",
@@ -446,42 +424,25 @@ export const BILLING_CHECKS = [
 
 export const AI_USTA_STEPS = [
   {
-    id: "power",
-    title: "Modeminizin güç kablosunun takılı olduğundan emin olun",
-    text: "Kablonun hem modeme hem prize tam oturduğunu kontrol edin.",
+    id: "cables",
+    title: "Güç ve kablo bağlantılarını kontrol edin",
+    text: "Modemin güç kablosunun takılı olduğundan emin olun. Ardından modemin altındaki fiber (WAN) kablosunu nazikçe çıkarıp “tık” sesi gelene kadar geri takın.",
     safe: "Güvenli adım: kabloyu bükmeyin, reset tuşuna basmayın.",
-    cta: "Kontrol ettim",
   },
   {
     id: "reboot",
-    title: "Şimdi modeminizi kapatıp 20 saniye bekleyelim",
-    text: "Arkadaki güç düğmesiyle kapatın, 20 saniye sonra tekrar açın.",
+    title: "Modemi yeniden başlatın",
+    text: "Modemin arkasındaki güç düğmesiyle kapatın, 30 saniye bekleyip tekrar açın. Işıkların yerine oturması 2 dakika sürebilir.",
     safe: "Güvenli adım: ayarlarınız silinmez.",
-    cta: "Tamam, açtım",
   },
 ];
 
-/** Modem indicator lights the customer can point the camera at (simulated). */
-export const MODEM_LEDS = [
-  { key: "power", name: "Power" },
-  { key: "internet", name: "Internet" },
-  { key: "wan", name: "WAN / DSL" },
-  { key: "wifi", name: "Wi-Fi" },
-] as const;
-export type LedKey = (typeof MODEM_LEDS)[number]["key"];
-export type LedState = "green" | "red" | "blink" | "off";
-export const LED_STATE_LABEL: Record<LedState, string> = { green: "Yeşil", red: "Kırmızı", blink: "Yanıp sönüyor", off: "Kapalı" };
-export const MODEM_LED_DEMO: Record<LedKey, LedState> = { power: "green", internet: "red", wan: "green", wifi: "green" };
-
-/** Voice triage menu (simulated call). */
-export const IVR_MENU = [
-  { id: "down", key: "1", label: "İnternetim hiç çalışmıyor" },
-  { id: "slow", key: "2", label: "İnternetim yavaş" },
-  { id: "drops", key: "3", label: "Bağlantım sık sık kopuyor" },
-  { id: "modem", key: "4", label: "Modemimde sorun var" },
-  { id: "other", key: "5", label: "Diğer işlemler" },
-] as const;
-export type IvrCategory = (typeof IVR_MENU)[number]["id"];
+export const MODEM_LED_DEMO = [
+  { key: "power", name: "Power", state: "Yeşil sabit", ok: true },
+  { key: "pon", name: "PON", state: "Yeşil sabit", ok: true },
+  { key: "internet", name: "Internet", state: "Kapalı", ok: false },
+  { key: "wifi", name: "Wi-Fi", state: "Yanıp sönüyor", ok: true },
+];
 
 export const INTENT_KEYWORDS: { intent: "billing" | "ai_usta" | "relocation" | "temp_internet" | "speed" | "track"; words: string[] }[] = [
   { intent: "billing", words: ["borç", "ödeme", "ödedim", "fatura", "mükerrer", "iade", "tahsil", "ücret", "tutarsız"] },

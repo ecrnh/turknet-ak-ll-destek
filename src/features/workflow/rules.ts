@@ -108,11 +108,11 @@ export type EligibilityResult = "eligible" | "eligible_external" | "no_port" | "
 export function relocationPlan(r: EligibilityResult): string[] {
   switch (r) {
     case "eligible":
-      return ["transfer", "appointment", "team", "install", "verify", "old_line"];
+      return ["transfer", "appointment", "install", "verify", "old_line"];
     case "eligible_external":
-      return ["transfer", "external", "temp_offer", "appointment", "team", "install", "verify", "old_line"];
+      return ["transfer", "external", "temp_offer", "appointment", "install", "verify", "old_line"];
     case "no_port":
-      return ["infra_followup", "temp_offer", "external", "transfer", "appointment", "team", "install", "verify", "old_line"];
+      return ["infra_followup", "temp_offer", "external", "transfer", "appointment", "install", "verify", "old_line"];
     case "no_response":
       return [];
   }

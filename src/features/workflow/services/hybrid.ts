@@ -158,29 +158,6 @@ registerOp("hybrid.activated", (id) => {
   notify(id, "Yedek internetiniz aktif!", "Ana bağlantınız düzelene kadar internet erişiminizi yedek bağlantınız üzerinden sürdürebilirsiniz.", "push", "/hibrit");
 });
 
-/**
- * "Yedek bağlantıyı aç / kapat" on the Hibrit Box card. Only once the free service
- * was activated by the customer; it never bypasses the 24-hour rule.
- */
-export function setHybridBackup(on: boolean): boolean {
-  const o = openOutage();
-  const h = W.getState().hybrid;
-  if (!o) return false;
-  if (on && h.status === "paused") {
-    patchHybrid({ status: "active" });
-    setConnectivity({ mobile: "active", mode: "hybrid_backup", hybridEnabled: true }, "Yedek bağlantı açıldı");
-    log(o.wfId, "customer", "info", "Müşteri yedek bağlantıyı uygulamadan açtı (demo cihaz komutu)");
-    return true;
-  }
-  if (!on && h.status === "active") {
-    patchHybrid({ status: "paused" });
-    setConnectivity({ mobile: "standby", mode: "fixed", hybridEnabled: true }, "Yedek bağlantı kapatıldı");
-    log(o.wfId, "customer", "info", "Müşteri yedek bağlantıyı uygulamadan kapattı; arıza takibi sürüyor");
-    return true;
-  }
-  return false;
-}
-
 /** Customer left the activation screen without activating. Outage tracking continues. */
 export function declineHybrid() {
   const o = openOutage();
@@ -238,7 +215,7 @@ export function restoreMain(): boolean {
   step(id, "restore", "done", "Ana bağlantı oturumu açıldı");
   patchOutage({ restoredAt: t, lastUpdateAt: t, repairNote: "Arıza giderildi" });
   const h = W.getState().hybrid;
-  if (h.status === "active" || h.status === "paused") {
+  if (h.status === "active") {
     step(id, "switch_back", "in_progress", "Ana bağlantı doğrulanıyor; yedekten dönüş hazırlanıyor", "Ana bağlantı kararlı çalışmadan yedekten çıkılmaz");
   } else {
     W.setState((s) => ({ ops: s.ops.filter((op) => !(op.workflowId === id && op.op.startsWith("hybrid."))) }));
@@ -259,7 +236,7 @@ registerOp("outage.verify", (id) => {
   const o = W.getState().outage;
   if (!wf || !o || stepStatus(id, "restore") !== "done" || stepStatus(id, "verify") === "done") return;
   const h = W.getState().hybrid;
-  const used = h.status === "active" || h.status === "paused";
+  const used = h.status === "active";
   const usageMb = hybridUsageMb(h.activatedAt, now());
   if (used) {
     setConnectivity({ mobile: "off", mode: "fixed", hybridEnabled: false }, "Yedek bağlantıdan ana bağlantıya dönüldü");

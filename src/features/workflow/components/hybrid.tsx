@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, CloudOff, Loader2, Power, RadioTower, Router, Signal, Smartphone, Truck, Wifi, WifiOff, XCircle } from "lucide-react";
+import { CheckCircle2, CloudOff, Loader2, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
 import { hybridOfferOpen, hybridUsageMb } from "../rules";
-import { activateHybrid, dismissOutage, outageHours, setHybridBackup } from "../services/hybrid";
+import { dismissOutage, outageHours } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
 import type { DeviceRequest, HybridChecks, OutageState } from "../types";
 
@@ -140,7 +140,7 @@ export function OutageHomeCard() {
   if (!o || o.dismissed) return null;
 
   if (o.restoredAt) {
-    const used = h.status === "ended" || h.status === "active" || h.status === "paused";
+    const used = h.status === "ended" || h.status === "active";
     return (
       <div className="rounded-card bg-card p-5 shadow-card" role="status">
         <div className="flex items-start gap-3">
@@ -171,9 +171,6 @@ export function OutageHomeCard() {
   if (active) {
     title = C.active.title;
     text = C.active.text;
-  } else if (h.status === "paused") {
-    title = "Yedek bağlantınız kapalı";
-    text = "İstediğiniz zaman Hibrit İnternet sayfasından yeniden açabilirsiniz. Arıza takibiniz sürüyor.";
   } else if (after24) {
     if (h.status === "no_coverage") {
       title = C.noCoverage.title;
@@ -221,106 +218,6 @@ export function OutageHomeCard() {
           Detayları Gör
         </Link>
       )}
-    </div>
-  );
-}
-
-/** Visual: main fiber line, the Hibrit Box at home, and the mobile backup line. Highlights the line in use. */
-export function ConnectionMap() {
-  const c = useWorkflowStore((s) => s.connectivity);
-  const mainOn = c.fixed === "up";
-  const backupOn = c.mode === "hybrid_backup" && c.mobile === "active";
-  const Node = ({ icon: Icon, label, sub, on, warn }: { icon: typeof Wifi; label: string; sub: string; on: boolean; warn?: boolean }) => (
-    <div className="flex w-[30%] flex-col items-center text-center">
-      <span className={cn("flex h-12 w-12 items-center justify-center rounded-2xl", on ? "bg-success-soft text-success" : warn ? "bg-destructive-soft text-destructive" : "bg-muted text-muted-foreground")}>
-        <Icon className="size-6" />
-      </span>
-      <span className="mt-1.5 text-xs font-semibold text-foreground">{label}</span>
-      <span className={cn("text-[11px]", on ? "text-success" : warn ? "text-destructive" : "text-muted-foreground")}>{sub}</span>
-    </div>
-  );
-  const Wire = ({ on }: { on: boolean }) => <span className={cn("mt-6 h-1 flex-1 rounded-full", on ? "bg-success" : "bg-border")} aria-hidden />;
-  return (
-    <div className="flex items-start" aria-label={`Şu an kullanılan bağlantı: ${mainOn ? "ana internet" : backupOn ? "mobil yedek" : "yok"}`}>
-      <Node icon={Router} label="Ana internet" sub={mainOn ? "Aktif" : "Kesik"} on={mainOn} warn={!mainOn} />
-      <Wire on={mainOn} />
-      <Node icon={Wifi} label="Hibrit Box" sub={mainOn || backupOn ? "Bağlı" : "Beklemede"} on={mainOn || backupOn} />
-      <Wire on={backupOn} />
-      <Node icon={RadioTower} label="Mobil yedek" sub={backupOn ? "Aktif" : c.mobile === "standby" ? "Beklemede" : "Kapalı"} on={backupOn} />
-    </div>
-  );
-}
-
-/** "Evdeki Hibrit Box": device, SIM and line status plus backup on/off (after the free service is active). */
-export function HybridBoxCard() {
-  const c = useWorkflowStore((s) => s.connectivity);
-  const h = useWorkflowStore((s) => s.hybrid);
-  const o = useWorkflowStore((s) => s.outage);
-  const hasDevice = useWorkflowStore((s) => s.config.hybridDevice);
-  const now = Math.max(useNow(10_000), o?.lastUpdateAt ?? 0);
-  const ongoing = !!o && !o.restoredAt;
-  const backupOn = h.status === "active";
-  const mainUp = c.fixed === "up";
-  const switching = !!o?.restoredAt && (h.status === "active" || h.status === "paused");
-
-  let message: string;
-  if (switching) message = "Ev internetiniz yeniden aktif. Ana bağlantınıza geçiş yapıyoruz.";
-  else if (backupOn) message = "Yedek bağlantınız aktif. İnterneti kullanmaya devam edebilirsiniz.";
-  else if (h.status === "paused") message = "Yedek bağlantınızı kapattınız. Arıza sürdükçe istediğiniz an yeniden açabilirsiniz.";
-  else if (mainUp) message = "Şu anda ana internet bağlantınızı kullanıyorsunuz.";
-  else if (ongoing && hybridOfferOpen(outageHours(o, now))) message = "Ev internetinizde kesinti algıladık. Yedek bağlantınızı devreye alalım mı?";
-  else message = "Ev internetinizde kesinti algıladık. Kesinti 24 saati aşarsa yedek bağlantınızı buradan açabilirsiniz.";
-
-  const rows: [string, string][] = [
-    ["Cihaz", hasDevice ? (backupOn ? "Çalışıyor · mobil ağa bağlı" : "Çalışıyor") : h.device ? `Yolda · ${C.device[h.device.status]}` : "Uyumlu cihaz yok"],
-    ["Mobil bağlantı", backupOn ? "Aktif · sinyal iyi" : h.status === "paused" ? "Beklemede" : "Kapalı"],
-    ["SIM", hasDevice ? (backupOn ? "Aktif" : "Hazır") : "—"],
-    ["Ana internet", mainUp ? "Aktif" : "Kesik"],
-    ["Kullanılan yedek veri", fmtUsage(hybridUsageMb(h.activatedAt, backupOn ? now : (h.endedAt ?? now)))],
-  ];
-  const canOn = h.status === "paused" || h.status === "ready" || h.status === "failed";
-
-  return (
-    <div className="rounded-card bg-card p-5 shadow-card">
-      <div className="flex items-center gap-3">
-        <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl", backupOn ? "bg-orange-soft text-orange-deep" : "bg-icon-box text-primary")}>
-          <Wifi className="size-5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-primary">Evdeki Hibrit Box</p>
-          <p className="text-xs text-muted-foreground">{backupOn ? "Şu an yedek bağlantı kullanılıyor" : mainUp ? "Şu an ana bağlantı kullanılıyor" : "Şu an internet bağlantısı yok"}</p>
-        </div>
-      </div>
-      <p className="mt-3 rounded-2xl bg-muted p-3 text-sm text-foreground" aria-live="polite">{message}</p>
-      <dl className="mt-3 space-y-1.5 text-xs">
-        {rows.map(([k, v]) => (
-          <div key={k} className="flex justify-between gap-2">
-            <dt className="text-muted-foreground">{k}</dt>
-            <dd className="text-right font-semibold text-foreground">{v}</dd>
-          </div>
-        ))}
-      </dl>
-      {ongoing && (backupOn || canOn) && (
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            disabled={!canOn}
-            onClick={() => (h.status === "paused" ? setHybridBackup(true) : activateHybrid())}
-            className="flex min-h-12 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-float disabled:opacity-40"
-          >
-            <Power className="size-4" /> Yedek bağlantıyı aç
-          </button>
-          <button
-            type="button"
-            disabled={!backupOn}
-            onClick={() => setHybridBackup(false)}
-            className="flex min-h-12 items-center justify-center rounded-full border border-primary/20 px-3 text-sm font-semibold text-primary disabled:opacity-40"
-          >
-            Yedek bağlantıyı kapat
-          </button>
-        </div>
-      )}
-      <p className="mt-3 text-[11px] text-muted-foreground">Cihaz, SIM ve mobil bağlantı demo olarak simüle edilir; gerçek operatör bağlantısı yoktur.</p>
     </div>
   );
 }

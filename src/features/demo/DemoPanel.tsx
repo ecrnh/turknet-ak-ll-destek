@@ -3,7 +3,6 @@ import { Activity, BarChart3, ChevronRight, Gauge, QrCode, RotateCcw, Video, Eye
 import { toast } from "sonner";
 import { useAppStore } from "@/features/core/appStore";
 import { useActingAccount } from "@/features/family/store";
-import { USER } from "@/data/mock";
 import { NET_LABEL, NET_TEXT } from "@/components/tn/NetStatus";
 import { cn } from "@/lib/utils";
 import { elderVideoScenario, qrFaultScenario, resetAll, simulateSpeedDrop } from "./scenarios";
@@ -57,7 +56,7 @@ export function DemoPanel({ onHide }: { onHide?: () => void }) {
         </div>
         <div>
           <p className="text-muted-foreground">Profil</p>
-          <p className="font-bold text-foreground">{acting ? acting.short : `${USER.firstName} (Ben)`}</p>
+          <p className="font-bold text-foreground">{acting ? acting.short : "Çağrı (Ben)"}</p>
         </div>
       </div>
 

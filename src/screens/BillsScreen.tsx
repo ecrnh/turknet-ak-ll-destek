@@ -24,7 +24,7 @@ function Row({ title, to, icon: Icon }: { title: string; to: string; icon: typeo
 
 export function BillsScreen() {
   const acting = useActingAccount();
-  const canPay = useCan("finance");
+  const canPay = useCan("payment");
   const canView = useCan("bills");
   const addHistory = useAppStore((s) => s.addHistory);
   const [paid, setPaid] = useState(false);

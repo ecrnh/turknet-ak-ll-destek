@@ -67,7 +67,6 @@ function setTemp(tempWfId: string, status: TempStatus) {
 /** Customer accepted the offer: create the linked temp-internet workflow and order (idempotent). */
 export function acceptTempInternet(parentId: string, kind: TempKind): string {
   const offer = offerFor(kind);
-  const ownDevice = getWf(parentId)?.data["ownDevice"] === true;
   const { wf, created } = createWorkflow({
     type: "temp_internet",
     title: "TürkNet Box · geçici internet",
@@ -75,11 +74,11 @@ export function acceptTempInternet(parentId: string, kind: TempKind): string {
     relatedIds: [parentId],
     steps: [
       { key: "terms", label: "Koşullar gösterildi ve onaylandı" },
-      { key: "provision", label: ownDevice ? "Evdeki Hibrit Box'ın hazırlanması" : "Cihaz siparişi ve teslimat" },
+      { key: "provision", label: "Box siparişi ve teslimat" },
       { key: "active", label: "Box ile internet aktif" },
       { key: "switch_back", label: "Sabit internete geri geçiş" },
     ],
-    data: { kind, parentId, ownDevice },
+    data: { kind, parentId },
     why: "Müşteri koşulları görüp açıkça onay verdi; onay olmadan sipariş oluşturulmaz",
   });
   if (!created) return wf.id;
@@ -88,7 +87,7 @@ export function acceptTempInternet(parentId: string, kind: TempKind): string {
     temp: [...s.temp, { id: `GCT-${wf.id.slice(4)}`, workflowId: wf.id, parentWorkflowId: parentId, kind, status: "accepted", price: offer.price, device: offer.device, createdAt: t, updatedAt: t }],
   }));
   step(wf.id, "terms", "done", `${offer.price} · ${offer.quota}`);
-  notify(wf.id, "Geçici internet talebiniz alındı", ownDevice ? "Evinizdeki Hibrit Box'ı yeni adreste kullanmanız için hazırlıyoruz. Cihaz gönderimi gerekmiyor." : "Cihazınızı hazırlıyoruz. Teslimatı sizin için takip edeceğiz.");
+  notify(wf.id, "Box talebiniz alındı", "Box'ınızı hazırlıyoruz. Teslimatı sizin için takip edeceğiz.");
   chain("temp.provision", wf.id, 1200);
   return wf.id;
 }
@@ -96,15 +95,6 @@ export function acceptTempInternet(parentId: string, kind: TempKind): string {
 export function provisionTemp(tempWfId: string) {
   const wf = getWf(tempWfId);
   if (!wf || stepStatus(tempWfId, "provision") !== "pending") return;
-  if (wf.data["ownDevice"] === true) {
-    W.setState({
-      box: { id: `BOX-${tempWfId.slice(4)}`, tempWfId, model: "Evdeki Hibrit Box (SIM kartlı)", sim: "ready", power: "off", usedGb: 0, quotaGb: 100, toggles: 0, signal: "İyi · 4 çubuk (demo)", updatedAt: Date.now() },
-    });
-    setTemp(tempWfId, "shipped");
-    step(tempWfId, "provision", "done", "Evinizdeki uyumlu Hibrit Box kullanılacak · cihaz gönderimi gerekmedi (demo)");
-    chain("temp.activate", tempWfId, 1200);
-    return;
-  }
   {
     workOrder(tempWfId, { kind: "device_delivery", title: "TürkNet Box gönderimi", team: TEAMS.logistics }, "Geçici internet için cihaz teslimatı gerekiyor");
     W.setState({

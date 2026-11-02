@@ -13,7 +13,7 @@ import { BottomNav } from "./BottomNav";
 import { ActingBanner, PushBanner, Splash } from "./Overlays";
 import { TurknetLogo } from "./headers";
 
-const NO_NAV = ["/goruntulu-destek/gorusme", "/qr/tara", "/canli-destek"];
+const NO_NAV = ["/goruntulu-destek/gorusme", "/qr/tara"];
 
 function StatusBar() {
   const [now, setNow] = useState(() => Date.now());

@@ -1,18 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { CircleHelp, Headset, House, ListChecks, UserRound } from "lucide-react";
+import { CircleHelp, House, LayoutGrid, ReceiptText, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/features/core/appStore";
 
-const TRACK_PREFIXES = ["/takip", "/surec", "/hallet", "/tasinma", "/fatura-kalkani", "/islemler", "/islem/", "/faturalar"];
-const SUPPORT_PREFIXES = ["/yardim", "/telefon-destek", "/ai-usta", "/canli-destek", "/qr", "/goruntulu-destek", "/hiz-testi", "/dijital-onarim", "/ajanlar", "/hibrit", "/destek-kayitlari", "/baglanti"];
+const OPS_PREFIXES = ["/islemler", "/yardim", "/islem/", "/qr", "/goruntulu-destek", "/hiz-testi", "/dijital-onarim", "/ajanlar", "/hibrit", "/destek-kayitlari", "/takip", "/surec", "/tasinma", "/ai-usta", "/baglanti", "/fatura-kalkani"];
 const ACC_PREFIXES = ["/hesabim", "/aile", "/tercihler", "/islem-gecmisi"];
 
 function activeTab(path: string) {
   if (path === "/") return "home";
+  if (path.startsWith("/faturalar")) return "bills";
   if (ACC_PREFIXES.some((p) => path.startsWith(p))) return "account";
-  if (SUPPORT_PREFIXES.some((p) => path.startsWith(p))) return "support";
-  if (TRACK_PREFIXES.some((p) => path.startsWith(p))) return "track";
+  if (OPS_PREFIXES.some((p) => path.startsWith(p))) return "ops";
   return null;
 }
 
@@ -21,7 +20,7 @@ export function BottomNav() {
   const openHelp = useAppStore((s) => s.openHelp);
   const active = activeTab(path);
 
-  const Tab = ({ id, to, label, Icon }: { id: string; to: "/" | "/takip" | "/yardim" | "/hesabim"; label: string; Icon: typeof House }) => {
+  const Tab = ({ id, to, label, Icon }: { id: string; to: "/" | "/islemler" | "/faturalar" | "/hesabim"; label: string; Icon: typeof House }) => {
     const on = active === id;
     return (
       <Link to={to} className={cn("relative flex h-full flex-1 flex-col items-center justify-center gap-1 text-[0.8rem]", on ? "font-semibold text-primary" : "text-muted-foreground")} aria-current={on ? "page" : undefined}>
@@ -36,9 +35,9 @@ export function BottomNav() {
     <nav aria-label="Ana menü" className="absolute inset-x-0 bottom-0 z-40 h-[76px] rounded-t-[24px] bg-card shadow-[0_-8px_24px_-12px_color-mix(in_oklab,var(--primary)_25%,transparent)]">
       <div className="flex h-full items-stretch">
         <Tab id="home" to="/" label="Ana Sayfa" Icon={House} />
-        <Tab id="track" to="/takip" label="İşlemlerim" Icon={ListChecks} />
+        <Tab id="ops" to="/islemler" label="İşlemler" Icon={LayoutGrid} />
         <div className="w-[84px] shrink-0" />
-        <Tab id="support" to="/yardim" label="Destek" Icon={Headset} />
+        <Tab id="bills" to="/faturalar" label="Faturalarım" Icon={ReceiptText} />
         <Tab id="account" to="/hesabim" label="Hesabım" Icon={UserRound} />
       </div>
       <button

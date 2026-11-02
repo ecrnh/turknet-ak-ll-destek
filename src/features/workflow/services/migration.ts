@@ -3,7 +3,7 @@
  * Branches on the infrastructure answer: eligible / eligible via external
  * provider / no port / no response. Never invents a successful answer.
  */
-import { APPOINTMENT_SLOTS, CURRENT_ADDRESS, FIELD_TEAMS, SUBSCRIPTION, TEAMS, TEMP_MOBILE_OFFER, type DemoAddress } from "@/data/mock";
+import { APPOINTMENT_SLOTS, CURRENT_ADDRESS, SUBSCRIPTION, TEAMS, TEMP_MOBILE_OFFER, type DemoAddress } from "@/data/mock";
 import { ask, book, chain, complete, createWorkflow, escalate, getWf, log, notify, plan, registerDecision, registerOp, schedule, setData, setStatus, setWorkOrder, step, stepStatus, workOrder } from "../engine";
 import { MockInfraAPI, MockProviderAPI } from "../mockServices";
 import { relocationPlan, shouldEscalateAfterRetry, type EligibilityResult } from "../rules";
@@ -17,8 +17,7 @@ export const RELOCATION_LABELS: Record<string, string> = {
   temp_offer: "Geçici internet kararı",
   external: "Altyapı sağlayıcı yanıtı",
   transfer: "Nakil talebi ve iş emri",
-  appointment: "Randevu talebi",
-  team: "Ekip eşleştirme ve randevu onayı",
+  appointment: "Kurulum randevusu",
   install: "Kurulum ve aktivasyon",
   verify: "Yeni bağlantı doğrulaması",
   old_line: "Eski adres hizmet sonlandırma",
@@ -28,7 +27,6 @@ export interface RelocationInput {
   address: DemoAddress;
   moveDate: string;
   wantsTemp: boolean;
-  initiatedBy?: string;
 }
 
 export function startRelocation(input: RelocationInput): string {
@@ -40,7 +38,7 @@ export function startRelocation(input: RelocationInput): string {
       { key: "context", label: RELOCATION_LABELS["context"]! },
       { key: "eligibility", label: RELOCATION_LABELS["eligibility"]! },
     ],
-    data: { address: `${input.address.line}, ${input.address.district}/${input.address.city}`, district: input.address.district, moveDate: input.moveDate, wantsTemp: input.wantsTemp, oldPort: CURRENT_ADDRESS.port, ...(input.initiatedBy ? { initiatedBy: input.initiatedBy } : {}) },
+    data: { address: `${input.address.line}, ${input.address.district}/${input.address.city}`, district: input.address.district, moveDate: input.moveDate, wantsTemp: input.wantsTemp, oldPort: CURRENT_ADDRESS.port },
     why: "Müşteri “Taşınacağım” talebini yeni adres ve tarih ile gönderdi",
   });
   if (!created) return wf.id;
@@ -121,19 +119,15 @@ registerOp("relocation.infraFollowup", openInfraFollowup);
 export function offerTemp(id: string) {
   if (stepStatus(id, "temp_offer") !== "pending") return;
   const wf = getWf(id);
-  const ownDevice = W.getState().config.hybridDevice;
-  setData(id, { ownDevice });
   step(id, "temp_offer", "waiting");
   ask(
     id,
     {
       key: "relocation_temp",
       prompt: wf?.data["eligibility"] === "no_port" ? "Yeni adresinizde boş port yok. Hazır olana kadar geçici internet ister misiniz?" : "Sabit internetiniz hazır olana kadar geçici internet ister misiniz?",
-      detail: ownDevice
-        ? `Evinizde uyumlu bir Hibrit Box var; yeni adreste geçici internet için onu kullanabilirsiniz, cihaz gönderimi gerekmez. ${TEMP_MOBILE_OFFER.coverage}.`
-        : `Evinizde uyumlu bir cihaz görünmüyor; size SIM kartlı bir cihaz gönderebiliriz. ${TEMP_MOBILE_OFFER.coverage}. Onay verirseniz sipariş oluşturulur.`,
+      detail: `${TEMP_MOBILE_OFFER.coverage}. Otomatik satın alınmaz; onay verirseniz sipariş oluşturulur.`,
       options: [
-        { id: "accept", label: "Geçici İnterneti Başlat", desc: ownDevice ? `Mevcut Hibrit Box'ınız · ${TEMP_MOBILE_OFFER.price} · ${TEMP_MOBILE_OFFER.quota}` : `${TEMP_MOBILE_OFFER.device} · ${TEMP_MOBILE_OFFER.price} · ${TEMP_MOBILE_OFFER.quota}`, primary: true, terms: TEMP_MOBILE_OFFER.terms },
+        { id: "accept", label: "Teklifi Kabul Et", desc: `${TEMP_MOBILE_OFFER.device} · ${TEMP_MOBILE_OFFER.price} · ${TEMP_MOBILE_OFFER.quota}`, primary: true, terms: TEMP_MOBILE_OFFER.terms },
         { id: "decline", label: "Daha Sonra", desc: "Kurulum gününe kadar beklerim" },
       ],
     },
@@ -214,76 +208,25 @@ export function offerAppointment(id: string) {
     {
       key: "relocation_slot",
       prompt: "Kurulum için size uygun zamanı seçin",
-      detail: "Tarih ve saat aralığını seçin; adresinize uygun ekibi biz bulalım. Birden fazla ekibi aramanıza gerek yok.",
+      detail: "Teknisyen yeni adreste fiber sonlandırma ve modem kurulumu yapacak (demo slotlar).",
       options: APPOINTMENT_SLOTS.map((s, i) => ({ id: s.id, label: s.label, primary: i === 0 })),
     },
-    "Kurulum fiziksel ziyaret gerektirir; zamanı müşteri seçer, ekip eşleştirmesini sistem yapar",
+    "Kurulum fiziksel ziyaret gerektirir; zamanı müşteri seçer",
   );
 }
 registerOp("relocation.offerAppointment", offerAppointment);
 
-const slotOf = (slotId: unknown) => APPOINTMENT_SLOTS.find((s) => s.id === slotId) ?? APPOINTMENT_SLOTS[0]!;
-
 registerDecision("relocation_slot", (id, opt) => {
-  const slot = slotOf(opt);
-  step(id, "appointment", "done", `İstenen zaman: ${slot.label}`);
-  setData(id, { slotReq: slot.id, teamIdx: 0, teamAttempt: 1, match: "searching" });
-  step(id, "team", "in_progress", "Adresinizdeki uygun ekipler kontrol ediliyor");
-  schedule("relocation.teamFind", id, 1400);
-});
-
-/** Simulated field-team matching: finds a team, sends the request, waits for its answer. */
-registerOp("relocation.teamFind", (id) => {
-  const wf = getWf(id);
-  if (!wf || stepStatus(id, "team") !== "in_progress") return;
-  const team = FIELD_TEAMS[Number(wf.data["teamIdx"] ?? 0)] ?? FIELD_TEAMS[0];
-  setData(id, { match: "requested", team });
-  step(id, "team", "in_progress", `${team} ekibine randevu talebi gönderildi`);
-  log(id, "system", "external", `Saha ekip planlama (mock): ${team} için ${slotOf(wf.data["slotReq"]).label} talebi`, "Müşterinin tek tek ekip araması gerekmez");
-  schedule("relocation.teamAnswer", id, 1600);
-});
-
-registerOp("relocation.teamAnswer", (id) => {
-  const wf = getWf(id);
-  if (!wf || stepStatus(id, "team") !== "in_progress") return;
-  const attempt = Number(wf.data["teamAttempt"] ?? 1);
-  const slot = slotOf(wf.data["slotReq"]);
-  const team = String(wf.data["team"] ?? FIELD_TEAMS[0]);
-  if (W.getState().config.teamMatch === "decline_first" && attempt === 1) {
-    setData(id, { match: "declined" });
-    step(id, "team", "waiting", `${team} bu saati kabul edemedi; başka ekip arandı`);
-    log(id, "external", "external", `${team}: ${slot.label} uygun değil (demo yanıt)`, "Ekip uygunluğu değişti; sistem bir sonraki uygun ekip ve saati arar");
-    const i = APPOINTMENT_SLOTS.findIndex((s) => s.id === slot.id);
-    const alts = [APPOINTMENT_SLOTS[(i + 1) % APPOINTMENT_SLOTS.length]!, APPOINTMENT_SLOTS[(i + 3) % APPOINTMENT_SLOTS.length]!];
-    ask(
-      id,
-      {
-        key: "relocation_alt",
-        prompt: "Bu saat için ekip uygunluğu değişti",
-        detail: "Sizin için başka bir ekip aradık. Aşağıdaki zamanlardan birini seçmeniz yeterli; ekip bu saatler için uygun görünüyor (demo).",
-        options: alts.map((s, k) => ({ id: `${s.id}|${k + 1}`, label: s.label, desc: `${FIELD_TEAMS[k + 1]} · uygun`, primary: k === 0 })),
-      },
-      "İlk ekip talebi kabul etmedi; müşteriye yeni zaman ve ekip sunulur",
-    );
-    return;
-  }
-  setData(id, { match: "accepted" });
-  const wo = workOrder(id, { kind: "installation", title: "Yeni adres kurulum iş emri", team: `${TEAMS.field} · ${team}` }, "Ekip randevuyu kabul etti; kurulum iş emri randevuya bağlanır");
-  book(id, { id: slot.id, label: `${slot.label} · ${team}` }, wo.id);
-  step(id, "team", "done", `${team} randevuyu kabul etti · ${slot.label}`);
-  notify(id, "Randevunuz onaylandı!", `${slot.label} · ${team}. Ekip yola çıkmadan önce size haber vereceğiz (demo).`);
+  const slot = APPOINTMENT_SLOTS.find((s) => s.id === opt)!;
+  const wo = workOrder(id, { kind: "installation", title: "Yeni adres kurulum iş emri", team: TEAMS.field }, "Randevu seçildi; kurulum iş emri randevuya bağlanır");
+  book(id, slot, wo.id);
+  step(id, "appointment", "done", slot.label);
+  notify(id, "Randevunuz kaydedildi", `${slot.label} · Teknisyen gelmeden önce SMS alacaksınız (demo).`, "quiet");
   chain("relocation.install", id, 4000);
 });
 
-registerDecision("relocation_alt", (id, opt) => {
-  const [slotId, teamIdx] = opt.split("|");
-  setData(id, { slotReq: slotId ?? null, teamIdx: Number(teamIdx ?? 1), teamAttempt: 2, match: "requested", team: FIELD_TEAMS[Number(teamIdx ?? 1)] ?? FIELD_TEAMS[1] });
-  step(id, "team", "in_progress", `${slotOf(slotId).label} için ${FIELD_TEAMS[Number(teamIdx ?? 1)]} ekibine talep gönderildi`);
-  schedule("relocation.teamAnswer", id, 1400);
-});
-
 export function runInstall(id: string) {
-  if (stepStatus(id, "install") !== "pending" || stepStatus(id, "appointment") !== "done" || (stepStatus(id, "team") ?? "done") !== "done") return;
+  if (stepStatus(id, "install") !== "pending" || stepStatus(id, "appointment") !== "done") return;
   setWorkOrder(id, "installation", "in_progress");
   step(id, "install", "in_progress", "Teknisyen yeni adreste kurulum yapıyor");
   schedule("relocation.installed", id, 1800);
@@ -311,7 +254,7 @@ export function closeOldLine(id: string) {
   setWorkOrder(id, "deprovision", "done");
   step(id, "old_line", "done", `${CURRENT_ADDRESS.port} kapatıldı (${wo.id}) · ek ücret yok, taahhüt aynen devam`);
   const temp = tempOfWorkflow(id);
-  const slot = W.getState().appointments.find((a) => a.workflowId === id);
+  const slot = wf.decisions.find((d) => d.key === "relocation_slot");
   const woCount = getWf(id)?.workOrderIds.length ?? 0;
   notify(id, "İnternetiniz kullanıma hazır", "Yeni adresinizde internetiniz aktif. İyi günlerde kullanın!");
   complete(id, {
@@ -327,13 +270,3 @@ export function closeOldLine(id: string) {
   });
 }
 registerOp("relocation.oldLine", closeOldLine);
-
-/**
- * Address pre-check shown in the relocation wizard before anything is started.
- * Same mock answer the workflow will get; nothing is created or reserved.
- */
-export function previewAddress(address: DemoAddress): { result: EligibilityResult; reason: string } {
-  const r = MockInfraAPI.checkAddress(address);
-  log(null, "system", "external", `Adres ön kontrolü (${MockInfraAPI.name}): ${r.result}`, "Müşteri süreci başlatmadan önce yeni adresin durumunu görür");
-  return r;
-}

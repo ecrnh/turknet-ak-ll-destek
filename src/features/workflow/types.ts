@@ -237,21 +237,6 @@ export interface DemoConfig {
   reconciliation: "settled" | "duplicate";
   aiFix: "fixed" | "not_fixed";
   proactive: "remote_fix" | "field";
-  /** Field-team matching: first team accepts, or the first team declines the requested window. */
-  teamMatch: "accept" | "decline_first";
-  /** Whether the TürkNet app is installed when the customer taps the SMS link. */
-  appInstalled: boolean;
-}
-
-/** Simulated live-support chat (scripted demo agent, no real representative). */
-export interface ChatMessage {
-  id: string;
-  workflowId: string;
-  from: "agent" | "customer" | "system";
-  text: string;
-  at: number;
-  /** Quick replies offered with this agent message. */
-  replies?: { id: string; label: string }[];
 }
 
 /* ---------------- Hibrit İnternet (free outage backup, included in the subscription) ---------------- */
@@ -277,7 +262,6 @@ export type HybridStatus =
   | "activating"
   | "failed"
   | "active"
-  | "paused" // customer switched the backup line off while the outage continues
   | "ended";
 
 export interface HybridChecks {

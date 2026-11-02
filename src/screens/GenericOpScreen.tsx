@@ -9,14 +9,14 @@ import { useAppStore } from "@/features/core/appStore";
 import { useActingAccount, useCan } from "@/features/family/store";
 import { track } from "@/lib/analytics";
 
-const SCOPE_FOR: Record<string, "finance" | undefined> = { "hiz-yukseltme": "finance", iptal: "finance", dondur: "finance" };
+const SCOPE_FOR: Record<string, "plan" | "cancel" | undefined> = { "hiz-yukseltme": "plan", iptal: "cancel", dondur: "cancel" };
 
 export function GenericOpScreen({ slug }: { slug: string }) {
   const op = GENERIC_OPS[slug];
   const addHistory = useAppStore((s) => s.addHistory);
   const acting = useActingAccount();
   const scope = SCOPE_FOR[slug];
-  const allowed = useCan(scope ?? "tech");
+  const allowed = useCan(scope ?? "ticket");
   const [done, setDone] = useState(false);
 
   if (!op)

@@ -26,7 +26,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { APPOINTMENT_DATES, APPOINTMENT_SLOTS, APPOINTMENT_WINDOWS } from "@/data/mock";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { decide, WO_LABEL } from "../engine";
@@ -105,56 +104,10 @@ export function TechDetails({ title = "Teknik detayları gör", children, classN
   );
 }
 
-/** Date + time-window picker for the installation appointment. The team is matched by the system. */
-function SlotPicker({ wf }: { wf: Workflow }) {
-  const [date, setDate] = useState<string>(APPOINTMENT_DATES[0].id);
-  const [win, setWin] = useState<string>(APPOINTMENT_WINDOWS[0].id);
-  const slot = APPOINTMENT_SLOTS.find((s) => s.dateId === date && s.windowId === win);
-  const Chip = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
-    <button type="button" onClick={onClick} aria-pressed={on} className={cn("min-h-12 rounded-2xl border px-3 py-2 text-sm font-semibold", on ? "border-primary bg-primary text-primary-foreground" : "border-primary/20 bg-card text-primary")}>
-      {children}
-    </button>
-  );
-  return (
-    <div className="rounded-card border-2 border-magenta/30 bg-card p-5 shadow-card" role="group" aria-label="Randevu zamanı seçin">
-      <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Sizden bir seçim bekleniyor</p>
-      <h3 className="mt-1 text-lg font-semibold leading-snug text-primary">{wf.decision?.prompt}</h3>
-      {wf.decision?.detail && <p className="mt-1.5 text-sm text-muted-foreground">{wf.decision.detail}</p>}
-      <p className="mb-2 mt-4 text-xs font-semibold text-foreground">Tarih</p>
-      <div className="grid grid-cols-3 gap-2">
-        {APPOINTMENT_DATES.map((d) => (
-          <Chip key={d.id} on={date === d.id} onClick={() => setDate(d.id)}>
-            <span className="block">{d.label}</span>
-            <span className="block text-[11px] font-normal opacity-80">{d.day}</span>
-          </Chip>
-        ))}
-      </div>
-      <p className="mb-2 mt-4 text-xs font-semibold text-foreground">Saat aralığı</p>
-      <div className="grid grid-cols-3 gap-2">
-        {APPOINTMENT_WINDOWS.map((w) => (
-          <Chip key={w.id} on={win === w.id} onClick={() => setWin(w.id)}>
-            {w.label}
-          </Chip>
-        ))}
-      </div>
-      <button
-        type="button"
-        disabled={!slot}
-        onClick={() => slot && decide(wf.id, slot.id, "customer")}
-        className="mt-5 flex min-h-14 w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground shadow-float disabled:opacity-40"
-      >
-        Randevu Talebini Gönder
-      </button>
-      <p className="mt-2 text-center text-xs text-muted-foreground">Uygun ekibi biz bulacağız; ekiplerle tek tek görüşmeniz gerekmez.</p>
-    </div>
-  );
-}
-
 export function DecisionCard({ wf }: { wf: Workflow }) {
   const d = wf.decision;
   const [preview, setPreview] = useState<string | null>(null);
   if (!d) return null;
-  if (d.key === "relocation_slot") return <SlotPicker wf={wf} />;
   const options = d.key === "usta_photo" ? d.options.filter((o) => o.id !== "uploaded") : d.options;
   return (
     <div className="rounded-card border-2 border-magenta/30 bg-card p-5 shadow-card" role="group" aria-label="Karar bekleniyor">
@@ -256,14 +209,6 @@ export function AuditList({ events, showWf, dense }: { events: AuditEvent[]; sho
 }
 
 /** Track-hub card: name, start, status, last step, next step, what the customer must do, ETA, details. */
-/** Who started the process: the owner, a family member, or TürkNet itself. */
-export function initiatorLabel(wf: Pick<Workflow, "type" | "data">): string {
-  if (typeof wf.data["initiatedBy"] === "string") return `Başlatan: ${wf.data["initiatedBy"]}`;
-  if (wf.type === "outage_recovery" || wf.type === "proactive_fault") return "TürkNet otomatik başlattı";
-  if (wf.data["channel"] === "ivr") return "Telefonla başlattınız";
-  return "Siz başlattınız";
-}
-
 export function WorkflowCard({ wf }: { wf: Workflow }) {
   const Icon = TYPE_ICON[wf.type];
   const action = customerAction(wf);
@@ -280,9 +225,7 @@ export function WorkflowCard({ wf }: { wf: Workflow }) {
             <p className="font-semibold leading-tight text-primary">{wf.title}</p>
             <StatusPill status={wf.status} />
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            {initiatorLabel(wf)} · {fmtDateTime(wf.createdAt)} · {wf.id}
-          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Başlangıç {fmtDateTime(wf.createdAt)}</p>
         </div>
       </div>
       {closed ? (

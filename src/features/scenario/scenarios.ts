@@ -4,13 +4,7 @@
  * never fakes progress by changing text.
  */
 import { DEMO_MOVE_DATE, DEMO_NEW_ADDRESS } from "@/data/mock";
-import { useFamilyStore as F } from "@/features/family/store";
 import {
-  askMenu,
-  endCall,
-  openLiveChat,
-  sendChat,
-  startSpeedCheck,
   activateHybrid,
   activateTemp,
   checkHybrid,
@@ -165,22 +159,6 @@ const activation = (attempt: number) => (c: Ctx): StepState => {
   return "done";
 };
 
-/** Field-team search started and a request went out (or was already answered). */
-const teamFound = (c: Ctx): StepState => {
-  const m = c.main?.data["match"];
-  if (m && m !== "searching") return "done";
-  if (m === "searching") return hasOp(c.main?.id, "relocation.teamFind") ? "running" : "waiting";
-  return closed(c.main) ? "skipped" : "pending";
-};
-
-/** Runs a chained workflow to its end (used when a scenario step represents a fully automatic process). */
-function runToEnd(id: string) {
-  W.setState({ autoFollowUp: true });
-  for (let i = 0; i < 30 && W.getState().ops.some((o) => o.workflowId === id); i++) flushOps(id);
-  W.setState({ autoFollowUp: false });
-}
-const member = () => F.getState().delegates.find((d) => d.id === S.getState().ids["member"]);
-
 /* ---------------- shared relocation steps ---------------- */
 const relocationOpen: ScenarioStep = {
   id: "open",
@@ -242,10 +220,7 @@ const relocationTail = (only: string[], finalScreen: (c: Ctx) => string | null):
     run: (c) => c.main && offerAppointment(c.main.id),
     only,
   },
-  { id: "slot_decision", label: "Müşteri tarih ve saat aralığı seçer", why: "Müşteri yalnızca zamanı seçer; ekip eşleştirmesini sistem yapar", actor: "customer", status: decisionState(main, "relocation_slot"), decisionKey: "relocation_slot", only },
-  { id: "team_find", label: "Adresteki uygun ekipler aranır, randevu talebi gönderilir", why: "Müşteri tek tek ekip aramaz; sistem uygun ekibe talep iletir (simülasyon)", actor: "system", status: teamFound, run: () => flushOps(), only },
-  { id: "team_alt", label: "İlk ekip saati kabul etmez → başka ekip ve saat önerilir, müşteri seçer", why: "Ekip uygunluğu değişti; müşteri yeniden aramak zorunda kalmaz", actor: "customer", status: decisionState(main, "relocation_alt"), decisionKey: "relocation_alt", run: () => flushOps(), only: ["team_change"] },
-  { id: "team_ok", label: "Ekip kabul eder: “Randevunuz onaylandı!”", why: "Randevu ekip onayıyla kesinleşir ve kurulum iş emrine bağlanır", actor: "external", status: wfStep(main, "team"), run: () => flushOps(), screen: detail, only },
+  { id: "slot_decision", label: "Müşteri randevu seçer", why: "Seçim kaydedilir ve kurulum iş emrine bağlanır", actor: "customer", status: decisionState(main, "relocation_slot"), decisionKey: "relocation_slot", only },
   { id: "install", label: "Kurulum ve aktivasyon", why: "Kurulum iş emri yürütülür", actor: "team", status: wfStep(main, "install"), run: (c) => c.main && runInstall(c.main.id), only },
   {
     id: "verify",
@@ -278,7 +253,6 @@ export const SCENARIOS: DemoScenario[] = [
     outcomes: [
       { id: "success", label: "Altyapı açılır → kurulum", desc: "Müşteri geçici interneti kabul eder, port açılınca kurulum yapılır.", config: { addressCheck: "no_port", externalResponse: "ready" }, choices: { relocation_temp: "accept", relocation_slot: "slot-1" } },
       { id: "decline", label: "Geçici internet reddedilir", desc: "Müşteri teklifi reddeder; teslimat adımları atlanır.", config: { addressCheck: "no_port", externalResponse: "ready" }, choices: { relocation_temp: "decline", relocation_slot: "slot-2" } },
-      { id: "team_change", label: "İlk ekip saati kabul etmez", desc: "Port açılır; istenen saatte ilk ekip uygun değildir, sistem başka ekip ve saat önerir, randevu onaylanır.", config: { addressCheck: "no_port", externalResponse: "ready", teamMatch: "decline_first" }, choices: { relocation_temp: "accept", relocation_slot: "slot-1" } },
       { id: "escalate", label: "Altyapı yanıtsız → aktarım", desc: "Altyapı ekibinden 2 kontrolde yanıt gelmez, uzman ekibe bağlamıyla aktarılır.", config: { addressCheck: "no_port", externalResponse: "no_response" }, choices: { relocation_temp: "accept" } },
     ],
     steps: [
@@ -291,11 +265,11 @@ export const SCENARIOS: DemoScenario[] = [
       tempProvision,
       tempActive,
       { id: "external_req", label: "Altyapı genişletme sonucu beklenir", why: "Dış ekip yanıtı gelene kadar işlem ‘dış sistem bekleniyor’ durumunda tutulur", actor: "system", status: reached(main, "external"), run: (c) => c.main && requestExternal(c.main.id) },
-      { id: "external_ok", label: "Altyapı güncellendi: port açıldı", why: "Bekleyen dış talep yeniden kontrol edildi, olumlu yanıt geldi", actor: "external", status: wfStep(main, "external"), run: (c) => c.main && checkExternal(c.main.id), only: ["success", "decline", "team_change"] },
-      { id: "transfer", label: "Nakil iş emri oluşturulur", why: "Adres uygun hale gelince nakil iş emri başlatılır", actor: "system", status: wfStep(main, "transfer"), run: (c) => c.main && startTransfer(c.main.id), only: ["success", "decline", "team_change"] },
+      { id: "external_ok", label: "Altyapı güncellendi: port açıldı", why: "Bekleyen dış talep yeniden kontrol edildi, olumlu yanıt geldi", actor: "external", status: wfStep(main, "external"), run: (c) => c.main && checkExternal(c.main.id), only: ["success", "decline"] },
+      { id: "transfer", label: "Nakil iş emri oluşturulur", why: "Adres uygun hale gelince nakil iş emri başlatılır", actor: "system", status: wfStep(main, "transfer"), run: (c) => c.main && startTransfer(c.main.id), only: ["success", "decline"] },
       { id: "ext1", label: "1. kontrol: yanıt yok, müşteri bilgilendirilir", why: "Bekleyen yanıt başarı gibi gösterilmez; gecikme açıkça bildirilir", actor: "external", status: (c) => ((c.main?.retries ?? 0) >= 1 ? "done" : "pending"), run: (c) => c.main && checkExternal(c.main.id), only: ["escalate"] },
       { id: "ext2", label: "2. kontrol: yanıt yok → Altyapı Planlama ekibine aktarım", why: "Otomatik takip sınırı aşıldı; bağlam kaybolmadan insan takibine alınır", actor: "system", status: (c) => (c.main?.handoff ? "done" : "pending"), run: (c) => c.main && checkExternal(c.main.id), screen: detail, only: ["escalate"] },
-      ...relocationTail(["success", "decline", "team_change"], detail),
+      ...relocationTail(["success", "decline"], detail),
     ],
   },
   {
@@ -353,60 +327,29 @@ export const SCENARIOS: DemoScenario[] = [
   },
   {
     id: "D",
-    title: "Telefondan AI Usta'ya",
-    summary: "Müşteri TürkNet'i arar. Sesli asistan numaradan tanır, sorunu menüden sorar, bölgesel kesintiyi kontrol eder ve SMS ile uygulamaya geçirir. AI Usta önceki bağlamla açılır; ışık kontrolü ve güvenli adımlarla çözülür ya da tüm bağlamla canlı desteğe aktarılır.",
-    features: ["Sesli Triyaj", "SMS", "AI Usta", "Canlı Destek"],
+    title: "AI Usta ile modem sorunu",
+    summary: "Müşteri çağrı merkezini arar. Sesli asistan tanır ve ilk kontrolleri yapar, SMS ile AI Usta'ya geçirir; görsel kontrol ve güvenli adımlarla çözülür ya da bağlamıyla canlı desteğe aktarılır.",
+    features: ["Sesli Triyaj", "AI Usta", "Takip"],
     outcomes: [
-      { id: "fixed", label: "Self-servis çözülür", desc: "Güç kontrolü ve yeniden başlatma sonrası bağlantı gelir, müşteri doğrular; kayıt açılmaz.", config: { aiFix: "fixed" }, choices: { usta_menu: "down", usta_ivr: "sms", usta_photo: "demo_photo", usta_step1: "done", usta_step2: "done", usta_confirm: "yes" } },
-      { id: "not_fixed", label: "Canlı desteğe aktarım", desc: "Adımlar sonuç vermez; temsilci tüm bağlamı görerek başlar ve teknisyen randevusu oluşturur.", config: { aiFix: "not_fixed" }, choices: { usta_menu: "down", usta_ivr: "sms", usta_photo: "demo_photo", usta_step1: "done", usta_step2: "done", usta_live: "live" } },
-      { id: "agent", label: "Müşteri temsilci ister", desc: "Müşteri SMS yerine temsilciyi seçer; aktarım bağlamla yapılır ve görüşme yazılı sürer.", config: { aiFix: "fixed" }, choices: { usta_menu: "down", usta_ivr: "agent" } },
+      { id: "fixed", label: "Self-servis çözülür", desc: "İlk güvenli adım sonrası bağlantı gelir, müşteri doğrular.", config: { aiFix: "fixed" }, choices: { usta_ivr: "sms", usta_photo: "demo_photo", usta_step1: "done", usta_confirm: "yes" } },
+      { id: "not_fixed", label: "Canlı desteğe aktarım", desc: "İki güvenli adım sonuç vermez; kontrollerle birlikte uzmana aktarılır.", config: { aiFix: "not_fixed" }, choices: { usta_ivr: "sms", usta_photo: "demo_photo", usta_step1: "persist", usta_step2: "persist" } },
     ],
     steps: [
-      { id: "call", label: "Müşteri “TürkNet'i ara”ya dokunur, numarasından tanınır", why: "Abonelik numaradan bulunur; şifre veya kimlik bilgisi sorulmaz", actor: "customer", status: wfStep(main, "call"), run: () => setId("main", startUstaCall()), screen: () => "/telefon-destek" },
-      { id: "menu", label: "Sesli asistan sorunu sorar (1–5 menüsü)", why: "Sorun teknik soru sorulmadan sınıflandırılır", actor: "system", status: offered(main, "usta_menu"), run: (c) => c.main && askMenu(c.main.id) },
-      { id: "menu_choice", label: "Müşteri 1'e basar: “İnternetim hiç çalışmıyor”", why: "Seçim, sonraki tüm kanallara aktarılır", actor: "customer", status: decisionState(main, "usta_menu"), decisionKey: "usta_menu" },
-      { id: "ivr_check", label: "Bölgesel kesinti kontrolü: genel kesinti yok", why: "Bölgesel arıza varsa müşteriye adım yaptırılmaz", actor: "system", status: wfStep(main, "ivr_check"), run: (c) => c.main && ivrCheck(c.main.id) },
-      { id: "ivr_choice", label: "Müşteri seçer: SMS ile devam / temsilci", why: "Kanal değiştirme müşterinin seçimidir", actor: "customer", status: decisionState(main, "usta_ivr"), decisionKey: "usta_ivr" },
-      { id: "sms_open", label: "SMS'teki bağlantı açılır, AI Usta önceki bağlamla başlar", why: "Müşteri sorunu yeniden anlatmaz (simüle SMS, gerçek mesaj yok)", actor: "customer", status: wfStep(main, "sms"), run: (c) => c.main && openUstaSms(c.main.id), screen: (c) => (c.main ? `/ai-usta/${c.main.id}` : null), only: ["fixed", "not_fixed"] },
-      { id: "photo_req", label: "AI Usta kamerayı açmayı önerir", why: "Işık durumları sorunu daraltır", actor: "agent", status: offered(main, "usta_photo"), run: (c) => c.main && requestPhoto(c.main.id), only: ["fixed", "not_fixed"] },
-      { id: "photo", label: "Modem ışıkları gösterilir (örnek görüntü)", why: "Kamera yoksa örnek görüntüyle devam edilir", actor: "customer", status: decisionState(main, "usta_photo"), decisionKey: "usta_photo", only: ["fixed", "not_fixed"] },
-      { id: "analysis", label: "Görsel kontrol (simülasyon): İnternet ışığı kırmızı", why: "Gerçek model yok; sonuç kesin teşhis değildir", actor: "agent", status: wfStep(main, "analysis"), only: ["fixed", "not_fixed"] },
-      { id: "step1", label: "Adım 1: güç kablosu → “Kontrol ettim”", why: "En güvenli adımdan başlanır", actor: "customer", status: decisionState(main, "usta_step1"), decisionKey: "usta_step1", run: (c) => c.main && giveStep(c.main.id, 1), only: ["fixed", "not_fixed"] },
-      { id: "step2", label: "Adım 2: modemi kapatıp 20 sn bekleme → “Tamam, açtım”", why: "Yeniden başlatma ayarları silmez", actor: "customer", status: decisionState(main, "usta_step2"), decisionKey: "usta_step2", run: (c) => c.main && giveStep(c.main.id, 2), only: ["fixed", "not_fixed"] },
-      { id: "recheck", label: "Bağlantının kurulması beklenir ve tekrar kontrol edilir", why: "Çözüm ölçümle doğrulanır", actor: "system", status: wfStep(main, "recheck"), only: ["fixed", "not_fixed"] },
-      { id: "confirm", label: "“Harika! Bağlantınız yeniden aktif.” Müşteri doğrular", why: "Çözüm müşteri onayı olmadan kapatılmaz", actor: "customer", status: decisionState(main, "usta_confirm"), decisionKey: "usta_confirm", run: (c) => c.main && askConfirm(c.main.id), only: ["fixed"] },
-      { id: "reward", label: "Sorun çözüldü, destek kaydı açılmadı", why: "Self-servis çözümde kayıt oluşturulmaz", actor: "system", status: (c) => (c.main?.status === "completed" ? "done" : "pending"), screen: (c) => (c.main ? `/ai-usta/${c.main.id}` : null), only: ["fixed"] },
-      { id: "live", label: "Düzelmedi → müşteri “Canlı Desteğe Bağlan”a dokunur", why: "Kayıt yalnızca otomatik çözüm başarısız olunca ve müşteri onayıyla açılır", actor: "customer", status: decisionState(main, "usta_live"), decisionKey: "usta_live", only: ["not_fixed"] },
-      { id: "summary", label: "Temsilciye özet: sorun, triyaj, ışıklar, adımlar, ölçümler", why: "Müşteri sorunu tekrar anlatmaz", actor: "system", status: (c) => (c.main?.handoff ? "done" : "pending"), screen: (c) => (c.main ? `/ai-usta/${c.main.id}` : null), only: ["not_fixed"] },
-      { id: "handoff_call", label: "Sesli asistan bağlamıyla temsilciye aktarır", why: "Müşteri temsilci istedi; yapılan kontroller iletilir", actor: "system", status: (c) => (c.main?.handoff ? "done" : "pending"), only: ["agent"] },
-      {
-        id: "chat",
-        label: "Canlı destek: temsilci kontrolleri görerek başlar",
-        why: "İlk mesaj sorunu zaten bilir; aynı adımlar tekrar yaptırılmaz",
-        actor: "agent",
-        status: (c) => (c.main && c.w.chats.some((m) => m.workflowId === c.main!.id) ? "done" : "pending"),
-        run: (c) => {
-          if (!c.main) return;
-          endCall(c.main.id);
-          openLiveChat(c.main.id);
-        },
-        screen: (c) => (c.main ? `/canli-destek/${c.main.id}` : null),
-        only: ["not_fixed", "agent"],
-      },
-      {
-        id: "tech",
-        label: "Fiziksel müdahale gerekir: teknisyen randevusu oluşturulur",
-        why: "Kayıt ve tüm teşhis geçmişi İşlemlerim'de görünür",
-        actor: "agent",
-        status: (c) => (c.w.workOrders.some((o) => o.workflowId === c.main?.id && o.kind === "field_repair") ? "done" : "pending"),
-        run: (c) => {
-          if (!c.main) return;
-          sendChat(c.main.id, "Teknisyen randevusu istiyorum", "tech");
-          flushOps(c.main.id);
-        },
-        screen: (c) => (c.main ? `/canli-destek/${c.main.id}` : null),
-        only: ["not_fixed", "agent"],
-      },
+      { id: "call", label: "Müşteri çağrı merkezini arar, numarasından tanınır", why: "Sesli yanıt sistemi abonelik bilgisini numaradan bulur; kimlik tekrar sorulmaz", actor: "customer", status: wfStep(main, "call"), run: () => setId("main", startUstaCall()), screen: () => "/" },
+      { id: "ivr_check", label: "Sesli asistan ilk kontrolleri yapar", why: "Telefonda çözülebilecek bir durum mu diye bakılır; bölgesel arıza varsa müşteriye adım yaptırılmaz", actor: "system", status: wfStep(main, "ivr_check"), run: (c) => c.main && ivrCheck(c.main.id) },
+      { id: "ivr_choice", label: "Müşteri 1'e basar: AI Usta SMS'i istenir", why: "Görsel destek için kanal değiştirme müşterinin seçimidir", actor: "customer", status: decisionState(main, "usta_ivr"), decisionKey: "usta_ivr" },
+      { id: "sms_open", label: "SMS'teki “AI Usta'yı Aç” ile uygulamaya geçilir", why: "Çağrıdaki bağlam aktarılır; müşteri sorunu yeniden yazmaz (simüle SMS)", actor: "customer", status: wfStep(main, "sms"), run: (c) => c.main && openUstaSms(c.main.id), screen: (c) => (c.main ? `/surec/${c.main.id}` : null) },
+      { id: "photo_req", label: "AI Usta modem ışıklarının fotoğrafını ister", why: "Işık durumları teknik soru sormadan sorunu daraltır", actor: "agent", status: offered(main, "usta_photo"), run: (c) => c.main && requestPhoto(c.main.id) },
+      { id: "photo", label: "Fotoğraf yüklenir", why: "Müşteri kendi fotoğrafını veya örnek fotoğrafı kullanır", actor: "customer", status: decisionState(main, "usta_photo"), decisionKey: "usta_photo" },
+      { id: "analysis", label: "Görsel analiz (simülasyon): Internet ışığı kapalı", why: "Gerçek model yok; sonuç açıkça simülasyon olarak işaretlenir", actor: "agent", status: wfStep(main, "analysis") },
+      { id: "step1", label: "Güvenli adım 1: güç ve kablo kontrolü", why: "En güvenli ve geri alınabilir adımdan başlanır", actor: "agent", status: offered(main, "usta_step1"), run: (c) => c.main && giveStep(c.main.id, 1) },
+      { id: "step1_done", label: "Müşteri “Uyguladım” / “Sorun devam ediyor” der", why: "Müşteri her adımda sonucu bildirir", actor: "customer", status: decisionState(main, "usta_step1"), decisionKey: "usta_step1" },
+      { id: "recheck1", label: "Bağlantı yeniden kontrol edilir", why: "Çözüm ölçümle doğrulanır", actor: "system", status: wfStep(main, "recheck1") },
+      { id: "confirm", label: "Müşteri çözümü doğrular", why: "Çözüm müşteri onayı olmadan kapatılmaz", actor: "customer", status: decisionState(main, "usta_confirm"), decisionKey: "usta_confirm", run: (c) => c.main && askConfirm(c.main.id), only: ["fixed"] },
+      { id: "reward", label: "Doğrulanmış self-servis rozeti, kayıt kapanır", why: "Ödül göstergesi yalnızca doğrulanmış çözümde gösterilir (örnek)", actor: "system", status: (c) => (c.main?.status === "completed" ? "done" : "pending"), screen: detail, only: ["fixed"] },
+      { id: "step2", label: "Güvenli adım 2: modemi yeniden başlat", why: "İlk adım yetmedi; sıradaki güvenli kontrol", actor: "agent", status: decisionState(main, "usta_step2"), decisionKey: "usta_step2", run: (c) => c.main && giveStep(c.main.id, 2), only: ["not_fixed"] },
+      { id: "recheck2", label: "Yeniden kontrol: bağlantı yok", why: "Deneme sınırına ulaşıldı", actor: "system", status: wfStep(main, "recheck2"), only: ["not_fixed"] },
+      { id: "handoff", label: "Canlı teknik desteğe bağlamıyla aktarım", why: "Müşteri aynı sorunu baştan anlatmaz; tüm kontroller aktarılır", actor: "system", status: (c) => (c.main?.handoff ? "done" : "pending"), screen: detail, only: ["not_fixed"] },
     ],
   },
   {
@@ -454,58 +397,6 @@ export const SCENARIOS: DemoScenario[] = [
       { id: "external_ok", label: "Dış sistem yanıtı geldi: port tahsis edildi", why: "Yeni durum gelince sonraki adıma geçilir", actor: "external", status: wfStep(main, "external"), run: (c) => { setConfig({ externalResponse: "ready" }); if (c.main) checkExternal(c.main.id); }, screen: () => "/takip", only: ["success"] },
       { id: "ext2", label: "2. kontrol de yanıtsız → Nakil Operasyon ekibine aktarım", why: "Otomatik takip sınırı aşıldı; müşteri geçici internetle bağlı kalır", actor: "system", status: (c) => (c.main?.handoff ? "done" : "pending"), run: (c) => c.main && checkExternal(c.main.id), screen: () => "/takip", only: ["escalate"] },
       ...relocationTail(["success"], () => "/takip"),
-    ],
-  },
-  {
-    id: "G",
-    title: "Aile yetkilendirmesi",
-    summary: "Abonelik sahibi oğlunu sınırlı yetkiyle davet eder. Davet kabul edilince aile üyesi teknik destek başlatır (başlatan kişi görünür); ödeme isterse sahibin onayı gerekir. Sahip onaylar ya da reddedip yetkiyi iptal eder.",
-    features: ["Aile Yetkilendirmesi", "Takip"],
-    outcomes: [
-      { id: "approve", label: "Sahip ödeme talebini onaylar", desc: "Hassas işlem yalnızca sahibin açık onayıyla yapılır.", config: { proactive: "remote_fix" }, choices: {} },
-      { id: "reject", label: "Talep reddedilir, yetki iptal edilir", desc: "Sahip talebi reddeder ve aile üyesinin yetkisini kaldırır.", config: { proactive: "remote_fix" }, choices: {} },
-    ],
-    steps: [
-      { id: "open", label: "Sahip Hesabım → Aile ve Yetkilendirme'yi açar", why: "Yetki yalnızca abonelik sahibi tarafından verilir", actor: "customer", status: (c) => (c.s.flags["fam_open"] ? "done" : "pending"), run: () => { F.getState().reset(); flag("fam_open"); }, screen: () => "/aile" },
-      {
-        id: "invite",
-        label: "Mert Koyuncu (Çocuk) davet edilir: görüntüleme, teknik destek, finansal talep",
-        why: "Sahip hangi işlem gruplarının açılacağını seçer; faturalar ve randevular kapalı kalır",
-        actor: "customer",
-        status: () => (member() ? "done" : "pending"),
-        run: () => setId("member", F.getState().addDelegate({ name: "Mert Koyuncu", phone: "0535 902 11 46", relation: "Çocuk", scopes: { view: true, tech: true, appointments: false, bills: false, finance: true }, duration: "30" }).id),
-        screen: () => "/aile",
-      },
-      { id: "accept", label: "Mert SMS davetini kabul eder, yetkiler aktif olur", why: "Davet onaylanmadan yetki kullanılamaz", actor: "external", status: () => (member()?.status === "active" ? "done" : member()?.status === "revoked" ? "skipped" : "pending"), run: () => { const d = member(); if (d) F.getState().acceptInvite(d.id); } },
-      {
-        id: "member_start",
-        label: "Mert kendi telefonundan hız kontrolünü başlatır (Başlatan: Mert)",
-        why: "İşlemi kimin başlattığı süreçte ve etkinlik geçmişinde görünür",
-        actor: "customer",
-        status: (c) => (c.main ? "done" : "pending"),
-        run: () => {
-          const d = member();
-          if (!d) return;
-          setId("main", startSpeedCheck({ initiatedBy: `${d.name} (yetkili aile üyesi)` }));
-          F.getState().recordAction(d.id, "İnternet hızı kontrolünü başlattı");
-        },
-        screen: () => `/aile/uye/${S.getState().ids["member"]}`,
-      },
-      { id: "auto", label: "Hız ajanı süreci yürütür, ölçer ve doğrular", why: "Aile üyesi de sahibin aldığı otonom hizmeti alır", actor: "system", status: (c) => (c.main?.status === "completed" || c.main?.status === "escalated" ? "done" : c.main ? "pending" : "pending"), run: (c) => c.main && runToEnd(c.main.id), screen: detail },
-      { id: "request", label: "Mert “Faturayı öde” der → sahibin onayı istenir", why: "Finansal işlemler aile üyesine doğrudan açılmaz", actor: "customer", status: () => (F.getState().requests.some((r) => r.delegateId === member()?.id) ? "done" : "pending"), run: () => { const d = member(); if (d) F.getState().requestSensitive(d.id, "Faturayı öde"); }, screen: () => "/aile" },
-      {
-        id: "resolve",
-        label: "Sahip talebi onaylar / reddeder",
-        why: "Hassas işlem yalnızca sahibin açık onayıyla yapılır",
-        actor: "customer",
-        status: () => (F.getState().requests.some((r) => r.delegateId === member()?.id && r.status !== "pending") ? "done" : "pending"),
-        run: (c) => {
-          const r = F.getState().requests.find((x) => x.delegateId === member()?.id && x.status === "pending");
-          if (r) F.getState().resolveRequest(r.id, c.outcomeId === "approve");
-        },
-        screen: () => "/aile",
-      },
-      { id: "revoke", label: "Sahip Mert'in yetkisini iptal eder", why: "Yetki tek dokunuşla geri alınabilir; tüm geçmiş kayıtlı kalır", actor: "customer", status: () => (member()?.status === "revoked" ? "done" : "pending"), run: () => { const d = member(); if (d) F.getState().revoke(d.id); }, screen: () => "/aile", only: ["reject"] },
     ],
   },
 ];

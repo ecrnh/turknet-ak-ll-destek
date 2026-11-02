@@ -9,7 +9,7 @@ import { escalate, recheck, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
 import { customerAction, statusSentence, TEAM_FOR, whatsNext } from "../copy";
 import { AiUstaPanel, BillingPanel, ConnectivityPanel, HealthCard, RelocationPanel, SpeedPanel, TempPanel } from "../components/panels";
-import { AuditList, DecisionCard, DemoNote, HandoffCard, initiatorLabel, OutcomeCard, RecordsList, StatusPill, StepTimeline, TechDetails, TYPE_ICON, TYPE_LABEL } from "../components/ui";
+import { AuditList, DecisionCard, DemoNote, HandoffCard, OutcomeCard, RecordsList, StatusPill, StepTimeline, TechDetails, TYPE_ICON, TYPE_LABEL } from "../components/ui";
 
 export function WorkflowDetailScreen({ id }: { id: string }) {
   const wf = useWorkflowStore((s) => s.workflows.find((w) => w.id === id));
@@ -41,9 +41,7 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
             </span>
             <div className="min-w-0 flex-1">
               <p className="font-semibold leading-tight">{wf.title}</p>
-              <p className="text-xs text-primary-foreground/70">
-                {initiatorLabel(wf)} · {fmtDateTime(wf.createdAt)} · {wf.id}
-              </p>
+              <p className="text-xs text-primary-foreground/70">Başlangıç {fmtDateTime(wf.createdAt)}</p>
             </div>
           </div>
           <h2 className="mt-4 text-xl font-semibold leading-snug">{statusSentence(wf)}</h2>
@@ -65,17 +63,7 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
           </dl>
         </section>
 
-        {wf.type === "ai_usta" && isActive(wf) && !wf.handoff && (
-          <Link to="/ai-usta/$id" params={{ id: wf.id }} className="flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-float">
-            AI Usta ekranında devam et
-          </Link>
-        )}
-        {wf.handoff && wf.type === "ai_usta" && (
-          <Link to="/canli-destek/$id" params={{ id: wf.id }} className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-float">
-            <Headset className="size-4" /> Canlı desteğe geç
-          </Link>
-        )}
-        {!(wf.type === "ai_usta" && wf.decision?.key.startsWith("usta_")) && <DecisionCard key={wf.decision?.key ?? "none"} wf={wf} />}
+        <DecisionCard key={wf.decision?.key ?? "none"} wf={wf} />
         <HandoffCard wf={wf} />
         <OutcomeCard wf={wf} />
 

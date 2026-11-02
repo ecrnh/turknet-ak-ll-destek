@@ -51,7 +51,7 @@ export function detectAnomaly(): string | null {
 registerOp("proactive.detect", () => detectAnomaly());
 
 /** Customer says "İnternetim çok yavaş": the Speed Optimisation Agent starts with a measurement. */
-export function startSpeedCheck(opts: { initiatedBy?: string } = {}): string {
+export function startSpeedCheck(): string {
   const measured = 20;
   setConnectivity({ fixed: "degraded", metric: { optic: -27.1, drops: 3, speed: measured } }, `Hız ölçümü: ${measured} Mbps`);
   const { wf, created } = createWorkflow({
@@ -59,7 +59,7 @@ export function startSpeedCheck(opts: { initiatedBy?: string } = {}): string {
     title: "İnternet hızı kontrolü",
     dedupeKey: `speed:${SUBSCRIPTION.id}`,
     steps: [{ key: "measure", label: "Hız ölçümü" }, ...SPEED_STEPS],
-    data: { pkg: SUBSCRIPTION.speed, ...(opts.initiatedBy ? { initiatedBy: opts.initiatedBy } : {}) },
+    data: { pkg: SUBSCRIPTION.speed },
     why: "Müşteri internetinin yavaş olduğunu bildirdi",
   });
   if (!created) return wf.id;

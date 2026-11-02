@@ -16,7 +16,7 @@ import { useFamilyStore, type Duration } from "../store";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
-const STEP_TITLES = ["Kişi bilgileri", "Yetkiler", "Onay", "Kimlik doğrulama"];
+const STEP_TITLES = ["Kişi bilgileri", "Yetki kapsamı", "Onay", "SMS doğrulama"];
 
 export function NewDelegateScreen() {
   const navigate = useNavigate();
@@ -29,29 +29,22 @@ export function NewDelegateScreen() {
   const [phone, setPhone] = useState("");
   const [relation, setRelation] = useState<string>("Anne");
   const [scopes, setScopes] = useState<Record<ScopeKey, boolean>>(() => Object.fromEntries(SCOPES.map((s) => [s.key, s.default])) as Record<ScopeKey, boolean>);
-  const [delegateId, setDelegateId] = useState<string | null>(null);
-  const acceptInvite = useFamilyStore((s) => s.acceptInvite);
-  const status = useFamilyStore((s) => s.delegates.find((d) => d.id === delegateId)?.status);
   const [duration, setDuration] = useState<Duration>("unlimited");
   const [kvkk, setKvkk] = useState(false);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const digits = phone.replace(/\D/g, "");
-  const phoneOk = /^0?5\d{9}$/.test(digits);
+  const phoneOk = phone.replace(/\D/g, "").length >= 10;
 
   const next = () => {
     setError(null);
-    if (step === 0 && name.trim().split(/\s+/).length < 2) return setError("Ad ve soyadı birlikte girin.");
-    if (step === 0 && !phoneOk) return setError("Geçerli bir cep telefonu numarası girin (05xx xxx xx xx).");
-    if (step === 1 && !Object.values(scopes).some(Boolean)) return setError("En az bir yetki seçin.");
-    if (step === 2 && !kvkk) return setError("Devam etmek için KVKK aydınlatma metnini onaylayın.");
+    if (step === 0 && (!name.trim() || !phoneOk)) return setError("Ad soyad ve geçerli bir telefon numarası gir.");
+    if (step === 2 && !kvkk) return setError("Devam etmek için KVKK aydınlatma metnini onayla.");
     if (step === 3) {
-      if (otp.length < 6) return setError("6 haneli kodu eksiksiz girin.");
-      const d = addDelegate({ name: name.trim(), phone, relation, scopes, duration });
-      setDelegateId(d.id);
-      addHistory("Aile üyesi davet edildi", `${name} (${relation})`);
-      notify({ kind: "family", title: "Davet gönderildi", body: `${name} daveti kabul ettiğinde seçtiğiniz yetkiler aktif olacak.`, to: "/aile" }, false);
+      if (otp.length < 6) return setError("6 haneli kodu eksiksiz gir.");
+      addDelegate({ name: name.trim(), phone, relation, scopes, duration });
+      addHistory("Aile yetkisi verildi", `${name} (${relation})`);
+      notify({ kind: "family", title: "Yetkilendirme tamamlandı", body: `${name} artık hesabında seçtiğin işlemleri yapabilir.`, to: "/aile" }, false);
       flow.complete({ relation, duration });
     }
     setStep((s) => s + 1);
@@ -64,14 +57,8 @@ export function NewDelegateScreen() {
         <div className="space-y-4 px-4">
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="rounded-card bg-card p-6 text-center shadow-card">
             <CheckCircle2 className="mx-auto size-16 text-success" />
-            <p className="mt-3 text-xl font-semibold text-primary">Yetkilendirme tamamlandı.</p>
-            <p className="mt-1 text-sm text-muted-foreground">Artık seçtiğiniz işlemleri bu kişi de yönetebilir. {status === "invited" ? `${name} kişisine SMS ile davet gönderdik; kabul ettiğinde yetkiler aktif olur.` : "Davet kabul edildi, yetkiler aktif."}</p>
-            {status === "invited" && delegateId && (
-              <Button variant="outline" size="lg" className="mt-4 w-full" onClick={() => acceptInvite(delegateId)}>
-                Demo: Davetin kabul edilmesini simüle et
-              </Button>
-            )}
-            <p className="mt-3 text-xs text-muted-foreground">Yetkiyi istediğiniz an tek dokunuşla düzenleyebilir veya iptal edebilirsiniz.</p>
+            <p className="mt-3 text-xl font-semibold text-primary">{name} yetkilendirildi</p>
+            <p className="mt-1 text-sm text-muted-foreground">Yetkiyi istediğin an tek dokunuşla iptal edebilirsin.</p>
             <Button size="lg" className="mt-5 w-full" onClick={() => navigate({ to: "/aile" })}>
               Yetkili Kişilere Dön
             </Button>
@@ -83,7 +70,7 @@ export function NewDelegateScreen() {
 
   return (
     <div>
-      <PageHeader title="Aile Üyesi Davet Et" />
+      <PageHeader title="Yeni Kişi Yetkilendir" />
       <div className="px-4">
         <div className="mb-4 flex gap-1.5" aria-label={`Adım ${step + 1} / 4`}>
           {STEP_TITLES.map((t, i) => (
@@ -99,7 +86,7 @@ export function NewDelegateScreen() {
             <>
               <div className="space-y-1.5">
                 <Label htmlFor="d-name">Ad Soyad</Label>
-                <Input id="d-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Örn. Mert Koyuncu" className="h-12 rounded-xl" />
+                <Input id="d-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Örn. Ayşe Koyuncu" className="h-12 rounded-xl" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="d-phone">Cep telefonu</Label>
@@ -119,15 +106,15 @@ export function NewDelegateScreen() {
           )}
           {step === 1 && (
             <>
-              <p className="text-sm font-semibold text-primary">Bu kişinin hesabınızda hangi işlemleri yapabilmesini istiyorsunuz?</p>
+              <p className="text-sm text-muted-foreground">Bu kişi hesabında hangi işlemleri yapabilsin?</p>
               <div className="divide-y divide-border">
                 {SCOPES.map((s) => (
-                  <ToggleRow key={s.key} id={`scope-${s.key}`} title={s.label} desc={`${s.desc} · ${s.items.join(", ")}`} checked={scopes[s.key]} onChange={(v) => setScopes((p) => ({ ...p, [s.key]: v }))} />
+                  <ToggleRow key={s.key} id={`scope-${s.key}`} title={s.label} desc={s.desc} checked={scopes[s.key]} onChange={(v) => setScopes((p) => ({ ...p, [s.key]: v }))} />
                 ))}
               </div>
               {(scopes.payment || scopes.cancel) && (
                 <Banner tone="warning" title="Hassas yetki açtın">
-                  Bu kişi ödeme, iptal, iade veya paket değişikliği isteyebilir; her talep yalnızca sizin onayınızla gerçekleşir.
+                  Fatura ödeme ve iptal yetkileri finansal sonuç doğurur.
                 </Banner>
               )}
               <div>
@@ -159,7 +146,7 @@ export function NewDelegateScreen() {
                 <p className="mb-1 flex items-center gap-1.5 font-semibold text-foreground">
                   <ShieldAlert className="size-4" /> KVKK Aydınlatma Metni
                 </p>
-                Yetkilendirdiğiniz kişinin ad, telefon ve işlem kayıtları yalnızca hesabınızdaki işlemleri yürütmek amacıyla işlenir. Şifreniz ve ödeme bilgileriniz hiçbir zaman paylaşılmaz; hesap sahipliği devredilemez. Tüm erişimler Etkinlik Geçmişi'nde kayıt altındadır.
+                Yetkilendirdiğin kişinin ad, telefon ve işlem kayıtları yalnızca hesabındaki işlemleri yürütmek amacıyla işlenir. Yetkiyi dilediğin an iptal edebilirsin; tüm erişimler Yetki Geçmişi'nde kayıt altındadır.
               </div>
               <label htmlFor="kvkk" className="flex min-h-11 items-start gap-3">
                 <Checkbox id="kvkk" checked={kvkk} onCheckedChange={(v) => setKvkk(v === true)} className="mt-0.5 size-5 data-[state=checked]:bg-magenta data-[state=checked]:border-magenta" />
@@ -169,8 +156,8 @@ export function NewDelegateScreen() {
           )}
           {step === 3 && (
             <div className="text-center">
-              <p className="font-semibold text-primary">Kimliğinizi doğrulayın</p>
-              <p className="mt-1 text-sm text-muted-foreground">Kayıtlı numaranıza gönderilen 6 haneli kodu girin. Şifre veya kart bilgisi istemiyoruz. (Demo: herhangi bir kod)</p>
+              <p className="font-semibold text-primary">SMS ile doğrula</p>
+              <p className="mt-1 text-sm text-muted-foreground">{phone} numarasına gönderilen 6 haneli kodu gir. (Demo: herhangi bir kod)</p>
               <div className="mt-5 flex justify-center">
                 <InputOTP maxLength={6} value={otp} onChange={setOtp} aria-label="Doğrulama kodu">
                   <InputOTPGroup>
@@ -195,7 +182,7 @@ export function NewDelegateScreen() {
             </Button>
           )}
           <Button size="lg" className="flex-1" onClick={next}>
-            {step === 3 ? "Yetkilendirmeyi tamamla" : "Devam"}
+            {step === 3 ? "Doğrula ve Yetkilendir" : "Devam"}
           </Button>
         </div>
       </div>
