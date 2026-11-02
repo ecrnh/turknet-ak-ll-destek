@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   BadgeCheck,
   Bot,
@@ -32,7 +32,7 @@ import { STATUS_LABEL } from "../rules";
 import { customerAction, lastDoneStep, TYPE_LABEL } from "../copy";
 import { useWorkflowStore } from "../store";
 import type { Actor, AuditEvent, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
-import { ModemCameraCard } from "./modem";
+import { ModemInspectCard } from "./modem";
 
 export const TYPE_ICON: Record<WorkflowType, LucideIcon> = {
   relocation: MapPinned,
@@ -108,7 +108,6 @@ export function DecisionCard({ wf }: { wf: Workflow }) {
   const navigate = useNavigate();
   const d = wf.decision;
     if (!d) return null;
-  if (d.key === "usta_photo") return <ModemCameraCard wf={wf} />;
   if (d.key === "usta_inspect") return <ModemInspectCard wf={wf} />;
   const options = d.options;
   return (
