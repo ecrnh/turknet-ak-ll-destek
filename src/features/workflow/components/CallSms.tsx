@@ -135,7 +135,7 @@ function InstallLanding({ onOpen, onClose }: { onOpen: () => void; onClose: () =
       {stage === "store" && (
         <div className="mt-8 grid gap-3">
           <button type="button" onClick={install} className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-foreground text-sm font-semibold text-background">
-             App Store'dan indir
+            App Store'dan indir
           </button>
           <button type="button" onClick={install} className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-foreground text-sm font-semibold text-background">
             ▶ Google Play'den indir
