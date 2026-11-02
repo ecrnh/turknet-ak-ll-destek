@@ -24,7 +24,7 @@ export function PreferencesScreen() {
         <section className="rounded-card bg-card px-5 py-2 shadow-card">
           <p className="pt-3 text-xs font-bold uppercase tracking-wide text-magenta">Otomatik Kontrol İzinleri</p>
           <ToggleRow id="speed-agent" title="Hız Koruyucu" desc="Hız belirgin düştüğünde güvenli uzaktan düzeltme yapılsın (geri alınabilir)" checked={enabled.speed} onChange={(v) => toggle("speed", v)} />
-          <Link to="/ajanlar" className="flex min-h-12 items-center justify-between py-3 text-sm font-semibold text-primary">
+          <Link to="/ajanlar/kontroller" className="flex min-h-12 items-center justify-between py-3 text-sm font-semibold text-primary">
             Otomatik kontrolleri yönet <ChevronRight className="size-4" />
           </Link>
         </section>

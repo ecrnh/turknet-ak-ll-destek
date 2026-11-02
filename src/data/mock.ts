@@ -327,7 +327,7 @@ export const CASE_BASELINE = {
 export const AGENT_DEFS = [
   { id: "speed", name: "Hız Koruyucu", desc: "Hızında belirgin bir düşüş olursa izin verdiğin güvenli uzaktan düzeltmeleri dener.", icon: "gauge", to: "/ajanlar/hiz" },
   { id: "backup", name: "Kesinti Takibi", desc: "Kesintinin güncel durumunu gösterir; 24 saati aşarsa ücretsiz Hibrit İnternet'i hatırlatır.", icon: "route", to: "/hibrit" },
-  { id: "modem", name: "Modem Sağlık Kontrolü", desc: "Modem ve bağlantı durumuyla ilgili teknik kontrolleri yapar; bir sorun görünürse haber verir.", icon: "router", to: "/ajanlar" },
+  { id: "modem", name: "Modem Sağlık Kontrolü", desc: "Modem ve bağlantı durumuyla ilgili teknik kontrolleri yapar; bir sorun görünürse haber verir.", icon: "router", to: "/ajanlar/kontroller" },
   { id: "bill", name: "Fatura Hatırlatıcı", desc: "Son ödeme gününü hatırlatır, olağan dışı tutarları açıklar.", icon: "receipt", to: "/fatura-kalkani" },
 ] as const;
 
@@ -541,19 +541,19 @@ export const INTENT_KEYWORDS: { intent: "billing" | "ai_usta" | "relocation" | "
 export const GIGA = {
   name: "GIGA",
   tagline: "TürkNet'in akıllı dijital yardımcısı",
-  welcome: [
-    "Merhaba! Ben GIGA 👋",
-    "İnternetin, faturaların veya işlemlerinle ilgili ne olursa olsun yardımcı olmak için buradayım.",
-    "Bugün senin için neyi halledelim?",
-  ],
-  placeholder: "GIGA'ya yaz…",
-  humanNote: "İstediğin an bir uzmana bağlanabilirsin; konuşmamızı ona iletirim.",
+  /** GIGA screen greeting; `{name}` is the customer's (or managed profile's) first name. */
+  welcome: ["Merhaba, hoş geldin {name}!", "Bugün senin için ne yapabilirim?"],
+  /** Home page GIGA area. */
+  homeGreeting: "Merhaba, hoş geldin {name}! İnternetinle veya TürkNet işlemlerinle ilgili bir konuda yardıma mı ihtiyacın var? Ben buradayım.",
+  /** Suggestions only, never a required menu: the customer can always write their own sentence. */
+  starters: ["İnternetimle ilgili sorun var.", "Faturamı kontrol et.", "Taşınmak istiyorum.", "İşlemimin durumunu öğren."],
+  placeholder: "İhtiyacını yaz ya da söyle…",
   /** One assistant, six capabilities; the home page has no shortcuts for these, so the chat is the way in. `prompt` is what tapping the capability says to GIGA. */
   capabilities: [
     { id: "teknik", name: "Bağlantı sorunu", desc: "Bağlantı ve modem sorunlarını birlikte çözelim", icon: "usta", to: "/ai-usta", prompt: "İnternetim çalışmıyor" },
     { id: "fatura", name: "Fatura Kalkanı", desc: "Faturanı açıklarım, farklı görünen tutarları birlikte inceleriz", icon: "shield", to: "/fatura-kalkani", prompt: "Faturamda tutarsızlık var" },
     { id: "tasinma", name: "Taşınma ve Nakil", desc: "Yeni adresini kontrol edip süreci başlatalım", icon: "route", to: "/tasinma", prompt: "Taşınacağım" },
-    { id: "takip", name: "İşlemlerim", desc: "Devam eden işlemlerinin güncel durumu", icon: "track", to: "/takip", prompt: "İşlemim ne durumda?" },
+    { id: "takip", name: "İşlemlerim", desc: "Devam eden işlemlerinin güncel durumu", icon: "track", to: "/takip", prompt: "İşlemimin durumunu öğren." },
     { id: "hibrit", name: "Hibrit İnternet", desc: "Kesintide yedek bağlantın ve Box durumu", icon: "router", to: "/hibrit", prompt: "Hibrit İnternet" },
     { id: "hallet", name: "Benim İçin Hallet", desc: "Ne istediğini söyle, süreci birlikte başlatalım", icon: "hand", to: "/hallet", prompt: "Benim için hallet" },
   ],

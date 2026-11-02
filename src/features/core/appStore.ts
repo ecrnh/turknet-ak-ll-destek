@@ -119,7 +119,7 @@ const T = (iso: string) => new Date(iso).getTime();
 
 const seedNotifications = (): AppNotification[] => [
   { id: "n1", kind: "campaign", title: "12 Ay Peşin Ödeme Fırsatı", body: "Aylık ₺749,90'dan fiyatını sabitle, ₺2.400 tasarruf et.", time: T("2026-10-21T09:10:00+03:00"), read: false, to: "/islem/fiyat-sabitle" },
-  { id: "n2", kind: "agent", title: "Modem sağlık kontrolü", body: "Modemin normal çalışıyor. Son 7 günde bağlantı kopması görünmüyor.", time: T("2026-10-21T08:00:00+03:00"), read: false, to: "/ajanlar" },
+  { id: "n2", kind: "agent", title: "Modem sağlık kontrolü", body: "Modemin normal çalışıyor. Son 7 günde bağlantı kopması görünmüyor.", time: T("2026-10-21T08:00:00+03:00"), read: false, to: "/ajanlar/kontroller" },
   { id: "n3", kind: "family", title: "Aile yetkisi aktif", body: "Ayşe Koyuncu hesabında işlem yapma yetkin 14 Eylül'den beri aktif.", time: T("2026-10-20T19:22:00+03:00"), read: false, to: "/aile" },
   { id: "n4", kind: "bill", title: "Ekim faturan hazır", body: "Ödenmemiş faturan yok. Teşekkürler!", time: T("2026-10-20T10:00:00+03:00"), read: false, to: "/faturalar" },
   { id: "n5", kind: "support", title: "Destek kaydın tamamlandı", body: "Dijital Onarım ile hat profilin yenilendi.", time: T("2026-10-02T15:40:00+03:00"), read: false, to: "/destek-kayitlari" },

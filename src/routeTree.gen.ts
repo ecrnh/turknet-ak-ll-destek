@@ -33,6 +33,7 @@ import { Route as AileIndexRouteImport } from './routes/aile.index'
 import { Route as AileYeniRouteImport } from './routes/aile.yeni'
 import { Route as AjanlarIndexRouteImport } from './routes/ajanlar.index'
 import { Route as AjanlarHizRouteImport } from './routes/ajanlar.hiz'
+import { Route as AjanlarKontrollerRouteImport } from './routes/ajanlar.kontroller'
 import { Route as CanliDestekIdRouteImport } from './routes/canli-destek.$id'
 import { Route as FaturalarIndexRouteImport } from './routes/faturalar.index'
 import { Route as FaturalarGecmisRouteImport } from './routes/faturalar.gecmis'
@@ -166,6 +167,11 @@ const AjanlarHizRoute = AjanlarHizRouteImport.update({
   path: '/ajanlar/hiz',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AjanlarKontrollerRoute = AjanlarKontrollerRouteImport.update({
+  id: '/ajanlar/kontroller',
+  path: '/ajanlar/kontroller',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CanliDestekIdRoute = CanliDestekIdRouteImport.update({
   id: '/canli-destek/$id',
   path: '/canli-destek/$id',
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
   '/ajanlar/hiz': typeof AjanlarHizRoute
+  '/ajanlar/kontroller': typeof AjanlarKontrollerRoute
   '/canli-destek/$id': typeof CanliDestekIdRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
   '/ajanlar/hiz': typeof AjanlarHizRoute
+  '/ajanlar/kontroller': typeof AjanlarKontrollerRoute
   '/canli-destek/$id': typeof CanliDestekIdRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
   '/ajanlar/hiz': typeof AjanlarHizRoute
+  '/ajanlar/kontroller': typeof AjanlarKontrollerRoute
   '/canli-destek/$id': typeof CanliDestekIdRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
     | '/yardim'
     | '/aile/yeni'
     | '/ajanlar/hiz'
+    | '/ajanlar/kontroller'
     | '/canli-destek/$id'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
@@ -405,6 +415,7 @@ export interface FileRouteTypes {
     | '/yardim'
     | '/aile/yeni'
     | '/ajanlar/hiz'
+    | '/ajanlar/kontroller'
     | '/canli-destek/$id'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/yardim'
     | '/aile/yeni'
     | '/ajanlar/hiz'
+    | '/ajanlar/kontroller'
     | '/canli-destek/$id'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
@@ -482,6 +494,7 @@ export interface RootRouteChildren {
   YardimRoute: typeof YardimRoute
   AileYeniRoute: typeof AileYeniRoute
   AjanlarHizRoute: typeof AjanlarHizRoute
+  AjanlarKontrollerRoute: typeof AjanlarKontrollerRoute
   CanliDestekIdRoute: typeof CanliDestekIdRoute
   FaturalarGecmisRoute: typeof FaturalarGecmisRoute
   GoruntuluDestekGorusmeRoute: typeof GoruntuluDestekGorusmeRoute
@@ -668,6 +681,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AjanlarHizRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ajanlar/kontroller': {
+      id: '/ajanlar/kontroller'
+      path: '/ajanlar/kontroller'
+      fullPath: '/ajanlar/kontroller'
+      preLoaderRoute: typeof AjanlarKontrollerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/canli-destek/$id': {
       id: '/canli-destek/$id'
       path: '/canli-destek/$id'
@@ -778,6 +798,7 @@ const rootRouteChildren: RootRouteChildren = {
   YardimRoute: YardimRoute,
   AileYeniRoute: AileYeniRoute,
   AjanlarHizRoute: AjanlarHizRoute,
+  AjanlarKontrollerRoute: AjanlarKontrollerRoute,
   CanliDestekIdRoute: CanliDestekIdRoute,
   FaturalarGecmisRoute: FaturalarGecmisRoute,
   GoruntuluDestekGorusmeRoute: GoruntuluDestekGorusmeRoute,

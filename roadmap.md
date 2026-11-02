@@ -59,3 +59,11 @@
 - [x] Dijital onarım: 5 sıralı uzaktan kontrol (simülasyon); sorun yok → ön/arka modem incelemesi + elle ışık/kablo seçimi; sorun var → uzaktan düzeltme + doğrulama
 - [x] Her kararda "Canlı destekle görüşmek istiyorum." → tam teşhis özetiyle aktarım + sohbet
 - [x] Ana sayfa: karşılama kartı kaldırıldı, GIGA kutusu "Merhaba, hoş geldin Çağrı!" ile en üstte; sohbette "Ben yaparım" etiketi kaldırıldı
+
+## Tur 6 — Destek deneyimi GIGA altında
+- [x] Ana sayfa: Destek İşlemlerim ve Devam Eden İşlemlerim kaldırıldı; tek GIGA alanı + mesaj kutusu (yazılan GIGA ekranında gönderilir)
+- [x] /ajanlar = GIGA sohbeti: karşılama, 4 başlangıç önerisi, yazı + sesli giriş (tarayıcı izin vermezse simülasyon), Devam Eden İşlemlerin (yalnızca aktifse)
+- [x] Gelişmiş niyet anlama: puanlı eşleşme, Türkçe karakter/yazım hatası toleransı, durum soruları, ikinci ihtiyaç, "evet" ile önerileni başlatma, sorun türünü tekrar sormama
+- [x] Süreçler sohbet içinde canlı kart + karar (GIGA Teknik, Fatura Kalkanı); taşınma sihirbazı açılır
+- [x] Son aksiyonlarım kaldırıldı; otomatik kontroller /ajanlar/kontroller
+

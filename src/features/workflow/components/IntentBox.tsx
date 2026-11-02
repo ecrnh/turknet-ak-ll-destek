@@ -1,44 +1,20 @@
-import { useNavigate } from "@tanstack/react-router";
 import { Send } from "lucide-react";
 import { useState } from "react";
+import { GIGA } from "@/data/mock";
+import { useAppStore } from "@/features/core/appStore";
 import { cn } from "@/lib/utils";
-import { startIntent } from "@/features/giga/actions";
-import { log } from "../engine";
-import { detectIntent, type Intent } from "../rules";
-
-export const QUICK_INTENTS = ["Taşınacağım", "İnternetim çok yavaş", "Faturamda tutarsızlık var", "İnternetim kesildi", "İşlemim ne durumda?"];
-
-const CLARIFY: { label: string; intent: Intent }[] = [
-  { label: "Taşınma", intent: "relocation" },
-  { label: "İnternet çalışmıyor", intent: "ai_usta" },
-  { label: "Yavaş internet", intent: "speed" },
-  { label: "Fatura", intent: "billing" },
-  { label: "İşlem durumu", intent: "track" },
-];
 
 /**
- * "Size nasıl yardımcı olabilirim?": detects the request and really starts the
- * matching flow (not a decorative chat box). Asks for a short clarification when unsure.
+ * "Talebini yaz": every free-text request goes to GIGA, which understands it
+ * and starts the matching flow (one place for request understanding).
  */
 export function IntentBox({ onDark, className }: { onDark?: boolean; className?: string }) {
-  const navigate = useNavigate();
+  const openHelp = useAppStore((s) => s.openHelp);
   const [text, setText] = useState("");
-  const [unsure, setUnsure] = useState(false);
-
-  const run = (intent: Intent, said: string) => {
-    setText("");
-    setUnsure(false);
-    startIntent(intent, said, navigate);
-  };
 
   const go = (t: string) => {
-    const intent = detectIntent(t);
-    if (!intent) {
-      if (t.trim()) log(null, "customer", "info", `Talep anlaşılamadı: “${t}”`, "Emin olunamayan talepte kullanıcıdan kısa açıklama istenir");
-      setUnsure(true);
-      return;
-    }
-    run(intent, t);
+    setText("");
+    openHelp(t.trim() || undefined);
   };
 
   return (
@@ -55,26 +31,13 @@ export function IntentBox({ onDark, className }: { onDark?: boolean; className?:
           <Send className="size-4" />
         </button>
       </form>
-      {unsure ? (
-        <div className={cn("mt-2.5 rounded-2xl p-3", onDark ? "bg-primary-foreground/10" : "bg-muted")} role="status">
-          <p className={cn("text-sm font-semibold", onDark ? "text-primary-foreground" : "text-foreground")}>Tam anlayamadım. Konu hangisine yakın?</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {CLARIFY.map((c) => (
-              <button key={c.label} type="button" onClick={() => run(c.intent, c.label)} className={cn("rounded-full px-3 py-1.5 text-xs font-semibold", onDark ? "bg-card text-primary" : "border border-primary/20 bg-card text-primary")}>
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {QUICK_INTENTS.map((q) => (
-            <button key={q} type="button" onClick={() => go(q)} className={cn("rounded-full px-3 py-1.5 text-xs font-semibold", onDark ? "bg-primary-foreground/15 text-primary-foreground" : "border border-primary/20 bg-card text-primary")}>
-              {q}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        {GIGA.starters.map((q) => (
+          <button key={q} type="button" onClick={() => go(q)} className={cn("rounded-full px-3 py-1.5 text-xs font-semibold", onDark ? "bg-primary-foreground/15 text-primary-foreground" : "border border-primary/20 bg-card text-primary")}>
+            {q}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

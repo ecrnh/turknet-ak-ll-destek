@@ -7,13 +7,14 @@ describe("GIGA · kim ne yapar", () => {
   it("fatura kontrolünü GIGA yapar, inceleme ve kayıt değişikliği onaya bağlıdır", () => {
     const r = gigaReply("Faturamda tutarsızlık var", base);
     expect(r.topic).toBe("billing");
-    expect(r.actions?.find((a) => a.intent === "billing")?.kind).toBe("auto");
+    expect(r.start).toBe("billing");
     expect(r.text).toContain("onayınla");
   });
 
   it("taşınma başvurusu müşteri onayı gerektirir", () => {
     const r = gigaReply("Taşınacağım", base);
-    expect(r.actions?.[0]).toMatchObject({ kind: "approval", intent: "relocation" });
+    expect(r.start).toBe("relocation");
+    expect(r.text).toContain("onayını alırım");
   });
 
   it("açık taşınma varken yeni taşınma başlatılmaz, mevcut işleme gidilir", () => {
@@ -38,7 +39,7 @@ describe("GIGA · kim ne yapar", () => {
   });
 
   it("anlamadığında önce netleştirme seçenekleri sunar, uzman seçeneğini öne çıkarmaz", () => {
-    const r = gigaReply("merhaba", base);
+    const r = gigaReply("asdf qwer", base);
     expect(r.topic).toBe("clarify");
     expect(r.actions?.filter((a) => a.kind === "ask").length).toBeGreaterThan(0);
     expect(r.actions?.some((a) => a.kind === "human")).toBe(false);

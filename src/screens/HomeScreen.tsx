@@ -4,14 +4,13 @@ import { HomeTopBar } from "@/components/layout/headers";
 import { ActionTile, CampaignCard, TileScroller } from "@/components/tn/cards";
 import { NET_DOT, NET_LABEL, NET_TEXT } from "@/components/tn/NetStatus";
 import { SectionTitle } from "@/components/tn/primitives";
-import { INTERNET_OPS, SUBSCRIPTION_OPS, SUPPORT_OPS, USER } from "@/data/mock";
+import { INTERNET_OPS, SUBSCRIPTION_OPS, USER } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
 import { useActingAccount } from "@/features/family/store";
 import { AgentActivityCard } from "@/features/aiAgents/components/AgentActivityCard";
 import { OutageHomeCard } from "@/features/workflow/components/hybrid";
 import { cn } from "@/lib/utils";
 import { HeroCarousel } from "./home/HeroCarousel";
-import { OngoingProcesses } from "./home/HomeSections";
 
 function StatusPill() {
   const status = useAppStore((s) => s.net.status);
@@ -81,24 +80,10 @@ export function HomeScreen() {
       <div className="space-y-4 px-4">
         <OutageHomeCard />
         <AgentActivityCard />
-        {simple ? (
-          <SimpleHome />
-        ) : (
-          <>
-            <OngoingProcesses />
-            <CampaignCard />
-          </>
-        )}
+        {simple ? <SimpleHome /> : <CampaignCard />}
       </div>
 
       <div className="px-4">
-        <SectionTitle>Destek İşlemlerim</SectionTitle>
-        <TileScroller>
-          {SUPPORT_OPS.map((o) => (
-            <ActionTile key={o.slug} item={o} />
-          ))}
-        </TileScroller>
-
         <SectionTitle>Abonelik İşlemlerim</SectionTitle>
         <TileScroller>
           {SUBSCRIPTION_OPS.map((o) => (
