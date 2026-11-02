@@ -327,3 +327,13 @@ export function closeOldLine(id: string) {
   });
 }
 registerOp("relocation.oldLine", closeOldLine);
+
+/**
+ * Address pre-check shown in the relocation wizard before anything is started.
+ * Same mock answer the workflow will get; nothing is created or reserved.
+ */
+export function previewAddress(address: DemoAddress): { result: EligibilityResult; reason: string } {
+  const r = MockInfraAPI.checkAddress(address);
+  log(null, "system", "external", `Adres ön kontrolü (${MockInfraAPI.name}): ${r.result}`, "Müşteri süreci başlatmadan önce yeni adresin durumunu görür");
+  return r;
+}
