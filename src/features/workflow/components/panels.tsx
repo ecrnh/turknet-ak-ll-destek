@@ -255,6 +255,17 @@ export function BillingPanel({ wf }: { wf: Workflow }) {
   );
 }
 
+/** GIGA picks up the phone conversation in the app: the customer never repeats the problem. */
+export function UstaWelcome({ wf }: { wf: Workflow }) {
+  const fromCall = wf.type === "ai_usta" && wf.data["channel"] === "ivr" && wf.steps.find((x) => x.key === "sms")?.status === "done";
+  if (!fromCall || wf.status === "completed" || wf.handoff) return null;
+  return (
+    <GigaNote mood="listening">
+      Tekrar hoş geldin! Telefon görüşmemizde “{String(wf.data["issue"] ?? "İnternet hiç çalışmıyor")}” demiştin. Kontrollerimize kaldığımız yerden devam edelim.
+    </GigaNote>
+  );
+}
+
 export function AiUstaPanel({ wf }: { wf: Workflow }) {
   const leds = String(wf.data["leds"] ?? "")
     .split("|")
@@ -266,14 +277,8 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
   const rating = wf.data["rating"];
   const st = (k: string) => wf.steps.find((x) => x.key === k)?.status;
   const light = INTERNET_LIGHT_STATES.find((x) => x.id === wf.data["light"]);
-  const fromCall = wf.data["channel"] === "ivr" && st("sms") === "done";
   return (
     <div className="space-y-3">
-    {fromCall && wf.status !== "completed" && !wf.handoff && (
-      <GigaNote mood="listening">
-        Tekrar hoş geldin! Telefon görüşmemizde “{String(wf.data["issue"] ?? "İnternet hiç çalışmıyor")}” demiştin. Kontrollerimize kaldığımız yerden devam edelim.
-      </GigaNote>
-    )}
     {st("analysis") === "done" && light && st("recheck") !== "done" && !wf.handoff && <GigaNote>{light.say}</GigaNote>}
     {st("reconnect") === "in_progress" && (
       <Box>
