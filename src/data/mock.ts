@@ -373,6 +373,8 @@ export const DEMO_NEW_ADDRESS: DemoAddress = {
   city: "İstanbul",
 };
 
+export const DEMO_NEW_ADDRESS_PARTS = { city: "İstanbul", district: "Kadıköy", neighborhood: "Caferağa Mah.", street: "Moda Cd.", building: "No:48 D:3" };
+
 export const DEMO_MOVE_DATE = "2026-11-10";
 
 export const APPOINTMENT_SLOTS = [
