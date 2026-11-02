@@ -1,11 +1,14 @@
 /**
  * GIGA's conversational brain (pure, testable). Turns what the customer says
  * into a reply plus clearly-labelled actions. A reply never claims an action is
- * done; it only says what GIGA will do and what needs the customer's approval.
+ * done; it says what GIGA is checking now (`start`, run by the chat through the
+ * real workflow services) and what needs the customer's approval.
  */
+import { GIGA, type UstaIssueId } from "@/data/mock";
 import type { NetStatus } from "@/features/core/appStore";
-import { detectIntent, STATUS_LABEL, type Intent } from "@/features/workflow/rules";
-import type { Workflow } from "@/features/workflow/types";
+import { STATUS_LABEL, type Intent } from "@/features/workflow/rules";
+import type { Workflow, WorkflowType } from "@/features/workflow/types";
+import { understand, type GigaTopic } from "./intent";
 
 export type GigaActionKind = "auto" | "approval" | "human" | "go" | "ask";
 
@@ -24,119 +27,230 @@ export interface GigaReply {
   actions?: GigaAction[];
   /** Streams the speed-guard steps inside the chat. */
   agent?: "speed";
-  topic: Intent | "human" | "privacy" | "hallet" | "payment" | "modem" | "wifi" | "family" | "subscription" | "upgrade" | "clarify";
+  /** The chat starts this flow right after the reply (checks GIGA may run on its own, or opening a wizard). */
+  start?: Intent;
+  /** GIGA Teknik: what is already known, so the problem type is not asked again. */
+  usta?: UstaIssueId | "modem";
+  /** Show this existing process live inside the chat. */
+  focus?: string;
+  /** Proposed but not started: a following "evet / başlat" starts it. */
+  offer?: Intent;
+  topic: Intent | GigaTopic | "status" | "clarify" | "outage";
 }
+
+export type GigaWf = Pick<Workflow, "id" | "type" | "title" | "status"> & {
+  nextStep?: string | null;
+  /** A customer decision is open. */
+  waiting?: boolean;
+  /** Team currently handling a hand-over. */
+  team?: string | null;
+};
 
 export interface GigaContext {
   net: NetStatus;
   /** Active (non-terminal) workflows, newest first. */
-  active: Pick<Workflow, "id" | "type" | "title" | "status">[];
+  active: GigaWf[];
   /** A known outage is being tracked. */
   outage: boolean;
+  /** What GIGA proposed in its previous message (for "evet", "başlat"). */
+  lastOffer?: Intent | null;
 }
 
 /** Scope of connection checks, in plain words. Never implies access to browsing, messages or unrelated activity. */
 export const PRIVACY_REPLY =
   "Bağlantı sorunlarını tespit edebilmek için yalnızca modem durumu, bağlantı kalitesi ve bölgesel kesinti bilgileri gibi teknik verileri kontrol ediyoruz. Ziyaret ettiğin siteleri, mesajlarını veya kişisel içeriklerini görmüyoruz.";
 
-const has = (t: string, ...words: string[]) => words.some((w) => t.includes(w));
+export const CLARIFY_PROMPTS: readonly string[] = GIGA.starters;
+
+/** Follow-up chips when the internet problem is not specific enough to pick a check. */
+export const TECH_CLARIFY = ["İnternetim tamamen kesildi", "İnternetim yavaş", "Bağlantım sürekli kopuyor", "Wi-Fi ağıma bağlanamıyorum", "Modem ışıkları farklı yanıyor"];
 
 const HUMAN: GigaAction = { label: "Uzmana bağlan", kind: "human" };
 
-export const CLARIFY_PROMPTS = ["İnternetim çalışmıyor", "İnternetim çok yavaş", "Faturamda tutarsızlık var", "Taşınacağım", "İşlemim ne durumda?"];
+const ask = (p: string): GigaAction => ({ label: p, kind: "ask", prompt: p });
+
+/** Which processes a topic can refer to ("nakil başvurum ne durumda?" → relocation). */
+const TOPIC_TYPES: Partial<Record<GigaTopic, WorkflowType[]>> = {
+  relocation: ["relocation"],
+  billing: ["billing_check"],
+  refund: ["billing_check"],
+  payment: ["billing_check"],
+  outage: ["ai_usta", "proactive_fault", "outage_recovery"],
+  modem: ["ai_usta", "proactive_fault"],
+  wifi: ["ai_usta"],
+  internet: ["ai_usta", "proactive_fault", "outage_recovery", "speed_optimize"],
+  speed: ["speed_optimize", "proactive_fault"],
+  hybrid: ["temp_internet", "outage_recovery"],
+};
+
+const TOPIC_NAME: Partial<Record<GigaTopic, string>> = {
+  relocation: "nakil başvurun",
+  billing: "fatura incelemen",
+  refund: "iade veya fatura incelemen",
+  payment: "fatura incelemen",
+  outage: "teknik arıza kaydın",
+  modem: "teknik arıza kaydın",
+  wifi: "teknik arıza kaydın",
+  internet: "teknik kaydın",
+  speed: "hız kontrolün",
+  hybrid: "Hibrit İnternet işlemin",
+};
+
+/** Suggested follow-up when the sentence also mentions a second need. */
+const ALSO_PROMPT: Partial<Record<GigaTopic, string>> = {
+  relocation: "Taşınmak istiyorum.",
+  billing: "Faturamı kontrol et.",
+  refund: "İade durumumu öğren",
+  speed: "İnternetim yavaş",
+  outage: "İnternetim kesildi",
+  hybrid: "Hibrit İnternet",
+  wifi: "Wi-Fi ağıma bağlanamıyorum",
+  modem: "Modemimde sorun var",
+  family: "Aile yetkilendirme",
+};
+
+/** "Bundan sonra ne olacak?" in GIGA's own voice. */
+export function nextForChat(w: GigaWf): string {
+  if (w.status === "completed") return "Bu işlem tamamlandı.";
+  if (w.waiting) return "Devam etmek için senden bir seçim bekleniyor; hemen aşağıdan seçebilirsin.";
+  if (w.team) return `${w.team} konuyu inceliyor; gelişme olunca sana haber veririz.`;
+  if (w.status === "waiting_for_external_system") return "İlgili ekipten yanıt bekliyoruz; yanıt gelince sana haber veririz.";
+  if (w.nextStep) return `Sıradaki adım: ${w.nextStep}.`;
+  return "Gelişme olunca sana haber veririz.";
+}
+
+function statusReply(w: GigaWf, more = 0): GigaReply {
+  return {
+    topic: "status",
+    text: `“${w.title}” şu an: ${STATUS_LABEL[w.status]}. ${nextForChat(w)}${more ? ` Ayrıca devam eden ${more} işlemin daha var.` : ""}`,
+    focus: w.id,
+    actions: [{ label: "Detayları gör", kind: "go", to: `/surec/${w.id}` }, ...(more ? [{ label: "Tüm işlemlerim", kind: "go" as const, to: "/takip" }] : [])],
+  };
+}
+
+function trackReply(ctx: GigaContext, topic: GigaTopic | null): GigaReply | null {
+  const types = topic ? TOPIC_TYPES[topic] : undefined;
+  const pool = types ? ctx.active.filter((w) => types.includes(w.type)) : ctx.active;
+  if (!pool.length) {
+    if (types) return null; // topic-specific: let the topic reply explain there is none
+    return { topic: "status", text: "Şu an devam eden bir işlemin yok. Yeni bir ihtiyacın varsa kendi cümlelerinle yazman yeterli.", actions: [{ label: "İşlem geçmişim", kind: "go", to: "/takip" }] };
+  }
+  if (pool.length === 1 || types) return statusReply(pool[0]!, types ? 0 : pool.length - 1);
+  return {
+    topic: "status",
+    text: `Devam eden ${pool.length} işlemin var. En son güncellenen: “${pool[0]!.title}” · ${STATUS_LABEL[pool[0]!.status]}. Hangisine bakmak istersin?`,
+    actions: [...pool.slice(0, 3).map((w) => ({ label: w.title, kind: "go" as const, to: `/surec/${w.id}` })), { label: "Tüm işlemlerim", kind: "go", to: "/takip" }],
+  };
+}
 
 function outageReply(net: NetStatus): GigaReply {
   return {
-    topic: "ai_usta",
+    topic: "outage",
     text:
       net === "mobile"
         ? "Ana bağlantındaki kesinti sürüyor; şu an Hibrit İnternet yedek bağlantın üzerinden bağlısın. Ana bağlantın düzelince geri dönüş otomatik yapılır, sana da haber veririz."
-        : "Bağlantında bir kesinti var ve teknik ekibimiz çözüm üzerinde çalışıyor. Modeminde bir şey yapmana gerek yok. Kesinti 24 saati aşarsa ücretsiz Hibrit İnternet'i senin onayınla etkinleştirebiliriz.",
+        : "Bölgende bilinen bir kesinti var ve teknik ekibimiz çözüm üzerinde çalışıyor. Modeminde bir şey yapmana gerek yok. Kesinti 24 saati aşarsa ücretsiz Hibrit İnternet'i senin onayınla etkinleştirebiliriz.",
     actions: [{ label: "Kesinti durumunu gör", kind: "go", to: "/hibrit" }],
   };
 }
 
+function withAlso(r: GigaReply, also: GigaTopic | null): GigaReply {
+  const p = also ? ALSO_PROMPT[also] : undefined;
+  if (!p) return r;
+  return { ...r, text: `${r.text} Diğer konuna da hemen ardından bakabiliriz.`, actions: [...(r.actions ?? []), ask(p)] };
+}
+
 export function gigaReply(input: string, ctx: GigaContext): GigaReply {
-  const t = input.toLocaleLowerCase("tr-TR").trim();
+  const u = understand(input);
+  const openOf = (types: WorkflowType[]) => ctx.active.find((w) => types.includes(w.type));
 
-  if (has(t, "temsilci", "canlı destek", "insanla", "gerçek kişi", "müşteri hizmet", "operatöre bağla", "uzmana bağla", "uzmanla görüş")) {
-    return {
-      topic: "human",
-      text: "Tabii. Seni uzmanımıza bağlıyorum; bu konuşmayı da ona iletiyorum, sorunu baştan anlatmana gerek kalmayacak.",
-      actions: [HUMAN],
-    };
-  }
-
-  // What do the technical checks cover? Answer with the exact scope, once, when asked.
-  if (has(t, "izliyor", "izleme", "gizlilik", "kişisel veri", "verilerim", "kvkk", "neyi kontrol", "ne kontrol", "hangi bilgi", "mesajlarım", "geçmişimi", "gezinme")) {
-    return {
-      topic: "privacy",
-      text: PRIVACY_REPLY,
-      actions: [{ label: "Otomatik kontrolleri yönet", kind: "go", to: "/ajanlar" }],
-    };
-  }
-
-  if (has(t, "hallet")) {
-    return {
-      topic: "hallet",
-      text: "Ne yapmak istediğini yazman yeterli. Taşınma, fatura kontrolü veya bağlantı sorunu için süreci birlikte başlatalım; onayın gereken her adımda önce sana sorarım.",
-      actions: [{ label: "Benim İçin Hallet", kind: "go", to: "/hallet" }, ...CLARIFY_PROMPTS.slice(0, 3).map((p) => ({ label: p, kind: "ask" as const, prompt: p }))],
-    };
-  }
-
-  // Paying a bill is not a billing dispute: answer it before intent routing.
-  if (has(t, "öderim", "nasıl öde", "otomatik ödeme", "talimat", "son ödeme") && !has(t, "tutarsız", "mükerrer", "iade", "fazla", "yanlış", "borç")) {
-    return {
-      topic: "payment",
-      text: "Ödenmemiş faturan bulunmuyor. Otomatik ödeme talimatı verirsen son ödeme gününü takip etmene gerek kalmaz; talimatı yalnızca senin onayınla oluştururum.",
-      actions: [
-        { label: "Faturalarım", kind: "go", to: "/faturalar" },
-        { label: "Otomatik ödeme talimatı", kind: "approval", to: "/otomatik-odeme" },
-      ],
-    };
-  }
-
-  const intent = detectIntent(t) ?? (has(t, "devam", "kaldığım") ? "track" : null);
-
-  switch (intent) {
-    case "track": {
-      if (!ctx.active.length) {
-        return { topic: "track", text: "Şu an devam eden bir işlemin yok. Yeni bir talebin varsa yazman yeterli; adımlarını İşlemlerim'den görebilirsin.", actions: [{ label: "İşlemlerim", kind: "go", to: "/takip" }] };
-      }
-      const [top] = ctx.active;
+  // Status questions about a specific process ("nakil başvurum ne durumda?").
+  if (u.isStatus && u.topic && u.topic !== "track") {
+    const r = trackReply(ctx, u.topic);
+    if (r) return r;
+    if (ctx.outage && ["outage", "internet", "modem", "hybrid"].includes(u.topic)) return outageReply(ctx.net);
+    const name = TOPIC_NAME[u.topic];
+    const offer: Intent | undefined = u.topic === "relocation" ? "relocation" : u.topic === "billing" || u.topic === "refund" ? "billing" : undefined;
+    if (name) {
       return {
-        topic: "track",
-        text: `Devam eden ${ctx.active.length} işlemin var. En son: “${top!.title}” · ${STATUS_LABEL[top!.status]}. Kaldığın yerden devam edebilirsin; bilgilerini tekrar sormam.`,
-        actions: [...ctx.active.slice(0, 2).map((w) => ({ label: w.title, kind: "go" as const, to: `/surec/${w.id}` })), { label: "Tüm işlemlerim", kind: "go", to: "/takip" }],
+        topic: "status",
+        text: `Kayıtlarına baktım; şu an devam eden bir ${name} görünmüyor.${offer === "relocation" ? " Taşınıyorsan yeni adresinle hemen başlatabiliriz." : offer === "billing" ? " İstersen faturanı şimdi kontrol edebilirim." : ""}`,
+        ...(offer ? { offer, actions: [ask(offer === "relocation" ? "Taşınmak istiyorum." : "Faturamı kontrol et.")] } : { actions: [{ label: "İşlem geçmişim", kind: "go", to: "/takip" }] }),
       };
     }
-    case "relocation": {
-      const open = ctx.active.find((w) => w.type === "relocation");
-      if (open) {
-        return { topic: "relocation", text: `Zaten devam eden bir taşınma işlemin var (${STATUS_LABEL[open.status]}). Aynı talep için yeni kayıt açmıyorum.`, actions: [{ label: "Taşınmamı gör", kind: "go", to: `/surec/${open.id}` }] };
-      }
+  }
+
+  switch (u.topic) {
+    case "human":
       return {
-        topic: "relocation",
-        text: "Taşınmanı senin için yönetebilirim. Yeni adresini aldıktan sonra altyapıyı kontrol ederim; nakil başvurusunu ve kurulum randevusunu senin onayınla oluştururum.",
-        actions: [{ label: "Taşınmayı Başlat", kind: "approval", intent: "relocation" }],
+        topic: "human",
+        text: "Tabii. Seni uzmanımıza bağlıyorum; bu konuşmayı da ona iletiyorum, sorunu baştan anlatmana gerek kalmayacak.",
+        actions: [HUMAN],
       };
-    }
-    case "billing":
+    case "video":
       return {
-        topic: "billing",
-        text: "Faturanı ödeme kayıtlarınla karşılaştırabilirim. Bir farklılık görürsem önce sana açıklarım; inceleme yalnızca senin onayınla başlar. Faturanda veya borç kaydında kendim değişiklik yapmam.",
+        topic: "video",
+        text: "Görüntülü görüşmede bir uzmanımız modemini ve bağlantını seninle birlikte kontrol eder. Konuştuklarımızı ona iletirim; baştan anlatmana gerek kalmaz.",
+        actions: [{ label: "Görüntülü desteğe geç", kind: "human" }],
+      };
+    case "privacy":
+      return { topic: "privacy", text: PRIVACY_REPLY, actions: [{ label: "Otomatik kontrolleri yönet", kind: "go", to: "/ajanlar/kontroller" }] };
+    case "hallet":
+      return {
+        topic: "hallet",
+        text: "Ne yapmak istediğini yazman yeterli. Taşınma, fatura kontrolü veya bağlantı sorunu için süreci birlikte başlatalım; onayın gereken her adımda önce sana sorarım.",
+        actions: [{ label: "Benim İçin Hallet", kind: "go", to: "/hallet" }, ...GIGA.starters.slice(0, 3).map(ask)],
+      };
+    case "payment":
+      return {
+        topic: "payment",
+        text: "Ödenmemiş faturan bulunmuyor. Otomatik ödeme talimatı verirsen son ödeme gününü takip etmene gerek kalmaz; talimatı yalnızca senin onayınla oluştururum.",
         actions: [
-          { label: "Faturamı Kontrol Et", kind: "auto", intent: "billing" },
           { label: "Faturalarım", kind: "go", to: "/faturalar" },
+          { label: "Otomatik ödeme talimatı", kind: "approval", to: "/otomatik-odeme" },
         ],
       };
-    case "speed":
-      return {
-        topic: "speed",
-        text: "Hızını kontrol ediyorum. Uzaktan düzeltilebilir bir durum bulursam düzeltip tekrar ölçeceğim; her adımı burada göreceksin.",
-        agent: "speed",
-      };
-    case "temp_internet":
+    case "refund": {
+      const open = openOf(["billing_check"]);
+      if (open) return statusReply(open);
+      return withAlso(
+        {
+          topic: "billing",
+          text: "İade için önce faturanı ve ödemelerini karşılaştırıyorum. Fazla bir ödeme görürsem iade talebini yalnızca senin onayınla başlatırım.",
+          start: "billing",
+        },
+        u.also,
+      );
+    }
+    case "billing": {
+      const open = openOf(["billing_check"]);
+      if (open) return { ...statusReply(open), text: `Bu dönem için açık bir fatura incelemen zaten var; yeni kayıt açmıyorum. ${STATUS_LABEL[open.status]}. ${nextForChat(open)}` };
+      return withAlso(
+        {
+          topic: "billing",
+          text: "Faturanı birlikte inceleyelim. Önceki dönem tutarını, mevcut faturanı ve varsa kampanya veya abonelik değişikliklerini kontrol ediyorum. Bir farklılık görürsem önce sana açıklarım; inceleme yalnızca senin onayınla başlar.",
+          start: "billing",
+        },
+        u.also,
+      );
+    }
+    case "relocation": {
+      const open = openOf(["relocation"]);
+      if (open) return { ...statusReply(open), topic: "relocation", text: `Zaten devam eden bir taşınma işlemin var (${STATUS_LABEL[open.status]}). Aynı talep için yeni kayıt açmıyorum. ${nextForChat(open)}` };
+      return withAlso(
+        {
+          topic: "relocation",
+          text: "Yeni adresin için altyapı ve port uygunluğunu kontrol ederek nakil sürecini başlatalım. Başvuruyu oluşturmadan önce onayını alırım.",
+          start: "relocation",
+        },
+        u.also,
+      );
+    }
+    case "speed": {
+      if (ctx.outage) return outageReply(ctx.net);
+      return withAlso({ topic: "speed", text: "Hızını kontrol ediyorum. Uzaktan düzeltilebilir bir durum bulursam düzeltip tekrar ölçeceğim; her adımı burada göreceksin.", agent: "speed" }, u.also);
+    }
+    case "hybrid": {
       if (ctx.outage) return outageReply(ctx.net);
       return {
         topic: "temp_internet",
@@ -146,61 +260,75 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
           { label: "Bağlantım", kind: "go", to: "/baglanti" },
         ],
       };
-    case "ai_usta":
+    }
+    case "outage":
+    case "modem":
+    case "wifi":
+    case "internet": {
       if (ctx.outage) return outageReply(ctx.net);
-      if (has(t, "ışık", "modem", "led", "kırmızı")) {
-        return {
-          topic: "modem",
-          text: "Önce bağlantını uzaktan kontrol ederim. Bir arıza görünmezse modeminin ışıklarına ve kablolarına birlikte bakar, tek seferde bir güvenli adım öneririm.",
-          actions: [
-            { label: "GIGA Teknik'i Başlat", kind: "auto", intent: "ai_usta" },
-            { label: "Görüntülü destek", kind: "go", to: "/goruntulu-destek" },
-          ],
-        };
+      const open = openOf(["ai_usta"]);
+      if (open) return { ...statusReply(open), topic: "ai_usta", text: `Bu sorun için başlattığımız kontrol sürüyor; kaldığımız yerden devam edelim. ${nextForChat(open)}` };
+      if (u.topic === "internet" && !u.ustaIssue) {
+        return { topic: "clarify", text: "Doğru kontrolü seçebilmem için sorunu biraz anlatır mısın? Aşağıdakilerden biri olabilir ya da kendi cümlenle yazabilirsin.", actions: TECH_CLARIFY.map(ask) };
       }
+      if (u.topic === "modem") {
+        return withAlso({ topic: "modem", text: "Önce bağlantını uzaktan kontrol ediyorum. Bir arıza görünmezse modeminin ışıklarına birlikte bakar, tek seferde bir güvenli adım öneririm.", start: "ai_usta", usta: "modem" }, u.also);
+      }
+      if (u.topic === "wifi") {
+        return withAlso(
+          {
+            topic: "wifi",
+            text: "Önce hattını ve modemini uzaktan kontrol ediyorum. Gerekirse QR taramasıyla evindeki Wi-Fi sinyalini de birlikte ölçeriz.",
+            start: "ai_usta",
+            usta: "wifi",
+            actions: [{ label: "QR ile Wi-Fi analizi", kind: "go", to: "/qr/tara" }],
+          },
+          u.also,
+        );
+      }
+      return withAlso(
+        {
+          topic: "ai_usta",
+          text: "Bağlantını kontrol ediyorum. Önce hattında ve bölgende bilinen bir arıza olup olmadığını inceleyelim.",
+          start: "ai_usta",
+          usta: u.ustaIssue ?? "no_connect",
+        },
+        u.also,
+      );
+    }
+    case "family":
       return {
-        topic: "ai_usta",
-        text: "Önce dijital onarımla bağlantını uzaktan kontrol ederim. Gerekirse modemine birlikte bakar, adım adım ilerleriz; çözülmezse yaptıklarımızı uzmana aktarırım.",
-        actions: [{ label: "GIGA Teknik'i Başlat", kind: "auto", intent: "ai_usta" }],
+        topic: "family",
+        text: "Aile Yetkilendirme ile yakınının hesabında destek talebi açabilir, görüntülü destekte onu da görüşmeye ekleyebilirsin. Fatura ödeme ve iptal varsayılan olarak kapalıdır.",
+        actions: [{ label: "Aile Yetkilendirme", kind: "go", to: "/aile" }],
       };
+    case "subscription":
+      return {
+        topic: "subscription",
+        text: "Bu işlemleri uygulamadan yapabilirsin; her biri senin onayınla tamamlanır.",
+        actions: [
+          { label: "Hizmeti Dondur", kind: "approval", to: "/islem/dondur" },
+          { label: "Aboneliğini İptal Et", kind: "approval", to: "/islem/iptal" },
+        ],
+      };
+    case "upgrade":
+      return { topic: "upgrade", text: "Adresinde 1.000 Mbps fiber altyapı var. Paket değişikliğini senin onayınla yaparım.", actions: [{ label: "Hızımı yükselt", kind: "approval", to: "/islem/hiz-yukseltme" }] };
+    case "track":
+      return trackReply(ctx, null)!;
+    case "yes":
+      if (ctx.lastOffer) return { topic: ctx.lastOffer, text: "Tamam, hemen bakıyorum.", start: ctx.lastOffer };
+      return { topic: "clarify", text: "Neye bakmamı istersin? Kendi cümlenle yazabilirsin.", actions: GIGA.starters.map(ask) };
+    case "no":
+      return { topic: "clarify", text: "Peki. Başka bir konuda yardımcı olabileceğim bir şey olursa yazman yeterli." };
+    case "greeting":
+      return { topic: "greeting", text: "Merhaba! Bugün senin için ne yapabilirim? Kendi cümlelerinle anlatabilirsin.", actions: GIGA.starters.map(ask) };
+    case "thanks":
+      return { topic: "thanks", text: "Rica ederim! Başka bir şey olursa buradayım." };
     default:
-      break;
+      return {
+        topic: "clarify",
+        text: "Tam anlayamadım. Biraz daha anlatır mısın? Konu bunlardan birine yakınsa seçebilirsin.",
+        actions: GIGA.starters.map(ask),
+      };
   }
-
-  if (has(t, "wi-fi", "wifi", "sinyal")) {
-    return {
-      topic: "wifi",
-      text: "Wi-Fi sinyalini QR taramasıyla ölçebilirim: kanal yoğunluğu ve sinyal gücü dahil 6 kontrol, yaklaşık 20 saniye.",
-      actions: [
-        { label: "QR ile analiz et", kind: "go", to: "/qr/tara" },
-        { label: "Görüntülü destek", kind: "go", to: "/goruntulu-destek" },
-      ],
-    };
-  }
-  if (has(t, "anne", "baba", "aile", "yetki", "ebeveyn")) {
-    return {
-      topic: "family",
-      text: "Aile Yetkilendirme ile yakınının hesabında destek talebi açabilir, görüntülü destekte onu da görüşmeye ekleyebilirsin. Fatura ödeme ve iptal varsayılan olarak kapalıdır.",
-      actions: [{ label: "Aile Yetkilendirme", kind: "go", to: "/aile" }],
-    };
-  }
-  if (has(t, "iptal", "dondur")) {
-    return {
-      topic: "subscription",
-      text: "Bu işlemleri uygulamadan yapabilirsin; her biri senin onayınla tamamlanır.",
-      actions: [
-        { label: "Hizmeti Dondur", kind: "approval", to: "/islem/dondur" },
-        { label: "Aboneliğini İptal Et", kind: "approval", to: "/islem/iptal" },
-      ],
-    };
-  }
-  if (has(t, "paket", "yükselt", "1000", "fiber")) {
-    return { topic: "upgrade", text: "Adresinde 1.000 Mbps fiber altyapı var. Paket değişikliğini senin onayınla yaparım.", actions: [{ label: "Hızımı yükselt", kind: "approval", to: "/islem/hiz-yukseltme" }] };
-  }
-
-  return {
-    topic: "clarify",
-    text: "Tam anlayamadım. Konu hangisine yakın?",
-    actions: [...CLARIFY_PROMPTS.map((p) => ({ label: p, kind: "ask" as const, prompt: p }))],
-  };
 }
