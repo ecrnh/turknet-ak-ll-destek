@@ -35,3 +35,16 @@
 - [x] Orta menü düğmesi GIGA; sohbet: karşılama, yetenekler, kaldığın yerden devam, uzmana bağlan, "GIGA yapar / Onayın gerekir" etiketleri
 - [x] Çağrı merkezi sesli triyajı ve SMS GIGA adıyla; bildirimlerde GIGA göndereni
 - [x] GIGA yanıt kuralları testleri
+
+## Tur 5 — Uçtan uca GIGA deneyimi
+- [x] Ana sayfa: karşılama + bağlantı kartı, 4 hızlı işlem, Devam Eden İşlemlerim, Senin için buradayız (banner ve mevcut tasarım korunarak)
+- [x] Benim İçin Hallet ekranı
+- [x] GIGA Taşınma sihirbazı (niyet → adres → kontrol → özet → başlat) + saha ekibi eşleştirme (ilk/ikinci ekip)
+- [x] Fatura Kalkanı yeni akış (kontrol animasyonu, farklılık, "Benim için incele") + Akıllı Otomatik Ödeme
+- [x] Aile ve Yetkilendirme: 4 yetki grubu, davet/kabul, düzenleme, başlatan bilgisi, sahip doğrulaması
+- [x] Hibrit: bağlantı şeması, Evdeki Hibrit Box kartı, yedek aç/kapat, otomatik geçiş izni; taşınmada Box sahibi ayrımı
+- [x] GIGA Teknik: giriş ekranı, telefon (menü 1–5, süre, kontroller), SMS + uygulama yok/kurulum, kamera simülasyonu, yeni adımlar, canlı destek sohbeti
+- [x] Hız: modem yanında yeniden ölç, yapılan işlemler; proaktif GIGA metinleri
+- [x] Bildirim birleştirme + kampanya tercih; GIGA sohbeti her soruda kayıt açmıyor
+- [x] Senaryo D (4 sonuç) ve yeni G (ekip eşleştirme); testler
+- Not: alt menü mevcut yapıda bırakıldı (Ana Sayfa · İşlemler · GIGA · Faturalarım · Hesabım)
