@@ -95,6 +95,16 @@ export function acceptTempInternet(parentId: string, kind: TempKind): string {
 export function provisionTemp(tempWfId: string) {
   const wf = getWf(tempWfId);
   if (!wf || stepStatus(tempWfId, "provision") !== "pending") return;
+  if (W.getState().config.ownsBox) {
+    // Customer already has a compatible Hibrit Box: no shipment, it is used at the new address.
+    W.setState({
+      box: { id: `BOX-${tempWfId.slice(4)}`, tempWfId, model: "Hibrit Box (müşteride mevcut)", sim: "ready", power: "off", usedGb: 0, quotaGb: 100, toggles: 0, signal: "İyi · 4 çubuk (demo)", updatedAt: Date.now() },
+    });
+    setTemp(tempWfId, "shipped");
+    step(tempWfId, "provision", "done", "Evinizdeki Hibrit Box kullanılacak; cihaz gönderimi gerekmedi", "Uyumlu cihazı olan müşteriye yeni cihaz gönderilmez");
+    chain("temp.activate", tempWfId, 1200);
+    return;
+  }
   {
     workOrder(tempWfId, { kind: "device_delivery", title: "TürkNet Box gönderimi", team: TEAMS.logistics }, "Geçici internet için cihaz teslimatı gerekiyor");
     W.setState({
