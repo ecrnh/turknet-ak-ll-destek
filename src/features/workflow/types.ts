@@ -237,7 +237,9 @@ export interface DemoConfig {
   reconciliation: "settled" | "duplicate";
   aiFix: "fixed" | "not_fixed";
   /** GIGA Teknik digital repair: finds nothing (customer-side checks follow) or finds an issue (remote fix first). */
-  ustaDiag: "clear" | "issue";
+  ustaDiag: "clear" | "issue" | "regional" | "incomplete";
+  /** Estimated duration (hours) of a regional outage found by digital repair. */
+  regionalEtaH: number;
   proactive: "remote_fix" | "field";
   /** Field-team matching for the relocation appointment: first team accepts, or first declines and a second team takes it. */
   teamMatch: "first" | "second";
@@ -298,6 +300,8 @@ export interface OutageState {
   lastUpdateAt: number;
   /** Customer-facing repair status line. */
   repairNote: string;
+  /** Estimated total outage duration in hours (from start), when known. Over 24 h opens the Hibrit İnternet offer early. */
+  etaH?: number | null | undefined;
   restoredAt: number | null;
   /** Restored card dismissed by the customer. */
   dismissed: boolean;

@@ -14,6 +14,7 @@ import { MockNetworkAPI, MockVisionAPI } from "../mockServices";
 import { AI_USTA_MAX_ATTEMPTS } from "../rules";
 import { useWorkflowStore as W } from "../store";
 import { setConnectivity } from "./connectivity";
+import { startOutage } from "./hybrid";
 import { openLiveChat } from "./liveSupport";
 
 const USTA_STEPS = [
@@ -223,7 +224,13 @@ registerOp("usta.check", (id) => {
   const idx = Number(wf.data["checkIdx"] ?? 0);
   const check = REPAIR_CHECKS[idx];
   if (!check) return;
-  const bad = MockNetworkAPI.repairFindsIssue() && ustaIssue(id).check === check.id;
+  // A check that gets no answer stops the run: the customer sees "Kontroller tamamlanamadı", never a guessed result.
+  if (check.id === "diag" && !MockNetworkAPI.checksAnswer()) {
+    setData(id, { checkIdx: idx });
+    finishRepair(id, "incomplete");
+    return;
+  }
+  const bad = (MockNetworkAPI.repairFindsIssue() && ustaIssue(id).check === check.id) || (check.id === "regional" && MockNetworkAPI.regionalOutage().found);
   const repair = [String(wf.data["repair"] ?? ""), `${check.id}:${bad ? "0" : "1"}`].filter(Boolean).join("|");
   setData(id, { repair, checkIdx: idx + 1 });
   if (idx + 1 < REPAIR_CHECKS.length) {
@@ -233,10 +240,43 @@ registerOp("usta.check", (id) => {
   finishRepair(id);
 });
 
-function finishRepair(id: string) {
+const AFTER_REPAIR = ["remote", "verify", "inspect", "analysis", "step1", "step2", "reconnect", "recheck", "confirm"];
+
+function finishRepair(id: string, forced?: "incomplete") {
   const issue = ustaIssue(id);
-  const found = Object.values(repairResults(getWf(id)?.data ?? {})).some((ok) => !ok);
+  const results = repairResults(getWf(id)?.data ?? {});
+  if (forced === "incomplete") {
+    setData(id, { repairOutcome: "incomplete" });
+    step(id, "repair", "waiting", "Kontroller tamamlanamadı · bir sistem yanıt vermedi (simülasyon)", "Yanıt alınamayan kontrol sonuç sayılmaz");
+    ask(
+      id,
+      {
+        key: "usta_incomplete",
+        prompt: "Kontrolleri şu an tamamlayamadım. Birazdan tekrar deneyebilir ya da seni teknik destek ekibimize aktarabilirim.",
+        options: [{ id: "retry", label: "Tekrar dene", primary: true }, { id: "handoff", label: "Teknik desteğe aktar" }, LIVE_OPTION],
+      },
+      "Kontroller yarım kaldı; müşteri tekrar denemeyi veya aktarımı seçer",
+      { push: false },
+    );
+    return;
+  }
+  if (results["regional"] === false) {
+    const { etaH } = MockNetworkAPI.regionalOutage();
+    setData(id, { repairOutcome: "regional", etaH });
+    step(id, "repair", "done", `Bölgesel arıza bulundu · tahmini çözüm ${etaH} saat (simülasyon)`);
+    AFTER_REPAIR.forEach((k) => step(id, k, "skipped", "Sorun bölgesel; müşteri tarafında adım gerekmiyor"));
+    const outageId = startOutage(0.2, { regional: true, etaH, relatedIds: [id], why: "GIGA Teknik dijital onarımı bölgesel arıza buldu (demo)" });
+    setData(id, { outageWf: outageId });
+    complete(id, {
+      resolved: false,
+      summary: "Sorun bölgesel bir kesintiden kaynaklanıyor; takip Kesinti Takibi'nde sürüyor.",
+      results: [`Bölgesel arıza · tahmini çözüm ${etaH} saat`, "Modeminde yapılacak bir adım yok"],
+    });
+    return;
+  }
+  const found = Object.values(results).some((ok) => !ok);
   if (!found) {
+    setData(id, { repairOutcome: "clear" });
     step(id, "repair", "done", "5 kontrol tamamlandı · bilinen bir arıza görünmüyor (simülasyon)");
     ["remote", "verify"].forEach((k) => step(id, k, "skipped", "Uzaktan düzeltilecek bir sorun bulunmadı"));
     step(id, "inspect", "waiting");
@@ -253,7 +293,7 @@ function finishRepair(id: string) {
     );
     return;
   }
-  setData(id, { finding: issue.finding });
+  setData(id, { finding: issue.finding, repairOutcome: "issue" });
   step(id, "repair", "done", `Sorun tespit edildi: ${issue.finding} (simülasyon)`);
   step(id, "remote", "in_progress", `${issue.fix}…`);
   schedule("usta.remoteDone", id, 2200);
@@ -294,6 +334,17 @@ registerDecision("usta_remote_failed", (id, opt) => {
   if (opt === "live") return goLive(id);
   if (opt === "inspect") return askInspect(id);
   escalate(id, TEAMS.tech, "Uzaktan düzeltme sonrası bağlantı gelmedi; dijital onarım sonuçları aktarıldı");
+});
+
+registerDecision("usta_incomplete", (id, opt) => {
+  if (opt === "live") return goLive(id);
+  if (opt === "handoff") {
+    step(id, "repair", "failed", "Kontroller tamamlanamadı; teknik desteğe aktarıldı");
+    return escalate(id, TEAMS.tech, "Dijital onarım kontrolleri tamamlanamadı; yapılan kontroller aktarıldı");
+  }
+  setData(id, { checkIdx: 0, repair: "", repairOutcome: "" });
+  step(id, "repair", "pending");
+  startRepair(id);
 });
 
 registerDecision("usta_more", (id, opt) => {

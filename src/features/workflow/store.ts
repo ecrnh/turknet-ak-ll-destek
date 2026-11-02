@@ -59,6 +59,7 @@ export const defaultConfig = (): DemoConfig => ({
   reconciliation: "settled",
   aiFix: "fixed",
   ustaDiag: "clear",
+  regionalEtaH: 36,
   proactive: "remote_fix",
   teamMatch: "first",
   appInstalled: true,

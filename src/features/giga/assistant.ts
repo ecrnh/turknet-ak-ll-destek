@@ -289,7 +289,7 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
       return withAlso(
         {
           topic: "ai_usta",
-          text: "Bağlantını kontrol ediyorum. Önce hattında ve bölgende bilinen bir arıza olup olmadığını inceleyelim.",
+          text: "Bağlantını kontrol ediyorum. Önce sorunun evindeki bağlantıdan mı yoksa bölgesel bir kesintiden mi kaynaklandığını anlamaya çalışalım.",
           start: "ai_usta",
           usta: u.ustaIssue ?? "no_connect",
         },

@@ -81,3 +81,50 @@ describe("GIGA Teknik · önce dijital onarım", () => {
     expect(labels).toEqual(expect.arrayContaining(["Sorun", "Dijital onarım", "Tespit edilen sorun", "Modem ışıkları", "Kablo kontrolü", "Yapılan adımlar", "Mevcut durum"]));
   });
 });
+
+describe("GIGA Teknik · sade bağlantı kontrolü", () => {
+  it("beş kontrol müşteriye üç aşama olarak gösterilir", async () => {
+    const { REPAIR_STAGES, repairStageStates } = await import("@/features/workflow/rules");
+    expect(REPAIR_STAGES.map((s) => s.title)).toEqual(["Modem ve bağlantı kontrolü", "Bölgesel arıza kontrolü", "Çözüm seçenekleri"]);
+    expect(REPAIR_STAGES.flatMap((s) => s.checks)).toEqual(["modem", "session", "line", "regional", "diag"]);
+    expect(repairStageStates(1, null)).toEqual(["running", "pending", "pending"]);
+    expect(repairStageStates(3, null)).toEqual(["done", "running", "pending"]);
+    expect(repairStageStates(5, "clear")).toEqual(["done", "done", "done"]);
+  });
+
+  it("bölgesel arıza bulunursa modem adımı istenmez, kesinti takibi başlar ve 24 saati aşan tahminde Hibrit İnternet sunulur", () => {
+    cfg({ ustaDiag: "regional", regionalEtaH: 36 });
+    const id = startAiUsta("no_internet");
+    decide(id, "no_connect");
+    drain();
+    const wf = getWf(id)!;
+    expect(wf.data["repairOutcome"]).toBe("regional");
+    expect(stepStatus(id, "inspect")).toBe("skipped");
+    expect(wf.status).toBe("completed");
+    expect(W.getState().outage?.etaH).toBe(36);
+    expect(W.getState().hybrid.status).toBe("offered");
+  });
+
+  it("bölgesel arızanın tahmini süresi 24 saatin altındaysa Hibrit İnternet hemen sunulmaz", () => {
+    cfg({ ustaDiag: "regional", regionalEtaH: 6 });
+    const id = startAiUsta("no_internet");
+    decide(id, "no_connect");
+    drain();
+    expect(W.getState().outage).toBeTruthy();
+    expect(W.getState().hybrid.status).toBe("unavailable");
+  });
+
+  it("kontroller tamamlanamazsa sonuç uydurulmaz; tekrar deneme veya aktarım sunulur", () => {
+    cfg({ ustaDiag: "incomplete" });
+    const id = startAiUsta("no_internet");
+    decide(id, "no_connect");
+    drain();
+    expect(getWf(id)!.data["repairOutcome"]).toBe("incomplete");
+    expect(getWf(id)!.decision?.key).toBe("usta_incomplete");
+    cfg({ ustaDiag: "clear" });
+    decide(id, "retry");
+    drain();
+    expect(getWf(id)!.data["repairOutcome"]).toBe("clear");
+    expect(getWf(id)!.decision?.key).toBe("usta_more");
+  });
+});

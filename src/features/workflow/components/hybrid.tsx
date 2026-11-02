@@ -5,7 +5,7 @@ import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
 import { hybridOfferOpen, hybridUsageMb } from "../rules";
-import { dismissOutage, outageHours } from "../services/hybrid";
+import { activateHybrid, checkHybrid, declineHybrid, dismissOutage, outageHours } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
 import type { DeviceRequest, HybridChecks, OutageState } from "../types";
 
@@ -162,7 +162,7 @@ export function OutageHomeCard() {
   }
 
   const hours = outageHours(o, now);
-  const after24 = hybridOfferOpen(hours);
+  const after24 = hybridOfferOpen(hours, o.etaH);
   const active = h.status === "active";
 
   let title: string = C.detected.title;
@@ -245,6 +245,76 @@ export function ConnectionDiagram() {
       <Node icon={Router} label="Hibrit Box" state={fixedUp ? "Hazır" : backupOn ? "Yedekte" : "Beklemede"} on={fixedUp || backupOn} />
       <Line on={backupOn} />
       <Node icon={Signal} label="Mobil yedek" state={backupOn ? "Kullanılıyor" : "Kapalı"} on={backupOn} />
+    </div>
+  );
+}
+
+/**
+ * Regional outage found during a GIGA conversation: plain explanation, the
+ * estimated duration and — when it is expected to exceed 24 h — the free
+ * Hibrit İnternet with an explicit eligibility check and activation consent.
+ */
+export function HybridOfferInline() {
+  const o = useWorkflowStore((s) => s.outage);
+  const h = useWorkflowStore((s) => s.hybrid);
+  const now = Math.max(useNow(30_000), o?.lastUpdateAt ?? 0);
+  if (!o || o.restoredAt) return null;
+  const offer = hybridOfferOpen(outageHours(o, now), o.etaH);
+  const btn = "flex min-h-11 w-full items-center justify-center rounded-full text-sm font-semibold";
+  return (
+    <div className="rounded-card bg-card p-4 shadow-card" aria-live="polite">
+      <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+        <CloudOff className="size-4 text-warning" /> Bölgesel kesinti
+      </p>
+      <p className="mt-1 text-sm text-foreground">Sorun evindeki bağlantıdan değil, bölgendeki bir arızadan kaynaklanıyor. Teknik ekibimiz çalışıyor; modeminde bir şey yapmana gerek yok.</p>
+      {o.etaH ? <p className="mt-2 text-xs font-semibold text-muted-foreground">Tahmini çözüm süresi: yaklaşık {o.etaH} saat</p> : null}
+
+      {offer && h.status !== "active" && (
+        <div className="mt-3 rounded-2xl bg-muted/60 p-3">
+          <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+            <Router className="size-4 text-magenta" /> Hibrit İnternet ile bağlı kal <FreeBadge />
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Aboneliğine dahil yedek bağlantı. Uyumlu cihaz, aktif SIM ve yeterli mobil kapsama gerekir; önce uygunluğunu kontrol ederiz.</p>
+          {(h.status === "checking" || h.checks) && h.status !== "offered" && (
+            <div className="mt-3">
+              <ChecksList checks={h.checks} checking={h.status === "checking"} />
+            </div>
+          )}
+          <div className="mt-3 space-y-2">
+            {h.status === "offered" && !h.declinedAt && (
+              <>
+                <button type="button" onClick={() => checkHybrid()} className={cn(btn, "bg-primary text-primary-foreground shadow-float")}>Uygunluğumu kontrol et</button>
+                <button type="button" onClick={() => declineHybrid()} className={cn(btn, "border border-primary/20 bg-card text-primary")}>Şimdi değil</button>
+              </>
+            )}
+            {h.status === "offered" && h.declinedAt && (
+              <button type="button" onClick={() => checkHybrid()} className={cn(btn, "border border-primary/20 bg-card text-primary")}>Uygunluğumu kontrol et</button>
+            )}
+            {(h.status === "ready" || h.status === "failed") && (
+              <>
+                {h.status === "failed" && <p className="text-xs font-semibold text-destructive">Yedek bağlantı açılamadı. Tekrar deneyebilirsin.</p>}
+                <button type="button" onClick={() => activateHybrid()} className={cn(btn, "bg-primary text-primary-foreground shadow-float")}>{h.status === "failed" ? "Tekrar Dene" : "Ücretsiz Olarak Etkinleştir"}</button>
+              </>
+            )}
+            {h.status === "activating" && (
+              <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin text-magenta" /> Yedek bağlantın açılıyor…</p>
+            )}
+            {h.status === "no_device" && (
+              <>
+                <p className="text-xs text-foreground">Uyumlu yedek cihaz veya aktif SIM bulunamadı. Cihazı ücretsiz gönderebiliriz.</p>
+                <Link to="/hibrit" className={cn(btn, "bg-primary text-primary-foreground shadow-float")}>Cihaz Talep Et</Link>
+              </>
+            )}
+            {h.status === "no_coverage" && <p className="text-xs text-foreground">Adresinde yedek bağlantı için yeterli mobil kapsama yok. Arıza takibin devam ediyor; çözülünce haber veririz.</p>}
+          </div>
+        </div>
+      )}
+      {h.status === "active" && (
+        <p className="mt-3 flex items-center gap-2 rounded-2xl bg-success-soft px-3 py-2 text-sm font-semibold text-success">
+          <CheckCircle2 className="size-4" /> Yedek bağlantın aktif; ana bağlantın düzelince haber vereceğiz.
+        </p>
+      )}
+      <Link to="/hibrit" className="mt-3 inline-flex min-h-9 items-center text-sm font-semibold text-magenta">Kesinti durumunu gör</Link>
     </div>
   );
 }
