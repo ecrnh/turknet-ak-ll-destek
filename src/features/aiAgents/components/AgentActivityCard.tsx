@@ -3,18 +3,20 @@ import { CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import { useAgentsStore } from "../store";
 import { useWorkflowStore } from "@/features/workflow/store";
 import { GigaAvatar, GigaName } from "@/features/giga/GigaAvatar";
-import { SPEED_FIX_STEPS } from "@/data/mock";
+import { SPEED_FIX_STEPS, USER } from "@/data/mock";
+import { useActingAccount } from "@/features/family/store";
 import { fmtRelative } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
 
 /** A Hız Koruyucu fix is mentioned on the home card only while it is recent. */
 const RECENT_FIX_MS = 3 * 24 * 60 * 60 * 1000;
 
-/** GIGA on the home page: a compact presence card, plus a short note when Hız Koruyucu found and fixed something. Chat opens only from the centre GIGA button. */
+/** GIGA on the home page: greets the customer by name (replaces the old welcome card), plus a short note when Hız Koruyucu found and fixed something. Chat opens only from the centre GIGA button. */
 export function AgentActivityCard() {
   const run = useAgentsStore((s) => s.speedRun);
   const actions = useAgentsStore((s) => s.actions);
   const backupOn = useWorkflowStore((s) => s.hybrid.status === "active");
+  const acting = useActingAccount();
   const running = run.status === "running";
   const fix = actions.find((a) => a.agent === "speed" && !a.undone);
   const recentFix = fix && Date.now() - fix.time < RECENT_FIX_MS ? fix : null;
@@ -28,7 +30,7 @@ export function AgentActivityCard() {
             <GigaName />
           </p>
           <p className="text-sm font-semibold leading-snug">
-            {running ? "Hızını düzeltmeye çalışıyorum…" : backupOn ? "Yedek bağlantıdasın; ana bağlantın düzelince haber vereceğiz" : "Yardıma ihtiyacın olduğunda buradayım!"}
+            {running ? "Hızını düzeltmeye çalışıyorum…" : backupOn ? "Yedek bağlantıdasın; ana bağlantın düzelince haber vereceğiz" : `Merhaba, hoş geldin ${acting ? acting.short : USER.firstName}!`}
           </p>
         </div>
         <ChevronRight className="size-5 shrink-0" />
