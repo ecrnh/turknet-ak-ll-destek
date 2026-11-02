@@ -121,6 +121,7 @@ export function HybridControls() {
         <Seg label="Taşınmada geçici internet" value={config.ownsBox ? "yes" : "no"} options={[["yes", "Evde Box var"], ["no", "Cihaz gönderilir"]]} onChange={(v) => setConfig({ ownsBox: v === "yes" })} />
         <Seg label="Randevu ekip eşleştirme" value={config.teamMatch} options={[["first", "İlk ekip kabul"], ["second", "İkinci ekip"]]} onChange={(v) => setConfig({ teamMatch: v })} />
         <Seg label="SMS alan telefonda uygulama" value={config.appInstalled ? "yes" : "no"} options={[["yes", "Yüklü"], ["no", "Yüklü değil"]]} onChange={(v) => setConfig({ appInstalled: v === "yes" })} />
+        <Seg label="Dijital onarım sonucu" value={config.ustaDiag} options={[["clear", "Sorun yok"], ["issue", "Sorun bulur"]]} onChange={(v) => setConfig({ ustaDiag: v })} />
         <Seg label="GIGA Teknik adımları" value={config.aiFix} options={[["fixed", "Çözülür"], ["not_fixed", "Çözülmez"]]} onChange={(v) => setConfig({ aiFix: v })} />
         <p className="text-[10px] text-muted-foreground">Cihaz ve kapsama ayarı, müşterinin bir sonraki uygunluk kontrolünde kullanılır (telefonda “Tekrar Kontrol Et”).</p>
       </div>

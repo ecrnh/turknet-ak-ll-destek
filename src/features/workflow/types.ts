@@ -236,6 +236,8 @@ export interface DemoConfig {
   hybridActivation: "success" | "fail";
   reconciliation: "settled" | "duplicate";
   aiFix: "fixed" | "not_fixed";
+  /** GIGA Teknik digital repair: finds nothing (customer-side checks follow) or finds an issue (remote fix first). */
+  ustaDiag: "clear" | "issue";
   proactive: "remote_fix" | "field";
   /** Field-team matching for the relocation appointment: first team accepts, or first declines and a second team takes it. */
   teamMatch: "first" | "second";
