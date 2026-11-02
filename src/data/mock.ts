@@ -544,7 +544,7 @@ export const GIGA = {
   /** GIGA screen greeting; `{name}` is the customer's (or managed profile's) first name. */
   welcome: ["Merhaba, hoş geldin {name}!", "Bugün senin için ne yapabilirim?"],
   /** Home page GIGA area. */
-  homeGreeting: "İnternetinle veya TürkNet işlemlerinle ilgili bir konuda yardıma mı ihtiyacın var?",
+  homeGreeting: "Destek almak veya soru sorman için yanındayım!",
   /** Suggestions only, never a required menu: the customer can always write their own sentence. */
   starters: ["İnternetimle ilgili sorun var.", "Faturamı kontrol et.", "Taşınmak istiyorum.", "İşlemimin durumunu öğren."],
   placeholder: "İhtiyacını yaz ya da söyle…",
