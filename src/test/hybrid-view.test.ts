@@ -64,3 +64,20 @@ describe("Hibrit İnternet ekranı · durum tutarlılığı", () => {
     expect([v.main, v.mobile]).toEqual(["Bağlı", "Beklemede"]);
   });
 });
+
+import { fmtRemaining, outageRemainingH } from "@/features/workflow/hybridView";
+
+describe("Ana sayfa kesinti kartı · tahmini çözüm süresi", () => {
+  it("bilinen tahmin varsa kalan süreyi ondan hesaplar", () => {
+    expect(outageRemainingH(10, 36, true)).toBe(26);
+    expect(fmtRemaining(26)).toBe("Yaklaşık 1 gün içinde");
+  });
+  it("bilinen tahmin geçtiyse 'güncelleniyor' der, uydurma süre göstermez", () => {
+    expect(outageRemainingH(40, 36, true)).toBeNull();
+    expect(fmtRemaining(null)).toBe("Tahmini süre güncelleniyor");
+  });
+  it("tahmin yoksa her zaman ileride birkaç saat gösterir", () => {
+    expect(outageRemainingH(0.3, null, false)).toBe(6);
+    expect(outageRemainingH(25, null, false)).toBe(4);
+  });
+});

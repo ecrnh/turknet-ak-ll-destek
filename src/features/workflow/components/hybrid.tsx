@@ -1,11 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, CloudOff, Loader2, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
+import { CheckCircle2, CloudOff, Loader2, Power, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
+import { useEffect } from "react";
+import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
+import { runOverdueOps } from "../engine";
+import { fmtRemaining, outageRemainingH } from "../hybridView";
 import { hybridOfferOpen, hybridUsageMb } from "../rules";
-import { activateHybrid, checkHybrid, declineHybrid, dismissOutage, outageHours } from "../services/hybrid";
+import { activateHybrid, checkHybrid, declineHybrid, dismissOutage, openHybridBox, outageHours } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
 import type { DeviceRequest, HybridChecks, OutageState } from "../types";
 
@@ -130,13 +134,20 @@ export function DeviceTracker({ d }: { d: DeviceRequest }) {
 
 const PRIMARY = "mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-float";
 
-/** Home outage card: one calm message and at most one primary action. */
+/** Home outage card: the problem, how long it has lasted, the estimated fix and the Hibrit İnternet action. */
 export function OutageHomeCard() {
   const o = useWorkflowStore((s) => s.outage);
   const h = useWorkflowStore((s) => s.hybrid);
+  const regional = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.data["outageType"] === "regional");
   const verifying = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status !== "done");
   // Never behind the last state change (the presenter can move the outage start).
-  const now = Math.max(useNow(30_000), o?.lastUpdateAt ?? 0);
+  const now = Math.max(useNow(10_000), o?.lastUpdateAt ?? 0);
+  const busy = h.status === "checking" || h.status === "activating";
+  useEffect(() => {
+    if (!busy) return;
+    const t = window.setInterval(() => runOverdueOps(), 2500);
+    return () => window.clearInterval(t);
+  }, [busy]);
   if (!o || o.dismissed) return null;
 
   if (o.restoredAt) {
@@ -163,61 +174,78 @@ export function OutageHomeCard() {
 
   const hours = outageHours(o, now);
   const after24 = hybridOfferOpen(hours, o.etaH);
-  const active = h.status === "active";
+  const active = h.status === "active" && !h.pausedAt;
+  const remaining = fmtRemaining(outageRemainingH(hours, o.etaH, regional));
 
-  let title: string = C.detected.title;
-  let text: string = C.detected.text;
-  let cta: string | null = null;
-  if (active) {
-    title = C.active.title;
-    text = C.active.text;
-  } else if (after24) {
-    if (h.status === "no_coverage") {
-      title = C.noCoverage.title;
-      text = `${C.noCoverage.text} ${C.noCoverage.after}`;
-    } else if (h.status === "no_device" && h.device) {
-      title = "Yedek cihazınız yolda";
-      text = `Cihazınız teslim edilince ücretsiz Hibrit İnternet'i etkinleştirebilirsiniz. Durum: ${C.device[h.device.status]}.`;
-    } else if (h.status === "checking" || h.status === "activating") {
-      title = C.offer.title;
-      text = h.status === "checking" ? "Yedek bağlantı uygunluğunuzu kontrol ediyoruz." : "Yedek bağlantınız etkinleştiriliyor.";
-    } else {
-      title = C.offer.title;
-      text = C.offer.text;
-      cta = h.status === "failed" ? C.failed.cta : h.status === "no_device" ? C.noDevice.cta : C.offer.cta;
-    }
+  const title = active ? "İnternet kesintisi sürüyor · yedek bağlantı aktif" : regional ? "Bölgenizde internet kesintisi var" : "İnternet bağlantınızda kesinti var";
+  const facts: [string, string][] = [
+    ["Sorun", regional ? "Bölgesel altyapı arızası" : "Hattınızda bağlantı kesintisi"],
+    ["Süre", `${fmtOngoing(hours)} sürüyor`],
+    ["Tahmini çözüm", `${remaining} (demo)`],
+    ["Durum", o.repairNote || "Teknik ekibimiz çalışıyor"],
+  ];
+
+  // Hibrit İnternet: one line of state and, when allowed, the single open action.
+  let hybridLine: string;
+  let canOpen = false;
+  if (active) hybridLine = h.activatedBy === "auto" ? "Aktif · önceden verdiğiniz izinle otomatik açıldı" : "Aktif · yedek bağlantıyla internete bağlısınız";
+  else if (h.status === "activating" || (h.status === "checking" && h.openRequested)) hybridLine = "Hibrit Box açılıyor…";
+  else if (!after24) hybridLine = h.autoFailover ? "Kesinti 24 saati aşarsa otomatik açılacak" : "Kesinti 24 saati aşarsa ücretsiz açabilirsiniz";
+  else if (h.status === "no_coverage") hybridLine = "Adresinizde yedek bağlantı için yeterli mobil kapsama yok";
+  else if (h.status === "no_device") hybridLine = h.device ? `Yedek cihazınız · ${C.device[h.device.status]}` : "Evinizde uyumlu Hibrit Box bulunamadı";
+  else if (h.status === "checking") hybridLine = "Uygunluğunuz kontrol ediliyor…";
+  else {
+    hybridLine = h.status === "failed" ? "Açılamadı · tekrar deneyebilirsiniz" : "Ücretsiz açılabilir · aboneliğinize dahil";
+    canOpen = true;
   }
 
+  const open = () => {
+    if (!openHybridBox()) toast("Hibrit Box şu an açılamıyor", { description: "Kesinti 24 saati aştığında ya da aşması beklendiğinde açılabilir." });
+  };
+
   return (
-    <div className={cn("rounded-card bg-card p-5 shadow-card", after24 && !active && cta && "border-gradient")} role="status" aria-live="polite">
+    <div className={cn("rounded-card bg-card p-5 shadow-card", canOpen && "border-gradient")} role="status" aria-live="polite">
       <div className="flex items-start gap-3">
         <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl", active ? "bg-orange-soft text-orange-deep" : "bg-destructive-soft text-destructive")}>
           {active ? <Smartphone className="size-6" /> : <CloudOff className="size-6" />}
         </span>
         <div className="min-w-0 flex-1">
           <p className="font-semibold leading-snug text-primary">{title}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{active ? "Ana bağlantınız düzelince otomatik olarak ana bağlantıya döneceksiniz." : "Teknik ekibimiz çalışıyor; gelişmeleri size bildireceğiz."}</p>
         </div>
       </div>
-      {active ? (
-        <div className="mt-4">
-          <LinkStatus now={now} />
+
+      <dl className="mt-4 space-y-1.5 rounded-2xl bg-muted p-3 text-xs">
+        {facts.map(([k, v]) => (
+          <div key={k} className="flex gap-2">
+            <dt className="w-24 shrink-0 text-muted-foreground">{k}</dt>
+            <dd className="font-semibold text-foreground">{v}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className={cn("mt-3 flex items-center gap-3 rounded-2xl border p-3", active ? "border-orange-deep/30 bg-orange-soft" : "border-border")}>
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-icon-box text-primary">
+          {h.status === "activating" || h.status === "checking" ? <Loader2 className="size-4 animate-spin" /> : <Router className="size-4" />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-primary">Hibrit İnternet</p>
+          <p className="text-xs text-muted-foreground">{hybridLine}</p>
         </div>
-      ) : (
-        <OutageMeta o={o} now={now} className="mt-4" />
-      )}
-      {cta ? (
-        <>
-          <Link to="/hibrit" className={PRIMARY}>
-            {cta}
-          </Link>
-          <p className="mt-2 text-center text-xs font-semibold text-success">{C.included}</p>
-        </>
-      ) : (
-        <Link to="/hibrit" className="mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-primary">
-          Detayları Gör
+      </div>
+
+      {canOpen ? (
+        <button type="button" onClick={open} className={PRIMARY}>
+          <Power className="mr-2 size-4" /> {h.status === "failed" ? C.failed.cta : "Hibrit Box'ı Aç"}
+        </button>
+      ) : h.status === "no_device" && after24 && !h.device ? (
+        <Link to="/hibrit" className={PRIMARY}>
+          {C.noDevice.cta}
         </Link>
-      )}
+      ) : null}
+      <Link to="/hibrit" className="mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-primary">
+        Detayları Gör
+      </Link>
     </div>
   );
 }

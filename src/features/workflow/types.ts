@@ -347,4 +347,6 @@ export interface HybridService {
   autoFailover: boolean;
   /** Who switched the backup on: the pre-approved automatic switch or the customer by hand. */
   activatedBy?: "auto" | "customer" | null | undefined;
+  /** Customer tapped "Hibrit Box'ı Aç" while the eligibility check was still running. */
+  openRequested?: boolean | undefined;
 }

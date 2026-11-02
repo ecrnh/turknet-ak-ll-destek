@@ -147,8 +147,11 @@ registerOp("hybrid.checked", (id) => {
     notify(id, "Yedek bağlantı şu an kullanılamıyor", "Bulunduğunuz konumda yedek bağlantı için yeterli mobil kapsama bulunamadı. Arıza takibiniz devam ediyor.", "quiet");
   } else {
     step(id, "hybrid", "waiting", "Cihaz, SIM ve kapsama uygun · onayınız bekleniyor");
-    if (W.getState().hybrid.autoFailover) activateHybrid("auto");
+    const hs = W.getState().hybrid;
+    if (hs.openRequested) activateHybrid("customer");
+    else if (hs.autoFailover) activateHybrid("auto");
   }
+  if (block) patchHybrid({ openRequested: false });
 });
 
 /** Customer consent: "Ücretsiz Olarak Etkinleştir" (also used for "Tekrar Dene"). */
@@ -157,11 +160,32 @@ export function activateHybrid(by: "auto" | "customer" = "customer"): boolean {
   const o = openOutage();
   if (!o || !canActivateHybrid({ elapsedH: outageHours(o), etaH: o.etaH, fixed: s.connectivity.fixed, status: s.hybrid.status })) return false;
   const attempt = s.hybrid.attempts + 1;
-  patchHybrid({ status: "activating", attempts: attempt, activatedBy: by });
+  patchHybrid({ status: "activating", attempts: attempt, activatedBy: by, openRequested: false });
   log(o.wfId, "customer", "decision", by === "auto" ? "Otomatik yedek geçişi: müşterinin önceden verdiği izinle Hibrit Box açılıyor" : attempt === 1 ? "Müşteri onayı: Hibrit Box'ı Aç" : `Müşteri tekrar denedi (${attempt}. deneme)`, "Hibrit İnternet yalnızca müşterinin onayıyla etkinleşir");
   step(o.wfId, "hybrid", "in_progress", `Yedek bağlantı etkinleştiriliyor (${attempt}. deneme)`);
   schedule("hybrid.activated", o.wfId, 1500);
   return true;
+}
+
+/**
+ * The one "Hibrit Box'ı Aç" action (home card and Hibrit screen): resumes a paused backup,
+ * opens a ready one, or runs the eligibility check first and opens right after it passes.
+ * Returns false when the 24-hour rule does not allow opening yet.
+ */
+export function openHybridBox(): boolean {
+  const h = W.getState().hybrid;
+  if (h.status === "active" && h.pausedAt) return resumeHybrid();
+  if (h.status === "ready" || h.status === "failed") return activateHybrid("customer");
+  if (h.status === "checking") {
+    patchHybrid({ openRequested: true });
+    return true;
+  }
+  if (h.status === "offered" || h.status === "no_device") {
+    if (!checkHybrid()) return false;
+    patchHybrid({ openRequested: true });
+    return true;
+  }
+  return false;
 }
 registerOp("hybrid.activated", (id) => {
   if (W.getState().hybrid.status !== "activating") return;

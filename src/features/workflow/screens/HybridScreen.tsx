@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { CheckCircle2, CloudOff, Info, Loader2, Power, Router, Signal, Smartphone, TriangleAlert, Wifi } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
 import { ToggleRow } from "@/components/tn/primitives";
@@ -10,9 +10,10 @@ import { useNow } from "@/hooks/use-now";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
+import { runOverdueOps } from "../engine";
 import { hybridView } from "../hybridView";
 import { HYBRID_OFFER_AFTER_H, hybridOfferOpen, hybridUsageMb } from "../rules";
-import { activateHybrid, checkHybrid, outageHours, requestHybridDevice, resumeHybrid, setAutoFailover } from "../services/hybrid";
+import { checkHybrid, openHybridBox, outageHours, requestHybridDevice, setAutoFailover } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
 import { ChecksList, DeviceTracker, FreeBadge, fmtOngoing, fmtUsage, OutageMeta } from "../components/hybrid";
 import { DemoNote, TechDetails } from "../components/ui";
@@ -34,7 +35,7 @@ export function HybridScreen() {
   const hasDevice = useWorkflowStore((s) => s.config.hybridDevice);
   const verify = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status);
   const now = Math.max(useNow(5_000), o?.lastUpdateAt ?? 0);
-  const [wantOpen, setWantOpen] = useState(false);
+  const wantOpen = !!h.openRequested;
 
   const ongoing = !!o && !o.restoredAt;
   const hours = ongoing ? outageHours(o, now) : 0;
@@ -48,28 +49,20 @@ export function HybridScreen() {
     if (offerOpen && h.status === "offered") checkHybrid();
   }, [offerOpen, h.status]);
 
-  // "Hibrit Box'ı Aç" tapped while the check was still running: open as soon as it is ready.
+  // A check or activation in progress can never stall on this screen.
+  const busyOp = h.status === "checking" || h.status === "activating";
   useEffect(() => {
-    if (wantOpen && h.status === "ready") {
-      setWantOpen(false);
-      activateHybrid("customer");
-    }
-    if (wantOpen && (h.status === "no_device" || h.status === "no_coverage")) setWantOpen(false);
-  }, [wantOpen, h.status]);
+    if (!busyOp) return;
+    const t = window.setInterval(() => runOverdueOps(), 2500);
+    return () => window.clearInterval(t);
+  }, [busyOp]);
 
   useEffect(() => {
     if (h.status === "active") flow.complete({ attempts: h.attempts });
   }, [h.status, h.attempts, flow]);
 
   const openBox = () => {
-    if (h.status === "active" && h.pausedAt) return void resumeHybrid();
-    if (h.status === "ready" || h.status === "failed") return void activateHybrid("customer");
-    if (h.status === "offered" || h.status === "checking") {
-      setWantOpen(true);
-      if (h.status === "offered") checkHybrid();
-      return;
-    }
-    toast("Hibrit Box şu an açılamıyor", { description: `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştığında ya da aşması beklendiğinde açılabilir.` });
+    if (!openHybridBox()) toast("Hibrit Box şu an açılamıyor", { description: `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştığında ya da aşması beklendiğinde açılabilir.` });
   };
 
   // The whole status area is derived from the real connection state (see hybridView).

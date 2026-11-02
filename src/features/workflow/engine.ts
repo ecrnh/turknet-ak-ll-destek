@@ -293,6 +293,12 @@ function runOps(filter: (o: { dueAt: number; workflowId: string }) => boolean) {
 export const runDueOps = (t = now()) => runOps((o) => o.dueAt <= t);
 /** Fast-forward: run every queued job of a workflow immediately. */
 export const flushOps = (wfId?: string) => runOps((o) => !wfId || o.workflowId === wfId);
+/**
+ * Self-heal: run jobs that are clearly overdue. The job timer can be lost (a hot reload
+ * replacing the runner, a sleeping tab); screens that show live progress call this so a
+ * queued check can never sit at "Kontrol ediliyor" forever.
+ */
+export const runOverdueOps = (graceMs = 2000, t = now()) => runOps((o) => o.dueAt <= t - graceMs);
 
 /** Autonomous chaining: only when no presenter is stepping through a scenario. */
 export function chain(op: string, wfId: string, delayMs = 1500) {
