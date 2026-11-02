@@ -56,7 +56,7 @@ export function DemoPanel({ onHide }: { onHide?: () => void }) {
         </div>
         <div>
           <p className="text-muted-foreground">Profil</p>
-          <p className="font-bold text-foreground">{acting ? acting.short : "Çağrı (Ben)"}</p>
+          <p className="font-bold text-foreground">{acting ? acting.short : `${USER.firstName} (Ben)`}</p>
         </div>
       </div>
 

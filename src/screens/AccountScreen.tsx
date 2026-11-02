@@ -15,7 +15,7 @@ export function ProfileSwitcher() {
   return (
     <div className="flex gap-1 rounded-full bg-muted p-1" role="tablist" aria-label="Profil değiştir">
       <button role="tab" aria-selected={!actingAs} onClick={() => switchTo(null)} className={cn("min-h-10 flex-1 rounded-full text-sm font-semibold", !actingAs ? "bg-primary text-primary-foreground shadow" : "text-primary")}>
-        Çağrı (Ben)
+        {USER.firstName} (Ben)
       </button>
       {managed.map((m) => (
         <button
