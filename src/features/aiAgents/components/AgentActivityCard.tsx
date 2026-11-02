@@ -1,5 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { CheckCircle2, ChevronRight, Loader2, SendHorizontal } from "lucide-react";
+import { CheckCircle2, ChevronRight, Loader2, Mic, SendHorizontal } from "lucide-react";
+import { useVoiceInput } from "@/features/giga/useVoiceInput";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useAgentsStore } from "../store";
 import { useWorkflowStore } from "@/features/workflow/store";
@@ -28,6 +30,7 @@ export function AgentActivityCard() {
   const acting = useActingAccount();
   const navigate = useNavigate();
   const [text, setText] = useState("");
+  const voice = useVoiceInput((t) => openHelp(t));
   const running = run.status === "running";
   const fix = actions.find((a) => a.agent === "speed" && !a.undone);
   const recentFix = fix && Date.now() - fix.time < RECENT_FIX_MS ? fix : null;
@@ -71,9 +74,12 @@ export function AgentActivityCard() {
           if (t) openHelp(t);
           else navigate({ to: "/ajanlar" });
         }}
-        className="mt-3 flex items-center gap-2 rounded-full bg-card p-1 pl-4"
+        className="mt-3 flex items-center gap-1.5 rounded-full bg-card p-1 pl-4"
       >
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder={GIGA.placeholder} aria-label="GIGA'ya yaz" className="h-10 min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground" />
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder={voice.listening ? "Dinliyorum…" : GIGA.placeholder} aria-label="GIGA'ya yaz" className="h-10 min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground" />
+        <button type="button" onClick={voice.toggle} aria-label={voice.listening ? "Dinlemeyi durdur" : "Sesli anlat"} aria-pressed={voice.listening} className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full", voice.listening ? "animate-pulse bg-magenta text-magenta-foreground" : "text-primary hover:bg-muted")}>
+          <Mic className="size-5" />
+        </button>
         <button type="submit" aria-label="GIGA'ya gönder" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-magenta text-magenta-foreground">
           <SendHorizontal className="size-4" />
         </button>
