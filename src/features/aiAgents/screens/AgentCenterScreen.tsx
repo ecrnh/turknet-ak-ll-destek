@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Ban, Bot, CheckCircle2, ChevronRight, Clock, Hand, MessageCircle, PhoneOff, RotateCcw, Sparkles } from "lucide-react";
+import { Ban, Bot, CheckCircle2, ChevronRight, Clock, Hand, Lock, MessageCircle, PhoneOff, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
 import { iconFor } from "@/components/tn/icons";
@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { AGENT_DEFS, GIGA } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
 import { ActionModeTag, GigaAvatar, GigaName } from "@/features/giga/GigaAvatar";
+import { PRIVACY_REPLY } from "@/features/giga/assistant";
 import { useAgentsStore } from "../store";
 import { fmtRelative } from "@/lib/format";
 import { useFlow } from "@/lib/analytics";
@@ -33,7 +34,7 @@ export function AgentCenterScreen() {
             <GigaAvatar size={64} mood="idle" />
             <div>
               <p className="text-lg font-semibold">Merhaba, ben <GigaName />!</p>
-              <p className="text-sm text-primary-foreground/80">{GIGA.tagline}. Sadece ne yapacağını söylemem; işini halletmene yardım ederim.</p>
+              <p className="text-sm text-primary-foreground/80">{GIGA.tagline}. Sorunları birlikte çözer, işlemlerini kolaylaştırırım.</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -99,7 +100,7 @@ export function AgentCenterScreen() {
           </div>
         </div>
 
-        <SectionTitle>Otomatik görevlerim</SectionTitle>
+        <SectionTitle>Otomatik kontroller</SectionTitle>
         <div className="space-y-2.5">
           {AGENT_DEFS.map((a) => {
             const Icon = iconFor(a.icon);
@@ -115,12 +116,19 @@ export function AgentCenterScreen() {
                 <Switch
                   checked={enabled[a.id]}
                   onCheckedChange={(v) => { toggle(a.id, v); toast(`${a.name} ${v ? "açıldı" : "kapatıldı"}`); }}
-                  aria-label={`GIGA ${a.name} görevini ${enabled[a.id] ? "kapat" : "aç"}`}
+                  aria-label={`${a.name} ${enabled[a.id] ? "kapat" : "aç"}`}
                   className="data-[state=checked]:bg-magenta"
                 />
               </div>
             );
           })}
+        </div>
+        <div className="flex items-start gap-2.5 rounded-card bg-card p-4 shadow-card" role="note">
+          <Lock className="mt-0.5 size-4 shrink-0 text-magenta" aria-hidden />
+          <div>
+            <p className="text-sm font-semibold text-primary">Hangi bilgileri kontrol ediyoruz?</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{PRIVACY_REPLY} Otomatik kontrolleri istediğin zaman kapatabilirsin.</p>
+          </div>
         </div>
 
         <div className="rounded-card bg-card p-5 shadow-card">
@@ -133,7 +141,7 @@ export function AgentCenterScreen() {
               {actions.map((a) => (
                 <li key={a.id} className={cn("rounded-2xl border border-border p-3", a.undone && "opacity-60")}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wide text-magenta">GIGA · {AGENT_DEFS.find((d) => d.id === a.agent)?.name}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wide text-magenta">{AGENT_DEFS.find((d) => d.id === a.agent)?.name}</span>
                     <span className="text-[11px] text-muted-foreground">{fmtRelative(a.time)}</span>
                   </div>
                   <p className="mt-1 text-sm font-semibold">{a.undone ? <s>{a.title}</s> : a.title}</p>
