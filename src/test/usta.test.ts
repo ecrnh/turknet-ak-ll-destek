@@ -141,12 +141,14 @@ describe("Hibrit Box · otomatik ve manuel açılış ayrı izlenir", () => {
     W.getState().reset();
     setOutageElapsed(25);
     drain();
-    expect(W.getState().hybrid.status).toBe("ready");
+    expect(W.getState().hybrid.status).toBe("offered");
+    expect(W.getState().hybrid.activatedBy ?? null).toBeNull();
   });
 
   it("müşteri kendisi açarsa manuel olarak kaydedilir", async () => {
-    const { activateHybrid, setOutageElapsed } = await import("@/features/workflow/services/hybrid");
+    const { activateHybrid, checkHybrid, setOutageElapsed } = await import("@/features/workflow/services/hybrid");
     setOutageElapsed(25);
+    checkHybrid();
     drain();
     expect(activateHybrid()).toBe(true);
     drain();
