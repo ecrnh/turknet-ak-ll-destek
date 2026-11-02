@@ -1,5 +1,5 @@
 /**
- * AIHelperService: "AI Usta" visual technical support, reachable from the app
+ * AIHelperService: "GIGA Teknik" visual technical support, reachable from the app
  * or from the call centre (voice triage → simulated SMS → app, no re-telling).
  * Image analysis is a clearly-labelled simulation (no real vision model) and no
  * real SMS is sent. Every step is safe and reversible; after AI_USTA_MAX_ATTEMPTS
@@ -41,7 +41,7 @@ export function startAiUsta(): string {
   return wf.id;
 }
 
-/* ---------------- Sesli triyaj (IVR) → SMS → AI Usta ---------------- */
+/* ---------------- Sesli triyaj (IVR) → SMS → GIGA Teknik ---------------- */
 export function startUstaCall(): string {
   setConnectivity({ fixed: "down" }, "Modem internet oturumu yok");
   const { wf, created } = createWorkflow({
@@ -94,13 +94,13 @@ registerDecision("usta_ivr", (id, opt) => {
   }
   const link = `turk.net/u/${id}`;
   W.setState((s) => ({
-    sms: [...s.sms.filter((m) => m.workflowId !== id), { id: `SMS-${uid().slice(0, 5).toUpperCase()}`, workflowId: id, body: "TürkNet: Modeminizi AI Usta ile birlikte kontrol edelim. Sorununuzu tekrar anlatmanıza gerek yok.", link, at: Date.now(), opened: false }],
+    sms: [...s.sms.filter((m) => m.workflowId !== id), { id: `SMS-${uid().slice(0, 5).toUpperCase()}`, workflowId: id, body: "TürkNet: Modeminizi GIGA Teknik ile birlikte kontrol edelim. Sorununuzu tekrar anlatmanıza gerek yok.", link, at: Date.now(), opened: false }],
   }));
   step(id, "sms", "waiting", "SMS gönderildi, açılması bekleniyor (demo · gerçek SMS gönderilmedi)");
   log(id, "system", "external", `SMS gönderildi: ${link} (simülasyon)`, "Uygulama yüklüyse bağlantı doğrudan GIGA Teknik'i açar, değilse indirme sayfasına gider");
 });
 
-/** Customer taps "AI Usta'yı Aç" in the SMS. Context from the call carries over. */
+/** Customer taps "GIGA Teknik'i Aç" in the SMS. Context from the call carries over. */
 export function openUstaSms(id: string): boolean {
   if (stepStatus(id, "sms") !== "waiting" || getWf(id)?.decision) return false;
   W.setState((s) => ({ sms: s.sms.map((m) => (m.workflowId === id ? { ...m, opened: true } : m)) }));
@@ -110,7 +110,7 @@ export function openUstaSms(id: string): boolean {
   return true;
 }
 
-/* ---------------- Ortak AI Usta akışı ---------------- */
+/* ---------------- Ortak GIGA Teknik akışı ---------------- */
 export function ustaContext(id: string) {
   if (stepStatus(id, "context") !== "pending") return;
   step(id, "context", "done", "Bölgesel arıza yok · açık arıza kaydı yok · modem görünüyor, internet oturumu yok (demo)", "Bölgesel arıza olsaydı müşteriye adım yaptırılmazdı");

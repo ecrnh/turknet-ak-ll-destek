@@ -328,7 +328,7 @@ export const SCENARIOS: DemoScenario[] = [
   {
     id: "D",
     title: "GIGA Teknik ile modem sorunu",
-    summary: "Müşteri çağrı merkezini arar. Sesli asistan tanır ve ilk kontrolleri yapar, SMS ile AI Usta'ya geçirir; görsel kontrol ve güvenli adımlarla çözülür ya da bağlamıyla canlı desteğe aktarılır.",
+    summary: "Müşteri çağrı merkezini arar. GIGA sesli olarak tanır ve ilk kontrolleri yapar, SMS ile GIGA Teknik'e geçirir; görsel kontrol ve güvenli adımlarla çözülür ya da bağlamıyla canlı desteğe aktarılır.",
     features: ["GIGA sesli triyaj", "GIGA Teknik", "GIGA Takip"],
     outcomes: [
       { id: "fixed", label: "Self-servis çözülür", desc: "İlk güvenli adım sonrası bağlantı gelir, müşteri doğrular.", config: { aiFix: "fixed" }, choices: { usta_ivr: "sms", usta_photo: "demo_photo", usta_step1: "done", usta_confirm: "yes" } },
