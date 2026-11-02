@@ -54,7 +54,7 @@ export function handoffToHuman(transcript: string[]): string {
     title: "GIGA → uzman aktarımı",
     summary: said.length ? `Konuşma uzmana iletildi: “${said[said.length - 1]!.slice(0, 60)}”` : "Müşteri doğrudan uzman desteği istedi.",
     status: "Uzmana aktarıldı",
-    details: said.length ? said.map((s) => `Müşteri: ${s}`) : undefined,
+    ...(said.length ? { details: said.map((s) => `Müşteri: ${s}`) } : {}),
     to: "/goruntulu-destek",
   });
 }
