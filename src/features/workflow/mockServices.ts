@@ -59,6 +59,14 @@ export const MockNetworkAPI = {
   repairFindsIssue(): boolean {
     return cfg().ustaDiag === "issue";
   },
+  /** Digital repair (simulated): regional outage at the customer's exchange, with an estimated duration. */
+  regionalOutage(): { found: boolean; etaH: number } {
+    return { found: cfg().ustaDiag === "regional", etaH: cfg().regionalEtaH };
+  },
+  /** Digital repair (simulated): did every remote check answer? */
+  checksAnswer(): boolean {
+    return cfg().ustaDiag !== "incomplete";
+  },
   connectionAfterSelfFix(): boolean {
     return cfg().aiFix === "fixed";
   },

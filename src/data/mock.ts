@@ -478,7 +478,7 @@ export const AI_USTA_CABLE_STEP = {
 
 /** "İnternetim çalışmıyor" → what exactly? Kept for the whole session. `finding`/`fix` are the simulated detected issue and remote action. */
 export const USTA_ISSUES = [
-  { id: "no_connect", label: "İnternete hiç bağlanamıyorum.", issue: "İnternete hiç bağlanamıyor", check: "session", finding: "İnternet oturumun kapanmış görünüyor; modemin hatta bağlı ama internete çıkamıyor.", fix: "İnternet oturumunu uzaktan yeniliyorum", fixed: "İnternet oturumunu uzaktan yeniledim" },
+  { id: "no_connect", label: "İnternete hiç bağlanamıyorum.", issue: "İnternete hiç bağlanamıyor", check: "session", finding: "Modemin hatta bağlı ama internete çıkamıyor.", fix: "Bağlantını uzaktan yeniliyorum", fixed: "Bağlantını uzaktan yeniledim" },
   { id: "slow", label: "İnternetim yavaş.", issue: "İnternet yavaş", check: "line", finding: "Hattında paketine göre belirgin bir hız düşüşü görünüyor.", fix: "Hat ayarlarını uzaktan yeniliyorum", fixed: "Hat ayarlarını uzaktan yeniledim" },
   { id: "drops", label: "Bağlantım sürekli kopuyor.", issue: "Bağlantı sürekli kopuyor", check: "line", finding: "Son saatlerde bağlantında sık kopma görünüyor.", fix: "Hattını uzaktan yeniden eşitliyorum", fixed: "Hattını uzaktan yeniden eşitledim" },
   { id: "wifi", label: "Wi-Fi ağıma bağlanamıyorum.", issue: "Wi-Fi ağına bağlanamıyor", check: "diag", finding: "Wi-Fi kanalın çevredeki ağlar nedeniyle çok yoğun görünüyor.", fix: "Wi-Fi'ını daha az yoğun bir kanala alıyorum", fixed: "Wi-Fi'ını daha az yoğun bir kanala aldım" },

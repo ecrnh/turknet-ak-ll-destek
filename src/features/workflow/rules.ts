@@ -172,7 +172,8 @@ export const HYBRID_OFFER_AFTER_H = 24;
 
 export const outageElapsedH = (startedAt: number, now: number) => Math.max(0, (now - startedAt) / 3_600_000);
 
-export const hybridOfferOpen = (elapsedH: number) => elapsedH >= HYBRID_OFFER_AFTER_H;
+/** Offer the free Hibrit İnternet once an outage passes 24 h, or earlier when its estimated duration already exceeds 24 h. */
+export const hybridOfferOpen = (elapsedH: number, etaH?: number | null) => elapsedH >= HYBRID_OFFER_AFTER_H || (etaH ?? 0) > HYBRID_OFFER_AFTER_H;
 
 /** Hibrit İnternet needs a compatible backup device, an active SIM and enough mobile coverage. */
 export function hybridBlocker(c: { device: boolean; sim: boolean; coverage: boolean }): "no_device" | "no_coverage" | null {
@@ -182,8 +183,8 @@ export function hybridBlocker(c: { device: boolean; sim: boolean; coverage: bool
 }
 
 /** Activation is only possible during an unresolved outage past 24 h, after a passed check. */
-export function canActivateHybrid(p: { elapsedH: number; fixed: ConnectivityStatus["fixed"]; status: string }): boolean {
-  return p.fixed === "down" && hybridOfferOpen(p.elapsedH) && (p.status === "ready" || p.status === "failed");
+export function canActivateHybrid(p: { elapsedH: number; etaH?: number | null; fixed: ConnectivityStatus["fixed"]; status: string }): boolean {
+  return p.fixed === "down" && hybridOfferOpen(p.elapsedH, p.etaH) && (p.status === "ready" || p.status === "failed");
 }
 
 /** Demo usage of the backup connection (no real meter): a base amount plus ~24 MB per minute. */
@@ -192,3 +193,40 @@ export const hybridUsageMb = (activatedAt: number | null, now: number) => (activ
 /** Automatic payment: a bill this much above the usual amount waits for the customer's approval. */
 export const UNUSUAL_BILL_RATIO = 1.3;
 export const isUnusualBill = (amount: number, usual: number) => usual > 0 && amount > usual * UNUSUAL_BILL_RATIO;
+
+/* ---------------- GIGA Teknik · dijital onarım (müşteriye sade görünüm) ---------------- */
+
+export type RepairOutcome = "regional" | "issue" | "clear" | "incomplete";
+export type StageState = "done" | "running" | "pending";
+
+/** Five background checks shown to the customer as three plain stages. */
+export const REPAIR_STAGES = [
+  { id: "connection", title: "Modem ve bağlantı kontrolü", desc: "Modeminin ve hattının internete bağlı olup olmadığına bakıyoruz.", checks: ["modem", "session", "line"] },
+  { id: "regional", title: "Bölgesel arıza kontrolü", desc: "Bölgende bilinen bir kesinti veya genel arıza olup olmadığına bakıyoruz.", checks: ["regional", "diag"] },
+  { id: "solution", title: "Çözüm seçenekleri", desc: "Sonuca göre sana en uygun çözümü seçiyoruz.", checks: [] },
+] as const;
+
+/** Stage states from the background check progress. `checksDone` = how many of the 5 checks answered. */
+export function repairStageStates(checksDone: number, outcome: RepairOutcome | null): StageState[] {
+  const stage = (from: number, to: number): StageState => (checksDone >= to ? "done" : checksDone >= from ? "running" : "pending");
+  const s1 = stage(0, 3);
+  const s2 = checksDone < 3 ? "pending" : stage(3, 5);
+  if (outcome === "incomplete") return [s1 === "done" ? "done" : "pending", s2 === "done" ? "done" : "pending", "pending"];
+  return [s1, s2, outcome ? "done" : checksDone >= 5 ? "running" : "pending"];
+}
+
+/** The one result line the customer sees instead of five check results. */
+export const REPAIR_RESULT: Record<RepairOutcome, string> = {
+  regional: "Bölgesel arıza bulundu. Sorun evindeki bağlantıdan değil, bölgendeki bir kesintiden kaynaklanıyor.",
+  issue: "Bağlantında bir sorun bulundu. Uzaktan düzeltebileceğimiz bir durum.",
+  clear: "Sistem kontrollerinde sorun bulunamadı.",
+  incomplete: "Kontroller şu an tamamlanamadı.",
+};
+
+/** Plain description of the solution stage once the result is known. */
+export function solutionText(outcome: RepairOutcome, etaH?: number | null): string {
+  if (outcome === "regional") return (etaH ?? 0) > HYBRID_OFFER_AFTER_H ? "Çözüm 24 saatten uzun sürebilir; ücretsiz Hibrit İnternet'i önerebiliriz." : "Teknik ekibimiz çalışıyor; modeminde bir şey yapmana gerek yok.";
+  if (outcome === "issue") return "Uygun uzaktan onarımı hemen deniyoruz.";
+  if (outcome === "clear") return "Modemine birlikte bakmamız gerekiyor.";
+  return "Tekrar deneyebilir ya da uzman desteği alabilirsin.";
+}
