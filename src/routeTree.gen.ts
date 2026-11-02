@@ -23,6 +23,7 @@ import { Route as HibritRouteImport } from './routes/hibrit'
 import { Route as HizTestiRouteImport } from './routes/hiz-testi'
 import { Route as IslemGecmisiRouteImport } from './routes/islem-gecmisi'
 import { Route as IslemlerRouteImport } from './routes/islemler'
+import { Route as OtomatikOdemeRouteImport } from './routes/otomatik-odeme'
 import { Route as TakipRouteImport } from './routes/takip'
 import { Route as TasinmaRouteImport } from './routes/tasinma'
 import { Route as TercihlerRouteImport } from './routes/tercihler'
@@ -112,6 +113,11 @@ const IslemGecmisiRoute = IslemGecmisiRouteImport.update({
 const IslemlerRoute = IslemlerRouteImport.update({
   id: '/islemler',
   path: '/islemler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OtomatikOdemeRoute = OtomatikOdemeRouteImport.update({
+  id: '/otomatik-odeme',
+  path: '/otomatik-odeme',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TakipRoute = TakipRouteImport.update({
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
+  '/otomatik-odeme': typeof OtomatikOdemeRoute
   '/takip': typeof TakipRoute
   '/tasinma': typeof TasinmaRoute
   '/tercihler': typeof TercihlerRoute
@@ -266,6 +273,7 @@ export interface FileRoutesByTo {
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
+  '/otomatik-odeme': typeof OtomatikOdemeRoute
   '/takip': typeof TakipRoute
   '/tasinma': typeof TasinmaRoute
   '/tercihler': typeof TercihlerRoute
@@ -303,6 +311,7 @@ export interface FileRoutesById {
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
+  '/otomatik-odeme': typeof OtomatikOdemeRoute
   '/takip': typeof TakipRoute
   '/tasinma': typeof TasinmaRoute
   '/tercihler': typeof TercihlerRoute
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
+    | '/otomatik-odeme'
     | '/takip'
     | '/tasinma'
     | '/tercihler'
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
+    | '/otomatik-odeme'
     | '/takip'
     | '/tasinma'
     | '/tercihler'
@@ -413,6 +424,7 @@ export interface FileRouteTypes {
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
+    | '/otomatik-odeme'
     | '/takip'
     | '/tasinma'
     | '/tercihler'
@@ -450,6 +462,7 @@ export interface RootRouteChildren {
   HizTestiRoute: typeof HizTestiRoute
   IslemGecmisiRoute: typeof IslemGecmisiRoute
   IslemlerRoute: typeof IslemlerRoute
+  OtomatikOdemeRoute: typeof OtomatikOdemeRoute
   TakipRoute: typeof TakipRoute
   TasinmaRoute: typeof TasinmaRoute
   TercihlerRoute: typeof TercihlerRoute
@@ -570,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/islemler'
       fullPath: '/islemler'
       preLoaderRoute: typeof IslemlerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/otomatik-odeme': {
+      id: '/otomatik-odeme'
+      path: '/otomatik-odeme'
+      fullPath: '/otomatik-odeme'
+      preLoaderRoute: typeof OtomatikOdemeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/takip': {
@@ -730,6 +750,7 @@ const rootRouteChildren: RootRouteChildren = {
   HizTestiRoute: HizTestiRoute,
   IslemGecmisiRoute: IslemGecmisiRoute,
   IslemlerRoute: IslemlerRoute,
+  OtomatikOdemeRoute: OtomatikOdemeRoute,
   TakipRoute: TakipRoute,
   TasinmaRoute: TasinmaRoute,
   TercihlerRoute: TercihlerRoute,

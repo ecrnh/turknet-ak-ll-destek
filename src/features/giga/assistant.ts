@@ -70,7 +70,7 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
       text: "Ödenmemiş faturan bulunmuyor. Otomatik ödeme talimatı verirsen son ödeme gününü takip etmene gerek kalmaz; talimatı yalnızca senin onayınla oluştururum.",
       actions: [
         { label: "Faturalarım", kind: "go", to: "/faturalar" },
-        { label: "Otomatik ödeme talimatı", kind: "approval", to: "/islem/otomatik-odeme" },
+        { label: "Otomatik ödeme talimatı", kind: "approval", to: "/otomatik-odeme" },
       ],
     };
   }
