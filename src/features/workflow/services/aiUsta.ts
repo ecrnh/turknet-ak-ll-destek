@@ -262,7 +262,7 @@ function finishRepair(id: string) {
 registerOp("usta.remoteDone", (id) => {
   if (stepStatus(id, "remote") !== "in_progress") return;
   const issue = ustaIssue(id);
-  step(id, "remote", "done", `${issue.fix.replace(/yorum$/, "dim")} (simülasyon)`);
+  step(id, "remote", "done", `${issue.fixed} (simülasyon)`);
   step(id, "verify", "in_progress", "Bağlantını tekrar kontrol ediyorum");
   schedule("usta.verify", id, 1500);
 });
