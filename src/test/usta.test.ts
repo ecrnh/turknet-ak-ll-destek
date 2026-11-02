@@ -155,3 +155,17 @@ describe("Hibrit Box · otomatik ve manuel açılış ayrı izlenir", () => {
     expect(W.getState().hybrid.activatedBy).toBe("customer");
   });
 });
+
+import { resumeUsta } from "@/features/workflow/services/aiUsta";
+
+describe("GIGA Teknik · kontroller takılmaz", () => {
+  it("zamanlayıcısı kaybolan bir kontrol, ekran tekrar baktığında kendiliğinden ilerler", () => {
+    const id = startAiUsta("no_internet");
+    decide(id, "no_connect");
+    expect(String(getWf(id)!.data["repair"] ?? "")).toBe("");
+    // The queued check is overdue and nothing ran it (lost timer).
+    W.setState((s) => ({ ops: s.ops.map((o) => ({ ...o, dueAt: Date.now() - 10_000 })) }));
+    resumeUsta(id);
+    expect(String(getWf(id)!.data["repair"]).split("|")).toHaveLength(1);
+  });
+});
