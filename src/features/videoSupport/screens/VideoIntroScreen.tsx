@@ -24,7 +24,7 @@ export function VideoIntroScreen() {
   const managed = useFamilyStore((s) => s.managed);
   const delegates = useFamilyStore((s) => s.delegates);
   const acting = useActingAccount();
-  const canVideo = useCan("video");
+  const canVideo = useCan("tech");
   const [step, setStep] = useState<"info" | "perm">("info");
   const cam = useCamera(false);
 

@@ -3,6 +3,6 @@ import { HelpScreen } from "@/screens/HelpScreen";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/yardim")({
-  head: () => pageHead("Yardım", "Dijital onarım, görüntülü destek ve QR ile destek talebi."),
+  head: () => pageHead("Destek", "İnternetiniz çalışmıyor, yavaş ya da modeminizde sorun mu var? AI Usta ile birlikte çözelim."),
   component: HelpScreen,
 });
