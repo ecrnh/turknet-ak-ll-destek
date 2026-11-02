@@ -223,7 +223,8 @@ registerOp("usta.check", (id) => {
   if (!wf || stepStatus(id, "repair") !== "in_progress") return;
   const idx = Number(wf.data["checkIdx"] ?? 0);
   const check = REPAIR_CHECKS[idx];
-  if (!check) return;
+  // Every check already answered (e.g. an interrupted session): close the run instead of stalling.
+  if (!check) return finishRepair(id);
   // A check that gets no answer stops the run: the customer sees "Kontroller tamamlanamadı", never a guessed result.
   if (check.id === "diag" && !MockNetworkAPI.checksAnswer()) {
     setData(id, { checkIdx: idx });
@@ -517,7 +518,8 @@ export function goLive(id: string) {
 export function resumeUsta(id: string) {
   const wf = getWf(id);
   if (!wf || wf.type !== "ai_usta" || wf.status === "completed" || wf.handoff || wf.decision) return;
-  if (W.getState().ops.some((o) => o.workflowId === id)) return;
+  // Only a queued GIGA Teknik job means the session is moving; unrelated jobs must not block it.
+  if (W.getState().ops.some((o) => o.workflowId === id && o.op.startsWith("usta."))) return;
   if (stepStatus(id, "report") !== "done") return;
   const s = (k: string) => stepStatus(id, k);
   if (s("repair") === "pending" && (wf.data["channel"] === "app" || s("sms") === "done")) startRepair(id);
