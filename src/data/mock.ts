@@ -3,7 +3,7 @@
  */
 
 export const USER = {
-  firstName: "Ecren",
+  firstName: "Çağrı",
   name: "ECREN KOYUNCU",
   initials: "EK",
   subscriberNo: "4896005",
