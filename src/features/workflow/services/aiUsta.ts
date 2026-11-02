@@ -14,7 +14,7 @@ import { useWorkflowStore as W } from "../store";
 import { setConnectivity } from "./connectivity";
 
 const USTA_STEPS = [
-  { key: "context", label: "Bağlantı ve arıza kaydı kontrolü" },
+  { key: "context", label: "Bölgesel kesinti ve arıza kaydı kontrolü" },
   { key: "photo", label: "Modem ışıkları (kamera)" },
   { key: "analysis", label: "Işık kontrolü (simülasyon)" },
   { key: "step1", label: `Adım 1: ${AI_USTA_STEPS[0]!.title}` },
@@ -30,7 +30,7 @@ export function startAiUsta(issue: "no_internet" | "modem" = "no_internet"): str
   const said = issue === "modem" ? "Modemimde sorun var" : "İnternetim çalışmıyor";
   const { wf, created } = createWorkflow({
     type: "ai_usta",
-    title: `GIGA Teknik · ${said}`,
+    title: `Bağlantı sorunu · ${said}`,
     dedupeKey: `usta:${SUBSCRIPTION.id}`,
     steps: [{ key: "report", label: "Sorun bildirimi" }, ...USTA_STEPS],
     data: { channel: "app", issue: said },
@@ -47,13 +47,13 @@ export function startUstaCall(): string {
   setConnectivity({ fixed: "down" }, "Modem internet oturumu yok");
   const { wf, created } = createWorkflow({
     type: "ai_usta",
-    title: "GIGA Teknik · Telefon görüşmesinden",
+    title: "Bağlantı sorunu · Telefon görüşmesinden",
     dedupeKey: `usta:${SUBSCRIPTION.id}`,
     steps: [
-      { key: "call", label: "GIGA sizi numaranızdan tanıdı" },
+      { key: "call", label: "Aboneliğiniz numaranızdan bulundu" },
       { key: "report", label: "Sorununuzu telefonda seçtiniz" },
-      { key: "ivr_check", label: "GIGA telefonda ilk kontrolleri yaptı" },
-      { key: "sms", label: "GIGA Teknik bağlantısı SMS ile gönderildi" },
+      { key: "ivr_check", label: "Bölgesel kesinti ve bağlantı kontrolü" },
+      { key: "sms", label: "Destek bağlantısı SMS ile gönderildi" },
       ...USTA_STEPS,
     ],
     data: { channel: "ivr", phone: CUSTOMER.phone, callStartedAt: Date.now() },

@@ -13,7 +13,7 @@ import { useFlow } from "@/lib/analytics";
 
 const SERIES = [
   { t: "19:00", v: 96 }, { t: "19:10", v: 94 }, { t: "19:20", v: 61 }, { t: "19:30", v: 24 }, { t: "19:40", v: 20 },
-  { t: "GIGA", v: 22 }, { t: "+1 dk", v: 64 }, { t: "+2 dk", v: 91 }, { t: "+3 dk", v: 98 },
+  { t: "Düzeltme", v: 22 }, { t: "+1 dk", v: 64 }, { t: "+2 dk", v: 91 }, { t: "+3 dk", v: 98 },
 ];
 
 export function SpeedAgentScreen() {
@@ -24,10 +24,10 @@ export function SpeedAgentScreen() {
   if (run.status === "idle")
     return (
       <div>
-        <PageHeader title="GIGA Hız Koruyucu" />
+        <PageHeader title="Hız Koruyucu" />
         <div className="space-y-4 px-4">
           <EmptyState icon={Gauge} title="Hızın paketine uygun" text="Hızın 100 Mbps paketinin altına düşerse kök nedeni bulup otomatik düzelteceğim." action={<Button onClick={simulateSpeedDrop}>Demo: Hız düşüşü simüle et</Button>} />
-          {!enabled && <Banner tone="warning" title="Hız Koruyucu kapalı">GIGA ekranından açabilirsin.</Banner>}
+          {!enabled && <Banner tone="warning" title="Hız Koruyucu kapalı">Otomatik kontroller ekranından açabilirsin.</Banner>}
         </div>
       </div>
     );
@@ -35,7 +35,7 @@ export function SpeedAgentScreen() {
   const isDone = run.status === "done";
   return (
     <div>
-      <PageHeader title="GIGA Hız Koruyucu" />
+      <PageHeader title="Hız Koruyucu" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-card p-5 shadow-card">
           <p className="text-xl font-semibold leading-tight text-primary">{isDone ? "Hızını 20 Mbps'ten 98 Mbps'e yükselttim" : "Hız düşüşünü düzeltiyorum…"}</p>
@@ -90,7 +90,7 @@ export function SpeedAgentScreen() {
             <Button asChild size="xl" className="w-full rounded-full">
               <Link to="/hiz-testi">Hız Testi ile doğrula</Link>
             </Button>
-            <Csat feature="ai_speed_agent" title="GIGA'nın senin yerine düzeltmesi nasıldı?" />
+            <Csat feature="ai_speed_agent" title="Hızının uzaktan düzeltilmesi nasıldı?" />
           </>
         )}
       </div>

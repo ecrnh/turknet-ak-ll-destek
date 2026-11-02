@@ -41,7 +41,7 @@ const RESULT_TEXT: Record<EligibilityResult, { title: string; giga: string; tone
   no_response: { title: "Şu an yeni adresin için yanıt alamadık.", giga: "Sonucu tahmin etmek istemiyorum. Süreci başlatırsan kontrolü tekrar dener ve sonucu sana bildiririm.", tone: "unknown" },
 };
 
-/** GIGA Taşınma: intent → address → availability check → summary → start. No long support form. */
+/** Taşınma ve Nakil: intent → address → availability check → summary → start. No long support form. */
 export function RelocationStartScreen() {
   useFlow("relocation_wizard");
   const navigate = useNavigate();
@@ -106,7 +106,7 @@ export function RelocationStartScreen() {
 
   return (
     <div>
-      <PageHeader title="GIGA Taşınma" />
+      <PageHeader title="Taşınma ve Nakil" />
       <div className="space-y-4 px-4">
         {existing && stage !== "started" && (
           <Banner tone="info" title="Devam eden bir taşınma işleminiz var" action={<Link to="/surec/$id" params={{ id: existing.id }} className="font-semibold text-magenta">Detayları Gör →</Link>}>

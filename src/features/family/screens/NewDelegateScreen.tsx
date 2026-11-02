@@ -45,7 +45,7 @@ export function NewDelegateScreen() {
       if (otp.length < 6) return setError("6 haneli kodu eksiksiz gir.");
       addDelegate({ name: name.trim(), phone, relation, scopes, duration });
       addHistory("Aile yetkisi verildi", `${name} (${relation})`);
-      notify({ kind: "family", title: "Yetkilendirme tamamlandı", body: `${name} daveti kabul ettiğinde seçtiğin işlemleri yönetebilecek.`, to: "/aile", from: "giga" }, false);
+      notify({ kind: "family", title: "Yetkilendirme tamamlandı", body: `${name} daveti kabul ettiğinde seçtiğin işlemleri yönetebilecek.`, to: "/aile" }, false);
       flow.complete({ relation, duration });
     }
     setStep((s) => s + 1);

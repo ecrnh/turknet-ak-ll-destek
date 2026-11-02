@@ -465,7 +465,7 @@ export function HealthCard({ className }: { className?: string }) {
           <p className="font-semibold text-foreground">{SUBSCRIPTION.speed} Mbps</p>
         </div>
       </div>
-      <p className="mt-3 text-[11px] text-muted-foreground">Son kontrol {fmtRelative(c.lastCheckAt)} · izleme verisi demo</p>
+      <p className="mt-3 text-[11px] text-muted-foreground">Son kontrol {fmtRelative(c.lastCheckAt)} · teknik ölçüm verisi demo</p>
     </Box>
   );
 }
@@ -518,7 +518,7 @@ export function ConnectivityPanel({ compact }: { compact?: boolean }) {
           ))}
         </ol>
       )}
-      <p className="mt-3 text-[11px] text-muted-foreground">Son kontrol {fmtRelative(c.lastCheckAt)} · izleme verisi demo</p>
+      <p className="mt-3 text-[11px] text-muted-foreground">Son kontrol {fmtRelative(c.lastCheckAt)} · teknik ölçüm verisi demo</p>
     </Box>
   );
 }

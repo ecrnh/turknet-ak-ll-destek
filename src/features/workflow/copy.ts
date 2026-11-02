@@ -57,10 +57,10 @@ export function lastDoneStep(wf: Pick<Workflow, "steps">): string | null {
 }
 
 export const TYPE_LABEL: Record<WorkflowType, string> = {
-  relocation: "GIGA Taşınma",
+  relocation: "Taşınma ve Nakil",
   temp_internet: "Geçici internet",
   outage_recovery: "Kesinti",
-  billing_check: "GIGA Fatura",
+  billing_check: "Fatura Kalkanı",
   ai_usta: "GIGA Teknik",
   proactive_fault: "Proaktif kontrol",
   speed_optimize: "Hız kontrolü",

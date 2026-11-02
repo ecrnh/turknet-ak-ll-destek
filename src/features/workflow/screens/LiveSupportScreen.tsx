@@ -42,7 +42,7 @@ export function LiveSupportScreen({ id }: { id: string }) {
           <EmptyState
             icon={Headset}
             title="Önce birlikte çözmeyi deneyelim"
-            text="GIGA bu işlemi henüz uzmana aktarmadı. İstersen işlem sayfasından canlı desteğe bağlanabilirsin."
+            text="Bu işlem henüz uzmana aktarılmadı. İstersen işlem sayfasından canlı desteğe bağlanabilirsin."
             action={<Link to="/surec/$id" params={{ id }} className="font-semibold text-magenta">İşleme dön</Link>}
           />
         </div>

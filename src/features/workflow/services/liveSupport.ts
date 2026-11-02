@@ -55,7 +55,7 @@ export function openLiveChat(wfId: string): boolean {
         agent: LIVE_AGENT,
         startedAt: Date.now(),
         messages: [
-          msg("giga", "Konuşmamızı ve yaptığımız tüm kontrolleri temsilcine ilettim. Aynı şeyleri tekrar anlatmana gerek yok."),
+          msg("giga", "Yaptığımız kontrolleri temsilcine ilettim. Aynı şeyleri tekrar anlatmana gerek yok."),
           msg("agent", "Merhaba, bağlantı sorununla ilgili yaptığın kontrolleri görebiliyorum. Aynı adımları tekrar yapmana gerek yok. Şimdi birlikte devam edelim."),
         ],
       },

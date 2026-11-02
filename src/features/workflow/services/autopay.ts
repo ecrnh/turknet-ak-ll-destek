@@ -12,7 +12,7 @@ import type { AutoPayMethod, AutoPayState } from "../types";
 
 const patch = (p: Partial<AutoPayState>) => W.setState((s) => ({ autoPay: { ...s.autoPay, ...p } }));
 const addLog = (text: string) => W.setState((s) => ({ autoPay: { ...s.autoPay, log: [{ at: Date.now(), text }, ...s.autoPay.log].slice(0, 20) } }));
-const tell = (title: string, body: string) => useAppStore.getState().notify({ kind: "bill", title, body, to: "/otomatik-odeme", from: "giga" });
+const tell = (title: string, body: string) => useAppStore.getState().notify({ kind: "bill", title, body, to: "/otomatik-odeme" });
 
 /** The customer's usual monthly bill (demo: the seeded bill amount). */
 export const usualBill = () => W.getState().bills[0]?.amount ?? 749.9;

@@ -15,7 +15,7 @@ import { DemoNote, StatusPill } from "../components/ui";
 
 const COMPARE = ["Fatura tutarı", "Ödeme geçmişi", "Kampanya ve indirimler", "Abonelik değişiklikleri", "Dondurma ve iptal kayıtları"];
 
-/** Fatura Kalkanı (GIGA Fatura): invoice card → GIGA comparison → no issue / possible difference → consent. */
+/** Fatura Kalkanı: invoice card → comparison → no issue / possible difference → consent. GIGA only explains a found difference. */
 export function BillingShieldScreen() {
   useFlow("billing_shield");
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ export function BillingShieldScreen() {
 
   return (
     <div>
-      <PageHeader title="GIGA Fatura" />
+      <PageHeader title="Fatura Kalkanı" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">

@@ -133,13 +133,13 @@ export const AI_USTA_MAX_ATTEMPTS = 2;
 export type HealthCode = "normal" | "degraded" | "checking" | "regional" | "field" | "failover" | "down";
 
 export const HEALTH_COPY: Record<HealthCode, { title: string; text: string; tone: "ok" | "warn" | "info" | "bad" }> = {
-  normal: { title: "Bağlantınız normal", text: "İnternet bağlantınızı sürekli izliyoruz. Bir sorun görürsek size haber veririz.", tone: "ok" },
+  normal: { title: "Bağlantınız normal", text: "Bağlantınızın sağlıklı çalışmasına yardımcı olmak için gerekli teknik kontrolleri yapıyoruz. Bir sorun görürsek size haber veririz.", tone: "ok" },
   degraded: { title: "Bağlantınızda performans düşüşü algılandı", text: "Hızınız paketinizin belirgin şekilde altında. Nedenini birlikte bulabiliriz.", tone: "warn" },
   checking: { title: "Teknik kontrol gerçekleştiriliyor", text: "Bağlantınızı uzaktan kontrol ediyoruz. Şu an sizden bir işlem yapmanız gerekmiyor.", tone: "info" },
   regional: { title: "Bölgesel bir kesinti ihtimali değerlendiriliyor", text: "Sorun sizden kaynaklı görünmüyor. Modeminize dokunmanıza gerek yok.", tone: "warn" },
   field: { title: "Teknik ekibin müdahalesi gerekiyor", text: "Uzaktan çözemedik. Teknik ekip için işlem kaydı oluşturduk.", tone: "warn" },
   failover: { title: "Yedek internetiniz aktif", text: "Ana bağlantınız düzelene kadar internete Hibrit İnternet yedek bağlantınız üzerinden bağlısınız.", tone: "info" },
-  down: { title: "İnternet bağlantınızda kesinti var", text: "Teknik ekibimiz sorunun çözümü için çalışıyor. Gelişmeleri sizin için takip ediyoruz.", tone: "bad" },
+  down: { title: "İnternet bağlantınızda kesinti var", text: "Teknik ekibimiz sorunun çözümü için çalışıyor. Yeni bir gelişme olduğunda sizi bilgilendireceğiz.", tone: "bad" },
 };
 
 const CONNECTIVITY_TYPES = ["outage_recovery", "proactive_fault", "speed_optimize", "ai_usta"];

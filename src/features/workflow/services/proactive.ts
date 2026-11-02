@@ -44,7 +44,7 @@ export function detectAnomaly(): string | null {
   });
   if (!created) return wf.id;
   step(wf.id, "signal", "done", `Optik ${m.optic} dBm (normal ${NORMAL.optic}) · ${m.drops} kopma/saat`);
-  notify(wf.id, "Bağlantınızda dalgalanma tespit ettik", "Siz fark etmeden kontrol etmeye başladık. Şu an sizden bir işlem yapmanız gerekmiyor.");
+  notify(wf.id, "Bağlantınızda bir sorun olabilir", "Bağlantınızda bir sorun olabileceğine dair işaretler tespit ettik ve kontrol ediyoruz. Şu an sizin bir şey yapmanız gerekmiyor.");
   chain("proactive.scope", wf.id, 1200);
   return wf.id;
 }
@@ -65,7 +65,7 @@ export function startSpeedCheck(): string {
   if (!created) return wf.id;
   setData(wf.id, { speedBefore: measured });
   step(wf.id, "measure", "done", `Paketiniz ${SUBSCRIPTION.speed} Mbps · ölçülen ${measured} Mbps (demo ölçüm)`, "Ölçülen hız paketin %60'ının altında: anlamlı fark");
-  notify(wf.id, "Hızınızdaki düşüşü inceliyoruz", "Bağlantınızı kontrol ediyoruz. Sonuçlandığında size haber vereceğiz.");
+  notify(wf.id, "Hızınızdaki düşüşü inceliyoruz", "Sorunun kaynağını anlayabilmek için bağlantınızla ilgili gerekli kontrolleri yapıyoruz. Sonuçlandığında size haber vereceğiz.");
   chain("proactive.speed", wf.id, 1200);
   return wf.id;
 }
@@ -159,8 +159,8 @@ export function verifyProactive(id: string) {
   const wf = getWf(id);
   if (!wf || stepStatus(id, "verify") !== "pending" || W.getState().connectivity.fixed !== "up") return;
   const after = Number(wf.data["speedAfter"] ?? 94);
-  step(id, "verify", "done", `30 dk izleme: kopma yok, ${after} Mbps (demo)`);
-  notify(id, "Bağlantı sorununuz giderildi", wf.data["remoteOk"] ? "Uzaktan düzelttik; siz fark etmeden çözüldü." : "Teknik ekibimiz onarımı tamamladı, bağlantınızı doğruladık.");
+  step(id, "verify", "done", `30 dk bağlantı kararlılığı kontrolü: kopma yok, ${after} Mbps (demo)`);
+  notify(id, "Bağlantı sorununuz giderildi", wf.data["remoteOk"] ? "Bağlantınızdaki dalgalanmayı uzaktan giderdik. Şu anda bağlantınız normal görünüyor." : "Teknik ekibimiz onarımı tamamladı, bağlantınızı doğruladık.");
   complete(id, {
     resolved: true,
     summary: wf.data["remoteOk"] ? "Sorun uzaktan çözüldü, hız normale döndü" : "Sorun teknik ekiple çözüldü, müşteri kayıt açmadı",

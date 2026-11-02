@@ -36,7 +36,7 @@ export function HomeWelcome() {
           <p className="text-xs text-muted-foreground">
             {USER.packageName}
             {!down && ` · şu an ~${Math.max(0, Math.round(live))} Mbps (demo)`}
-            {down && " · GIGA kesintiyi senin için takip ediyor"}
+            {down && " · teknik ekip çalışıyor, gelişmeleri sana bildireceğiz"}
           </p>
         </div>
         <ChevronRight className="size-5 text-muted-foreground" />
@@ -74,12 +74,12 @@ export function ForYouCards() {
   const autoPayOn = useWorkflowStore((s) => s.autoPay.status === "active");
   const moving = workflows.some((w) => w.type === "relocation" && isActive(w));
   const billing = workflows.some((w) => w.type === "billing_check" && isActive(w));
-  const cards: { to: string; text: string }[] = [];
-  if (net === "down" || net === "slow") cards.push({ to: "/ai-usta", text: "GIGA ile internet bağlantını birlikte kontrol edebiliriz." });
-  if (!moving) cards.push({ to: "/tasinma", text: "Taşınmayı mı planlıyorsun? GIGA ile yeni adresini birlikte kontrol edelim." });
+  const cards: { to: string; text: string; giga?: boolean }[] = [];
+  if (net === "down" || net === "slow") cards.push({ to: "/ai-usta", text: "Bağlantında bir sorun mu var? GIGA ile birlikte kontrol edelim.", giga: true });
+  if (!moving) cards.push({ to: "/tasinma", text: "Taşınmayı mı planlıyorsun? Yeni adresini birlikte kontrol edelim." });
   if (!billing) cards.push({ to: "/fatura-kalkani", text: "Faturanda kontrol etmemizi istediğin bir şey var mı?" });
   if (!autoPayOn) cards.push({ to: "/otomatik-odeme", text: "Ödeme tarihini takip etmek zorunda kalma. Otomatik ödemeyi birlikte ayarlayalım." });
-  if (net === "online") cards.push({ to: "/ai-usta", text: "GIGA ile internet bağlantını birlikte kontrol edebiliriz." });
+  if (net === "online") cards.push({ to: "/ai-usta", text: "Bağlantında bir sorun yaşarsan GIGA ile birlikte kontrol edebiliriz.", giga: true });
   const list = cards.filter((c, i) => cards.findIndex((x) => x.to === c.to) === i).slice(0, 3);
   return (
     <section aria-labelledby="for-you">
@@ -87,7 +87,7 @@ export function ForYouCards() {
       <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 no-scrollbar">
         {list.map((c) => (
           <Link key={c.to} to={c.to as "/"} className="flex w-60 shrink-0 flex-col justify-between gap-3 rounded-card bg-referral p-4 shadow-card">
-            <GigaAvatar size={30} label={false} />
+            {c.giga ? <GigaAvatar size={30} label={false} /> : <Sparkles className="size-6 text-magenta" strokeWidth={1.5} />}
             <p className="text-sm font-semibold leading-snug text-primary">{c.text}</p>
             <span className="flex items-center gap-1 text-xs font-semibold text-magenta">Başlayalım <ChevronRight className="size-3.5" /></span>
           </Link>

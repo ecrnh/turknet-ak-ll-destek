@@ -41,12 +41,12 @@ export function TrackHubScreen() {
           <div className="flex items-center gap-3">
             <GigaAvatar size={44} mood={decisions.length ? "listening" : active.length ? "working" : "idle"} />
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">GIGA Takip · Benim İçin Takip Et</p>
-              <p className="text-xl font-semibold leading-snug">Senin için takip ettiğim işlemler</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Benim İçin Takip Et</p>
+              <p className="text-xl font-semibold leading-snug">İşlemlerinin güncel durumu</p>
             </div>
           </div>
           <p className="mt-1 text-sm text-primary-foreground/80">
-            {active.length ? `${active.length} işlem takipte${decisions.length ? ` · ${decisions.length} tanesi kararınızı bekliyor` : ""}` : "Şu an takip ettiğim bir işlem yok."}
+            {active.length ? `${active.length} işlem takipte${decisions.length ? ` · ${decisions.length} tanesi kararınızı bekliyor` : ""}` : "Şu an devam eden bir işlemin yok."}
           </p>
           <IntentBox onDark className="mt-4" />
         </div>
