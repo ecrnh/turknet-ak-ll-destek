@@ -1,3 +1,4 @@
+import { useGigaChat } from "@/features/giga/chatStore";
 import { useAppStore } from "@/features/core/appStore";
 import { useAgentsStore } from "@/features/aiAgents/store";
 import { useFamilyStore } from "@/features/family/store";
@@ -57,7 +58,7 @@ export function simulateSpeedDrop() {
     app().notify({ kind: "agent", title: "Hız düşüşü fark ettim", body: "Paketin 100 Mbps, ölçülen 20 Mbps. Hemen düzeltiyorum…", to: "/ajanlar/hiz" });
     later(1500, runSpeedAgent);
   } else {
-    app().notify({ kind: "agent", title: "Hızın düştü (20 Mbps)", body: "Hız Koruyucu kapalı. Açarsan hız belirgin düştüğünde güvenli uzaktan düzeltme yapabilirim.", to: "/ajanlar" });
+    app().notify({ kind: "agent", title: "Hızın düştü (20 Mbps)", body: "Hız Koruyucu kapalı. Açarsan hız belirgin düştüğünde güvenli uzaktan düzeltme yapabilirim.", to: "/ajanlar/kontroller" });
   }
 }
 
@@ -80,6 +81,7 @@ export function resetAll() {
   useVideoStore.getState().reset();
   useWorkflowStore.getState().reset();
   useScenarioStore.setState(initialScenario());
+  useGigaChat.getState().clear();
 }
 
 export async function rehydrateAll() {

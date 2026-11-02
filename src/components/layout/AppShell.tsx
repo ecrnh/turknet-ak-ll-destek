@@ -1,11 +1,10 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { BarChart3, Eye, SlidersHorizontal, Signal, Wifi, BatteryMedium, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { useAppStore } from "@/features/core/appStore";
 import { ScenarioPanel } from "@/features/scenario/ScenarioPanel";
 import { ScenarioDriver } from "@/features/scenario/ScenarioDriver";
-import { HelpCenterSheet } from "@/features/help/HelpCenterSheet";
 import { rehydrateAll } from "@/features/demo/scenarios";
 import { fmtClock } from "@/lib/format";
 import { CallSmsLayer } from "@/features/workflow/components/CallSms";
@@ -37,6 +36,13 @@ function PhoneApp() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const scroller = useRef<HTMLElement>(null);
   const showNav = !NO_NAV.some((p) => path.startsWith(p));
+  const helpOpen = useAppStore((s) => s.helpOpen);
+  const navigate = useNavigate();
+
+  // Every "ask GIGA" entry (home box, help screen, Benim İçin Hallet…) opens the GIGA screen, which sends the prefilled text.
+  useEffect(() => {
+    if (helpOpen && path !== "/ajanlar" && path !== "/ajanlar/") navigate({ to: "/ajanlar" });
+  }, [helpOpen, path, navigate]);
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: 0 });
@@ -50,7 +56,6 @@ function PhoneApp() {
         <Outlet />
       </main>
       {showNav && <BottomNav />}
-      <HelpCenterSheet />
       <PushBanner />
       <CallSmsLayer />
       <Toaster position="top-center" richColors closeButton />

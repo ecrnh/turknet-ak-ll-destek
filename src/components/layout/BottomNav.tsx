@@ -2,10 +2,9 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { House, LayoutGrid, ReceiptText, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/features/core/appStore";
 import { GigaAvatar } from "@/features/giga/GigaAvatar";
 
-const OPS_PREFIXES = ["/islemler", "/yardim", "/islem/", "/qr", "/goruntulu-destek", "/hiz-testi", "/dijital-onarim", "/ajanlar", "/hibrit", "/destek-kayitlari", "/takip", "/surec", "/tasinma", "/ai-usta", "/baglanti", "/fatura-kalkani", "/hallet", "/canli-destek"];
+const OPS_PREFIXES = ["/islemler", "/yardim", "/islem/", "/qr", "/goruntulu-destek", "/hiz-testi", "/dijital-onarim", "/ajanlar/hiz", "/hibrit", "/destek-kayitlari", "/takip", "/surec", "/tasinma", "/ai-usta", "/baglanti", "/fatura-kalkani", "/hallet", "/canli-destek"];
 const ACC_PREFIXES = ["/hesabim", "/aile", "/tercihler", "/islem-gecmisi"];
 
 function activeTab(path: string) {
@@ -18,7 +17,6 @@ function activeTab(path: string) {
 
 export function BottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const openHelp = useAppStore((s) => s.openHelp);
   const active = activeTab(path);
 
   const Tab = ({ id, to, label, Icon }: { id: string; to: "/" | "/islemler" | "/faturalar" | "/hesabim"; label: string; Icon: typeof House }) => {
@@ -41,13 +39,14 @@ export function BottomNav() {
         <Tab id="bills" to="/faturalar" label="Faturalarım" Icon={ReceiptText} />
         <Tab id="account" to="/hesabim" label="Hesabım" Icon={UserRound} />
       </div>
-      <button
-        onClick={() => openHelp()}
-        aria-label="GIGA'ya sor"
+      <Link
+        to="/ajanlar"
+        aria-label="GIGA"
+        aria-current={path === "/ajanlar" || path === "/ajanlar/" ? "page" : undefined}
         className="absolute left-1/2 top-0 flex h-[66px] w-[66px] -translate-x-1/2 -translate-y-[42%] items-center justify-center rounded-full bg-card shadow-float ring-4 ring-card transition-transform active:scale-95"
       >
         <GigaAvatar size={54} label={false} />
-      </button>
+      </Link>
     </nav>
   );
 }
