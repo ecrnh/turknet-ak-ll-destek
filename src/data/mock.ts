@@ -511,8 +511,8 @@ export const MODEM_LIGHTS = [
 ] as const;
 
 export const INTERNET_LIGHT_STATES = [
-  { id: "red", label: "Kırmızı", ok: false, say: "İnternet ışığının kırmızı olduğunu görüyorum. Önce bağlantını kontrol edelim." },
-  { id: "off", label: "Kapalı", ok: false, say: "İnternet ışığı yanmıyor görünüyor. Önce bağlantını kontrol edelim." },
+  { id: "red", label: "Kırmızı", ok: false, say: "İnternet ışığı kırmızı; modem internete çıkamıyor. Kablolarla başlayıp adım adım ilerleyelim." },
+  { id: "off", label: "Kapalı", ok: false, say: "İnternet ışığı yanmıyor görünüyor. Kablolarla başlayıp adım adım ilerleyelim." },
   { id: "blink", label: "Yanıp sönüyor", ok: false, say: "İnternet ışığı yanıp sönüyor; modem bağlanmaya çalışıyor olabilir. Birlikte kontrol edelim." },
   { id: "green", label: "Yeşil", ok: true, say: "Işıklar normal görünüyor. Yine de bağlantını adım adım kontrol edelim." },
 ] as const;
