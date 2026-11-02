@@ -15,6 +15,8 @@ export interface AppNotification {
   time: number;
   read: boolean;
   to?: string;
+  /** Sent by GIGA (assistant actions and process tracking). */
+  from?: "giga";
 }
 
 export interface SupportRecord {
@@ -125,6 +127,13 @@ const seedNotifications = (): AppNotification[] => [
   { id: "n12", kind: "agent", title: "Merhaba, ben GIGA!", body: "Hız Koruyucu ve Kesinti Takibi görevlerim aktif; hattını senin için izliyorum.", time: T("2026-08-29T10:00:00+03:00"), read: false, to: "/ajanlar" },
 ];
 
+/** Seed notifications whose wording changed with the GIGA brand. */
+const GIGA_SEED: Record<string, Pick<AppNotification, "title" | "body">> = Object.fromEntries(
+  seedNotifications()
+    .filter((n) => n.id === "n2" || n.id === "n7" || n.id === "n12")
+    .map((n) => [n.id, { title: n.title, body: n.body }]),
+);
+
 const seedRecords = (): SupportRecord[] => [
   {
     id: "r-seed-1",
@@ -200,8 +209,8 @@ export const useAppStore = create<AppState>()(
       name: "tn-app",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      version: 1,
-      /** v0 demos saved gift-internet notifications and old outage states; drop them. */
+      version: 2,
+      /** v0 saved gift-internet notifications and old outage states (dropped); v1 used pre-GIGA assistant names (renamed). */
       migrate: (persisted) => {
         const p = persisted as Partial<AppState> & { prefs?: Record<string, unknown> };
         const legacy = (to?: string) => !!to && (to.startsWith("/hediye") || to === "/ajanlar/yedek");
@@ -209,8 +218,10 @@ export const useAppStore = create<AppState>()(
         return {
           ...p,
           net: p.net && (status === "outage" || status === "backup") ? { ...p.net, status: "online" } : p.net,
-          notifications: (p.notifications ?? []).filter((n) => (n.kind as string) !== "gift" && !legacy(n.to)),
-          records: (p.records ?? []).filter((r) => !legacy(r.to)),
+          notifications: (p.notifications ?? [])
+            .filter((n) => (n.kind as string) !== "gift" && !legacy(n.to))
+            .map((n) => (GIGA_SEED[n.id] ? { ...n, ...GIGA_SEED[n.id] } : n)),
+          records: (p.records ?? []).filter((r) => !legacy(r.to)).map((r) => ((r.channel as string) === "Ajan" ? { ...r, channel: "GIGA" } : r)),
         } as AppState;
       },
       partialize: (s) => {
