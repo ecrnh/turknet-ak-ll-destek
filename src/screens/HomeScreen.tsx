@@ -11,6 +11,7 @@ import { AgentActivityCard } from "@/features/aiAgents/components/AgentActivityC
 import { OutageHomeCard } from "@/features/workflow/components/hybrid";
 import { cn } from "@/lib/utils";
 import { HeroCarousel } from "./home/HeroCarousel";
+import { ForYouCards, HomeWelcome, OngoingProcesses, QuickActions } from "./home/HomeSections";
 
 function StatusPill() {
   const status = useAppStore((s) => s.net.status);
@@ -79,11 +80,15 @@ export function HomeScreen() {
 
       <div className="space-y-4 px-4">
         <OutageHomeCard />
+        <HomeWelcome />
         {simple ? (
           <SimpleHome />
         ) : (
           <>
+            <QuickActions />
+            <OngoingProcesses />
             <AgentActivityCard />
+            <ForYouCards />
             <CampaignCard />
           </>
         )}
