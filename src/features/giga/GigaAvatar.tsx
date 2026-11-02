@@ -87,7 +87,7 @@ export function GigaAvatar({ size = 40, mood = "idle", className, label = true }
         <motion.span
           className="absolute left-1/2 rounded-full bg-magenta"
           style={{ top: 0, width: size * 0.15, height: size * 0.15, marginLeft: -size * 0.075 }}
-          animate={!still && (mood === "thinking" || mood === "working") ? { scale: [1, 1.35, 1], opacity: [1, 0.7, 1] } : false}
+          animate={!still && (mood === "thinking" || mood === "working") ? { scale: [1, 1.35, 1], opacity: [1, 0.7, 1] } : { scale: 1, opacity: 1 }}
           transition={{ repeat: Infinity, duration: 0.9 }}
         />
         {/* head */}
