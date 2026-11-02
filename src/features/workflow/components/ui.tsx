@@ -19,7 +19,6 @@ import {
   ScanEye,
   ShieldCheck,
   Smartphone,
-  Upload,
   User,
   Users,
   XCircle,
@@ -33,6 +32,7 @@ import { STATUS_LABEL } from "../rules";
 import { customerAction, lastDoneStep, TYPE_LABEL } from "../copy";
 import { useWorkflowStore } from "../store";
 import type { Actor, AuditEvent, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
+import { ModemCameraCard } from "./modem";
 
 export const TYPE_ICON: Record<WorkflowType, LucideIcon> = {
   relocation: MapPinned,
@@ -255,6 +255,9 @@ export function HandoffCard({ wf }: { wf: Workflow }) {
           <p className="font-semibold">{wf.handoff.team}</p>
         </div>
       </div>
+      {wf.type === "ai_usta" && wf.steps.some((st) => st.key === "recheck" && st.status === "failed") && (
+        <p className="mt-3 font-semibold">Bu adımlara rağmen bağlantın düzelmedi. Sorunu daha detaylı inceleyelim.</p>
+      )}
       <p className="mt-3 text-sm text-primary-foreground/90">{wf.handoff.reason}</p>
       <p className="mt-3 text-xs font-semibold text-primary-foreground/70">Ekibe ilettiğimiz bilgiler (sorunu baştan anlatmanız gerekmez):</p>
       <ul className="mt-1.5 space-y-1 text-xs text-primary-foreground/90">
@@ -262,6 +265,9 @@ export function HandoffCard({ wf }: { wf: Workflow }) {
           <li key={`${i}-${c}`}>{c}</li>
         ))}
       </ul>
+      <Link to="/canli-destek/$id" params={{ id: wf.id }} className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-full bg-card text-sm font-semibold text-primary">
+        <Headset className="size-4" /> Canlı desteğe bağlan
+      </Link>
     </div>
   );
 }
