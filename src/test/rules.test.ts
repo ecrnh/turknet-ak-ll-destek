@@ -6,6 +6,9 @@ describe("Ücretsiz Hibrit İnternet · 24 saat kuralı", () => {
     expect(HYBRID_OFFER_AFTER_H).toBe(24);
     expect(hybridOfferOpen(23.9)).toBe(false);
     expect(hybridOfferOpen(24)).toBe(true);
+    // Estimated duration over 24 h opens the offer early; 24 h or less does not.
+    expect(hybridOfferOpen(0.5, 36)).toBe(true);
+    expect(hybridOfferOpen(0.5, 24)).toBe(false);
   });
   it("geçen süre başlangıç zamanından hesaplanır", () => {
     const start = Date.UTC(2026, 10, 1, 10);
