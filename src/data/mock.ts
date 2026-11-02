@@ -432,25 +432,46 @@ export const BILLING_CHECKS = [
 
 export const AI_USTA_STEPS = [
   {
-    id: "cables",
-    title: "Güç ve kablo bağlantılarını kontrol edin",
-    text: "Modemin güç kablosunun takılı olduğundan emin olun. Ardından modemin altındaki fiber (WAN) kablosunu nazikçe çıkarıp “tık” sesi gelene kadar geri takın.",
-    safe: "Güvenli adım: kabloyu bükmeyin, reset tuşuna basmayın.",
+    id: "power",
+    title: "Modeminin güç kablosunun takılı olduğundan emin ol",
+    text: "Güç kablosu hem modemde hem prizde yerine oturmuş olsun. Fiber (WAN) kablosu da modemin altında takılı görünmeli.",
+    safe: "Güvenli adım: kabloyu bükme, reset tuşuna basma.",
+    cta: "Kontrol ettim",
   },
   {
     id: "reboot",
-    title: "Modemi yeniden başlatın",
-    text: "Modemin arkasındaki güç düğmesiyle kapatın, 30 saniye bekleyip tekrar açın. Işıkların yerine oturması 2 dakika sürebilir.",
-    safe: "Güvenli adım: ayarlarınız silinmez.",
+    title: "Şimdi modemini kapatıp 20 saniye bekleyelim",
+    text: "Modemin arkasındaki güç düğmesiyle kapat, 20 saniye bekle ve tekrar aç.",
+    safe: "Güvenli adım: ayarların silinmez.",
+    cta: "Tamam, açtım",
   },
 ];
 
-export const MODEM_LED_DEMO = [
-  { key: "power", name: "Power", state: "Yeşil sabit", ok: true },
-  { key: "pon", name: "PON", state: "Yeşil sabit", ok: true },
-  { key: "internet", name: "Internet", state: "Kapalı", ok: false },
-  { key: "wifi", name: "Wi-Fi", state: "Yanıp sönüyor", ok: true },
-];
+/** Modem light picker for the simulated camera. `internet` is the light GIGA Teknik reads. */
+export const MODEM_LIGHTS = [
+  { key: "power", name: "Power" },
+  { key: "wan", name: "WAN / PON" },
+  { key: "internet", name: "Internet" },
+  { key: "wifi", name: "Wi-Fi" },
+] as const;
+
+export const INTERNET_LIGHT_STATES = [
+  { id: "red", label: "Kırmızı", ok: false, say: "İnternet ışığının kırmızı olduğunu görüyorum. Önce bağlantını kontrol edelim." },
+  { id: "off", label: "Kapalı", ok: false, say: "İnternet ışığı yanmıyor görünüyor. Önce bağlantını kontrol edelim." },
+  { id: "blink", label: "Yanıp sönüyor", ok: false, say: "İnternet ışığı yanıp sönüyor; modem bağlanmaya çalışıyor olabilir. Birlikte kontrol edelim." },
+  { id: "green", label: "Yeşil", ok: true, say: "Işıklar normal görünüyor. Yine de bağlantını adım adım kontrol edelim." },
+] as const;
+
+export type InternetLight = (typeof INTERNET_LIGHT_STATES)[number]["id"];
+
+/** Voice menu of the simulated call (GIGA sesli destek). */
+export const IVR_MENU = [
+  { id: "no_internet", key: "1", label: "İnternetim hiç çalışmıyor", issue: "İnternet hiç çalışmıyor" },
+  { id: "slow", key: "2", label: "İnternetim yavaş", issue: "İnternet yavaş" },
+  { id: "drops", key: "3", label: "Bağlantım sık sık kopuyor", issue: "Bağlantı sık sık kopuyor" },
+  { id: "modem", key: "4", label: "Modemimde sorun var", issue: "Modemde sorun var" },
+  { id: "other", key: "5", label: "Diğer işlemler", issue: "Diğer işlemler" },
+] as const;
 
 export const INTENT_KEYWORDS: { intent: "billing" | "ai_usta" | "relocation" | "temp_internet" | "speed" | "track"; words: string[] }[] = [
   { intent: "billing", words: ["borç", "ödeme", "ödedim", "fatura", "mükerrer", "iade", "tahsil", "ücret", "tutarsız"] },
