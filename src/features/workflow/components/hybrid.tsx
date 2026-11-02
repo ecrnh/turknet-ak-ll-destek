@@ -14,8 +14,8 @@ export const fmtOutageDuration = (h: number) => (h < 1 ? `${Math.max(1, Math.rou
 export const fmtOngoing = (h: number) => (h < 1 ? `${Math.max(1, Math.round(h * 60))} dakikadır` : `${Math.floor(h)} saattir`);
 export const fmtUsage = (mb: number) => (mb < 1024 ? `${mb} MB` : `${(mb / 1024).toFixed(1).replace(".", ",")} GB`);
 
-export function FreeBadge({ onDark, className }: { onDark?: boolean; className?: string }) {
-  return <span className={cn("inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold", onDark ? "bg-neon-lime text-primary-deep" : "bg-success-soft text-success", className)}>{C.freeBadge}</span>;
+export function FreeBadge({ onDark, className, label }: { onDark?: boolean; className?: string; label?: string }) {
+  return <span className={cn("inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold", onDark ? "bg-neon-lime text-primary-deep" : "bg-success-soft text-success", className)}>{label ?? C.freeBadge}</span>;
 }
 
 /** Start time, duration, repair status and last update of the outage. */

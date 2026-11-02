@@ -10,6 +10,7 @@ import { useNow } from "@/hooks/use-now";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
+import { hybridView } from "../hybridView";
 import { HYBRID_OFFER_AFTER_H, hybridOfferOpen, hybridUsageMb } from "../rules";
 import { activateHybrid, checkHybrid, outageHours, requestHybridDevice, resumeHybrid, setAutoFailover } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
@@ -39,7 +40,6 @@ export function HybridScreen() {
   const hours = ongoing ? outageHours(o, now) : 0;
   const offerOpen = ongoing && hybridOfferOpen(hours, o.etaH);
   const backupOn = h.status === "active" && !h.pausedAt;
-  const mainUp = c.fixed === "up";
   const used = h.activatedAt ? hybridUsageMb(h.activatedAt, h.pausedAt ?? h.endedAt ?? now) : 0;
   const left = Math.max(0, HYBRID_BACKUP_QUOTA_MB - used);
 
@@ -72,47 +72,29 @@ export function HybridScreen() {
     toast("Hibrit Box şu an açılamıyor", { description: `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştığında ya da aşması beklendiğinde açılabilir.` });
   };
 
-  // One status message for the whole page.
-  let tone: Tone = "ok";
-  let title = "Bağlantın normal";
-  let text = "Ana internetini kullanıyorsun. Hibrit Box hazır; kesinti olursa devreye girer.";
-  if (o?.restoredAt) {
-    tone = verify === "done" ? "ok" : "info";
-    title = verify === "done" ? "Ana bağlantına döndün" : "Ana bağlantın doğrulanıyor";
-    text = h.status === "ended" ? "Ana internetin geri geldi. Hibrit Box'ın mobil bağlantısı otomatik olarak kapatıldı." : "Kesinti giderildi ve bağlantını doğruladık.";
-  } else if (ongoing && backupOn) {
-    tone = "info";
-    title = "Mobil yedek bağlantın aktif";
-    text = h.activatedBy === "auto" ? `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştığı için Hibrit Box, önceden verdiğin izinle otomatik açıldı.` : "Hibrit Box'ı açtın; internetini mobil yedek bağlantı üzerinden kullanıyorsun.";
-  } else if (ongoing && h.status === "activating") {
-    tone = "info";
-    title = "Hibrit Box açılıyor…";
-    text = h.activatedBy === "auto" ? "Önceden verdiğin izinle yedek bağlantı otomatik açılıyor." : "Yedek bağlantın birkaç saniye içinde hazır olacak.";
-  } else if (ongoing && offerOpen) {
-    tone = "warn";
-    title = hours >= HYBRID_OFFER_AFTER_H ? `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştı` : `Kesintinin ${HYBRID_OFFER_AFTER_H} saatten uzun sürmesi bekleniyor`;
-    text =
-      h.status === "no_device"
-        ? "Hibrit Box için uyumlu cihaz veya aktif SIM bulunamadı. Cihazı ücretsiz gönderebiliriz."
-        : h.status === "no_coverage"
-          ? "Adresinde yedek bağlantı için yeterli mobil kapsama yok. Arıza takibin sürüyor."
-          : h.status === "failed"
-            ? "Hibrit Box mobil ağa bağlanamadı. Tekrar açmayı deneyebilirsin."
-            : "Hibrit Box'ı açarak internete bağlı kalabilirsin.";
-  } else if (ongoing) {
-    tone = "down";
-    title = "Ana internetinde kesinti var";
-    text = `${fmtOngoing(hours)} sürüyor; teknik ekibimiz çalışıyor. ${h.autoFailover ? `Kesinti ${HYBRID_OFFER_AFTER_H} saati aşarsa yedek bağlantın otomatik açılacak.` : `Kesinti ${HYBRID_OFFER_AFTER_H} saati aşarsa Hibrit Box'ı buradan açabileceksin.`}`;
-  }
+  // The whole status area is derived from the real connection state (see hybridView).
+  const v = hybridView({
+    fixed: c.fixed,
+    outageOngoing: ongoing,
+    restored: !!o?.restoredAt,
+    restoredVerified: verify === "done",
+    hours,
+    offerOpen,
+    status: h.status,
+    paused: !!h.pausedAt,
+    activatedBy: h.activatedBy,
+    autoFailover: h.autoFailover,
+    hasDevice,
+  });
+  const { tone } = v;
 
-  const rows: { icon: typeof Router; label: string; value: string; on: boolean }[] = [
-    { icon: Wifi, label: "Ana internet", value: mainUp ? "Bağlı" : "Kesik", on: mainUp },
-    { icon: Router, label: "Hibrit Box", value: !hasDevice ? "Cihaz yok" : backupOn ? "Açık" : "Hazır", on: hasDevice },
-    { icon: Smartphone, label: "Mobil yedek", value: backupOn ? "Aktif" : "Kapalı", on: backupOn },
+  const rows: { icon: typeof Router; label: string; value: string; tone: "on" | "off" | "bad" }[] = [
+    { icon: Wifi, label: "Ana internet", value: v.main, tone: v.main === "Bağlı" ? "on" : "bad" },
+    { icon: Router, label: "Hibrit Box", value: v.box, tone: v.box === "Cihaz yok" ? "off" : "on" },
+    { icon: Smartphone, label: "Mobil yedek", value: v.mobile, tone: v.mobile === "Bağlı" ? "on" : "off" },
   ];
 
-  const showButton = ongoing && !backupOn && h.status !== "activating" && h.status !== "no_device" && h.status !== "no_coverage";
-  const buttonReady = offerOpen && (h.status === "ready" || h.status === "failed" || h.status === "offered" || h.status === "checking" || !!h.pausedAt);
+  const busy = wantOpen && h.status === "checking";
 
   return (
     <div>
@@ -120,15 +102,17 @@ export function HybridScreen() {
       <div className="space-y-4 px-4 pb-4">
         <div>
           <p className="text-lg font-semibold leading-snug text-primary">İnternetin kesilse bile bağlantın devam etsin.</p>
-          <FreeBadge className="mt-1.5" />
+          <FreeBadge className="mt-1.5" label="Ücretsiz · Aboneliğine dahil" />
         </div>
 
         <section className="rounded-card bg-card p-5 shadow-card" aria-live="polite">
           <div className={cn("flex items-start gap-2.5 rounded-2xl px-3 py-2.5", TONE[tone])}>
-            {tone === "ok" ? <CheckCircle2 className="mt-0.5 size-5 shrink-0" /> : tone === "down" ? <CloudOff className="mt-0.5 size-5 shrink-0" /> : tone === "warn" ? <TriangleAlert className="mt-0.5 size-5 shrink-0" /> : h.status === "activating" || (o?.restoredAt && verify !== "done") ? <Loader2 className="mt-0.5 size-5 shrink-0 animate-spin" /> : <Signal className="mt-0.5 size-5 shrink-0" />}
+            {tone === "ok" ? <CheckCircle2 className="mt-0.5 size-5 shrink-0" /> : tone === "down" ? <CloudOff className="mt-0.5 size-5 shrink-0" /> : tone === "warn" ? <TriangleAlert className="mt-0.5 size-5 shrink-0" /> : v.phase === "activating" || (v.phase === "restored" && verify !== "done") ? <Loader2 className="mt-0.5 size-5 shrink-0 animate-spin" /> : <Signal className="mt-0.5 size-5 shrink-0" />}
             <div>
-              <p className="text-sm font-semibold">{title}</p>
-              <p className="mt-0.5 text-xs text-foreground/80">{text}</p>
+              <p className="text-sm font-semibold">{v.title}</p>
+              {v.lines.map((l) => (
+                <p key={l} className="mt-0.5 text-xs text-foreground/80">{l}</p>
+              ))}
             </div>
           </div>
 
@@ -138,7 +122,7 @@ export function HybridScreen() {
                 <dt className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <r.icon className="size-3.5" /> {r.label}
                 </dt>
-                <dd className={cn("mt-0.5 text-sm font-semibold", r.on ? "text-foreground" : "text-muted-foreground", r.label === "Ana internet" && !r.on && "text-destructive")}>{r.value}</dd>
+                <dd className={cn("mt-0.5 break-words text-[13px] font-semibold", r.tone === "on" ? "text-foreground" : r.tone === "bad" ? "text-destructive" : "text-muted-foreground")}>{r.value}</dd>
               </div>
             ))}
           </dl>
@@ -153,10 +137,18 @@ export function HybridScreen() {
             </div>
           </div>
 
-          {showButton && (
-            <Button size="xl" className="mt-4 w-full rounded-full" onClick={openBox} disabled={!buttonReady || (wantOpen && h.status === "checking")}>
-              {wantOpen && h.status === "checking" ? <Loader2 className="animate-spin" /> : <Power />} Hibrit Box'ı Aç
-            </Button>
+          {v.showOpen && (
+            <>
+              <Button size="xl" className="mt-4 w-full rounded-full" onClick={openBox} disabled={!v.canOpen || busy}>
+                {busy ? <Loader2 className="animate-spin" /> : <Power />} Hibrit Box'ı Aç
+              </Button>
+              {v.openHint && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  {v.openHint}
+                  {hours > 0 ? ` Kesinti ${fmtOngoing(hours)} sürüyor.` : ""}
+                </p>
+              )}
+            </>
           )}
           {ongoing && h.status === "no_device" && (
             h.device ? (
@@ -170,13 +162,16 @@ export function HybridScreen() {
             )
           )}
 
-          <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
-            <Info className="mt-0.5 size-3.5 shrink-0" /> Ana internetin düzelince mobil yedek bağlantı otomatik kapanır ve ana bağlantına dönersin.
-          </p>
+          {v.failbackNote && (
+            <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
+              <Info className="mt-0.5 size-3.5 shrink-0" /> Ana internetin düzeldiğinde otomatik olarak ana bağlantına dönersin.
+            </p>
+          )}
         </section>
 
         <section className="rounded-card bg-card px-5 py-1 shadow-card">
-          <ToggleRow id="hybrid-auto" title="Otomatik yedek geçişi" desc="Kesinti 24 saati aşarsa yedek bağlantın otomatik açılsın." checked={h.autoFailover} onChange={(v) => setAutoFailover(v)} />
+          <ToggleRow id="hybrid-auto" title="Otomatik yedek geçişi" desc="Kesinti 24 saati aşarsa mobil yedek bağlantın otomatik açılsın." checked={h.autoFailover} onChange={(val) => setAutoFailover(val)} />
+          <p className="border-t border-border py-3 text-xs text-muted-foreground">Ana internetin yeniden bağlandığında sistem otomatik olarak sabit bağlantına döner.</p>
         </section>
 
         <TechDetails>
@@ -185,7 +180,7 @@ export function HybridScreen() {
               ["Cihaz", hasDevice ? "Uyumlu Hibrit Box · bağlı" : "Evde uyumlu cihaz yok"],
               ["SIM", hasDevice ? (backupOn ? "Aktif" : "Hazır") : "Yok"],
               ["Mobil bağlantı", backupOn ? "Bağlı · 4.5G · sinyal iyi" : "Beklemede"],
-              ["Bağlantı modu", backupOn ? "Mobil yedek" : "Ana hat (fiber)"],
+              ["Bağlantı modu", backupOn ? "Mobil yedek" : v.main === "Kesik" ? "Bağlantı yok" : "Ana hat (fiber)"],
               ["Açan", h.activatedBy === "auto" ? "Otomatik yedek geçişi" : h.activatedBy === "customer" ? "Sen (manuel)" : "—"],
             ].map(([k, v]) => (
               <div key={k} className="flex gap-2">
