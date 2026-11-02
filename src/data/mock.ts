@@ -421,6 +421,9 @@ export const BILLING_SEED = {
   duplicate: { id: "PAY-88214", amount: 749.9, at: "27 Eki 2026 21:16", channel: "Otomatik ödeme talimatı", ref: "BNK-5521931" },
 };
 
+/** Active discounts shown on the invoice card (demo). */
+export const BILL_DISCOUNTS = ["12 ay sabit fiyat", "Fiber kampanya indirimi −₺200,00", "Online fatura indirimi"];
+
 export const BILLING_CHECKS = [
   { code: "paid_but_debt", label: "Ödeme yapılmasına rağmen borç görünmesi" },
   { code: "duplicate_payment", label: "Mükerrer ödeme veya fatura kaydı" },
