@@ -28,3 +28,10 @@
 - [x] Aktivasyon ekranı: açıklama, ücretsiz vurgusu, cihaz/SIM/kapsama kontrolü, onay
 - [x] Alternatifler: cihaz yok (Cihaz Talep Et + teslimat), kapsama yok, vazgeçme, başarısız + tekrar dene, ana bağlantıya dönüş
 - [x] Panel "Hibrit" sekmesi + Senaryo B (5 sonuç yolu); testler
+
+## Tur 4 — GIGA marka entegrasyonu
+- [x] GIGA kimliği: avatar (dinliyor/düşünüyor/çalışıyor/tamamladı), isim, gradient
+- [x] AI Usta → GIGA Teknik, Fatura Asistanı/Kalkanı ekranı → GIGA Fatura, Taşınma → GIGA Taşınma, Takip → GIGA Takip, AI Ajanlar → GIGA
+- [x] Orta menü düğmesi GIGA; sohbet: karşılama, yetenekler, kaldığın yerden devam, uzmana bağlan, "GIGA yapar / Onayın gerekir" etiketleri
+- [x] Çağrı merkezi sesli triyajı ve SMS GIGA adıyla; bildirimlerde GIGA göndereni
+- [x] GIGA yanıt kuralları testleri

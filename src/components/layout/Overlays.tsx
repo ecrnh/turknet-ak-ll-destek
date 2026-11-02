@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useAppStore, type NotifKind } from "@/features/core/appStore";
 import { useActingAccount, useFamilyStore } from "@/features/family/store";
 import { TurknetLogo } from "./headers";
+import { GigaAvatar } from "@/features/giga/GigaAvatar";
 
 export const NOTIF_ICON: Record<NotifKind, typeof Bot> = {
   agent: Bot,
@@ -46,11 +47,15 @@ export function PushBanner() {
                 if (push.to) navigate({ to: push.to as "/" });
               }}
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                <TurknetLogo className="text-2xl text-primary-foreground" />
-              </span>
+              {push.from === "giga" || push.kind === "agent" ? (
+                <GigaAvatar size={40} mood="listening" label={false} />
+              ) : (
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                  <TurknetLogo className="text-2xl text-primary-foreground" />
+                </span>
+              )}
               <span className="flex-1">
-                <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Turknet · şimdi</span>
+                <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{push.from === "giga" ? "GIGA Takip · TürkNet · şimdi" : push.kind === "agent" ? "GIGA · TürkNet · şimdi" : "Turknet · şimdi"}</span>
                 <span className="block text-sm font-semibold text-foreground">{push.title}</span>
                 <span className="line-clamp-2 block text-xs text-muted-foreground">{push.body}</span>
               </span>

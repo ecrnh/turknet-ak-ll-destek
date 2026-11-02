@@ -166,7 +166,7 @@ const ACTOR: Record<Actor, { label: string; icon: LucideIcon; cls: string }> = {
   system: { label: "Sistem", icon: Bot, cls: "bg-icon-box text-primary" },
   customer: { label: "Müşteri", icon: User, cls: "bg-magenta-soft text-magenta" },
   external: { label: "Dış sistem", icon: Package, cls: "bg-warning-soft text-warning" },
-  agent: { label: "AI", icon: ScanEye, cls: "bg-icon-box text-primary" },
+  agent: { label: "GIGA", icon: ScanEye, cls: "bg-icon-box text-primary" },
   presenter: { label: "Sunum", icon: Users, cls: "bg-muted text-muted-foreground" },
   team: { label: "Ekip", icon: Headset, cls: "bg-success-soft text-success" },
 };

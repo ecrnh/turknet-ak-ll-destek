@@ -3,6 +3,7 @@ import { BellOff, CheckCheck } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { NOTIF_ICON } from "@/components/layout/Overlays";
+import { GigaAvatar } from "@/features/giga/GigaAvatar";
 import { Chip, EmptyState } from "@/components/tn/primitives";
 import { useAppStore, type NotifKind } from "@/features/core/appStore";
 import { fmtRelative } from "@/lib/format";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const FILTERS: { id: NotifKind | "all"; label: string }[] = [
   { id: "all", label: "Tümü" },
-  { id: "agent", label: "Ajanlar" },
+  { id: "agent", label: "GIGA" },
   { id: "support", label: "Destek" },
   { id: "family", label: "Aile" },
 ];
@@ -53,9 +54,13 @@ export function NotificationsScreen() {
               }}
               className={cn("flex w-full items-start gap-3 rounded-card bg-card p-4 text-left shadow-card", !n.read && "ring-1 ring-magenta/30")}
             >
-              <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", n.kind === "campaign" ? "bg-magenta text-magenta-foreground" : n.kind === "agent" ? "bg-primary text-primary-foreground" : "bg-icon-box text-primary")}>
-                <Icon className="size-5" />
-              </span>
+              {n.kind === "agent" || n.from === "giga" ? (
+                <GigaAvatar size={44} label={false} />
+              ) : (
+                <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", n.kind === "campaign" ? "bg-magenta text-magenta-foreground" : "bg-icon-box text-primary")}>
+                  <Icon className="size-5" />
+                </span>
+              )}
               <span className="flex-1">
                 <span className="flex items-center gap-2">
                   <span className="flex-1 font-semibold text-foreground">{n.title}</span>

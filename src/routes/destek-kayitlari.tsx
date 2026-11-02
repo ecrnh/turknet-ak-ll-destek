@@ -3,6 +3,6 @@ import { RecordsScreen } from "@/screens/RecordsScreen";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/destek-kayitlari")({
-  head: () => pageHead("Tüm Destek Kayıtları", "Görüntülü, QR, ajan ve chat destek kayıtların tek zaman çizelgesinde."),
+  head: () => pageHead("Tüm Destek Kayıtları", "Görüntülü, QR, GIGA ve chat destek kayıtların tek zaman çizelgesinde."),
   component: RecordsScreen,
 });

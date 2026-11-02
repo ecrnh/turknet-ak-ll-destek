@@ -59,7 +59,7 @@ function SimpleHome() {
       <Big icon={ReceiptText} label="Faturam" to="/faturalar" />
       <Big icon={WifiOff} label="İnternetim çalışmıyor" to="/ai-usta" />
       <Big icon={Video} label="Görüntülü yardım al" to="/goruntulu-destek" />
-      <Big icon={MessageCircleQuestion} label="Soru sor" onClick={() => openHelp()} />
+      <Big icon={MessageCircleQuestion} label="GIGA'ya sor" onClick={() => openHelp()} />
     </div>
   );
 }

@@ -38,7 +38,7 @@ export function FeedbackButton({ className }: { className?: string }) {
         <MessageSquareWarning className="size-6 shrink-0 text-magenta" strokeWidth={1.75} />
         <span className="flex-1">
           <span className="block font-semibold text-primary">Bu işlemi uygulamadan yapamadın mı?</span>
-          <span className="block text-xs text-muted-foreground">Bize söyle, asistana yazmana gerek kalmasın.</span>
+          <span className="block text-xs text-muted-foreground">Bize söyle, GIGA'ya yazmana gerek kalmasın.</span>
         </span>
       </button>
       <BottomSheet open={open} onClose={() => setOpen(false)} title="Bize söyle">

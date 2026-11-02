@@ -31,7 +31,7 @@ export function HelpScreen() {
             <Link to="/ai-usta" className="relative flex min-h-[112px] flex-col justify-between rounded-2xl bg-plum p-4 text-primary-foreground">
               <NewBadge className="absolute right-3 top-3" />
               <ScanEye className="size-7" strokeWidth={1.5} />
-              <span className="font-semibold leading-tight">AI Usta ile Çöz</span>
+              <span className="font-semibold leading-tight">GIGA Teknik ile Çöz</span>
             </Link>
             <Link to="/baglanti" className="flex min-h-[112px] flex-col justify-between rounded-2xl border border-border p-4 text-primary">
               <Wifi className="size-7" strokeWidth={1.5} />

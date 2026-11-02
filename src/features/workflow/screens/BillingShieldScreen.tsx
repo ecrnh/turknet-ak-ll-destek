@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -16,11 +16,12 @@ export function BillingShieldScreen() {
   const bills = useWorkflowStore((s) => s.bills);
   const payments = useWorkflowStore((s) => s.payments);
   const wfs = useWorkflowStore((s) => s.workflows).filter((w) => w.type === "billing_check");
+  const byGiga = useSearch({ from: "/fatura-kalkani" }).kontrol === 1;
   const [ran, setRan] = useState(false);
   const bill = bills[0]!;
   const findings = compareBilling(bill, payments);
   const active = wfs.find(isActive);
-  const checked = ran || wfs.length > 0;
+  const checked = ran || byGiga || wfs.length > 0;
 
   const run = () => {
     const r = runBillingShield();
@@ -31,14 +32,14 @@ export function BillingShieldScreen() {
 
   return (
     <div>
-      <PageHeader title="Fatura Kalkanı" />
+      <PageHeader title="GIGA Fatura" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">
             <ShieldCheck className="size-6" />
           </span>
           <p className="mt-3 text-lg font-semibold leading-snug">Faturanızı ve ödemelerinizi biz karşılaştıralım; olası bir farklılığı siz fark etmeden yakalayalım.</p>
-          <p className="mt-2 text-xs text-primary-foreground/80">Fatura Kalkanı kayıtları kendisi değiştirmez. İade veya borç düzeltme yalnızca sizin onayınızla ve yetkili ekip üzerinden yapılır.</p>
+          <p className="mt-2 text-xs text-primary-foreground/80">GIGA Fatura, Fatura Kalkanı ile kayıtları karşılaştırır ama kendisi değiştirmez. İade veya borç düzeltme yalnızca sizin onayınızla ve yetkili ekip üzerinden yapılır.</p>
         </div>
 
         {active && (

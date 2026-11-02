@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { CircleHelp, House, LayoutGrid, ReceiptText, UserRound } from "lucide-react";
+import { House, LayoutGrid, ReceiptText, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/features/core/appStore";
+import { GigaAvatar } from "@/features/giga/GigaAvatar";
 
 const OPS_PREFIXES = ["/islemler", "/yardim", "/islem/", "/qr", "/goruntulu-destek", "/hiz-testi", "/dijital-onarim", "/ajanlar", "/hibrit", "/destek-kayitlari", "/takip", "/surec", "/tasinma", "/ai-usta", "/baglanti", "/fatura-kalkani"];
 const ACC_PREFIXES = ["/hesabim", "/aile", "/tercihler", "/islem-gecmisi"];
@@ -36,16 +37,16 @@ export function BottomNav() {
       <div className="flex h-full items-stretch">
         <Tab id="home" to="/" label="Ana Sayfa" Icon={House} />
         <Tab id="ops" to="/islemler" label="İşlemler" Icon={LayoutGrid} />
-        <div className="w-[84px] shrink-0" />
+        <div className="flex w-[84px] shrink-0 items-end justify-center pb-2.5 text-[0.8rem] font-bold tracking-[0.08em] text-primary" aria-hidden>GIGA</div>
         <Tab id="bills" to="/faturalar" label="Faturalarım" Icon={ReceiptText} />
         <Tab id="account" to="/hesabim" label="Hesabım" Icon={UserRound} />
       </div>
       <button
         onClick={() => openHelp()}
-        aria-label="Yardım Merkezi"
-        className="absolute left-1/2 top-0 flex h-[66px] w-[66px] -translate-x-1/2 -translate-y-[38%] items-center justify-center rounded-full bg-help-btn text-primary-foreground shadow-float ring-4 ring-card transition-transform active:scale-95"
+        aria-label="GIGA'ya sor"
+        className="absolute left-1/2 top-0 flex h-[66px] w-[66px] -translate-x-1/2 -translate-y-[42%] items-center justify-center rounded-full bg-card shadow-float ring-4 ring-card transition-transform active:scale-95"
       >
-        <CircleHelp className="size-8" strokeWidth={1.5} />
+        <GigaAvatar size={54} label={false} />
       </button>
     </nav>
   );

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { startAiUsta, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
 import { DemoNote, StatusPill } from "../components/ui";
+import { GigaAvatar } from "@/features/giga/GigaAvatar";
 
 export function AiUstaStartScreen() {
   const navigate = useNavigate();
@@ -14,14 +15,17 @@ export function AiUstaStartScreen() {
 
   return (
     <div>
-      <PageHeader title="AI Usta" />
+      <PageHeader title="GIGA Teknik" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
           <div className="flex items-center gap-4">
-            <img src={modemImg} alt="Modem" width={96} height={96} className="h-20 w-20 object-contain" />
+            <div className="relative shrink-0">
+              <img src={modemImg} alt="Modem" width={96} height={96} className="h-20 w-20 object-contain" />
+              <GigaAvatar size={40} mood={active ? "working" : "listening"} className="absolute -right-2 -top-3" />
+            </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Görsel teknik destek</p>
-              <p className="text-lg font-semibold leading-snug">Modeminizi gösterin, adım adım birlikte çözelim.</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">GIGA Teknik · görsel destek</p>
+              <p className="text-lg font-semibold leading-snug">Ben GIGA. Modemini göster, sorunu birlikte çözelim.</p>
             </div>
           </div>
         </div>
@@ -44,14 +48,14 @@ export function AiUstaStartScreen() {
 
         {regional && (
           <div className="rounded-2xl border border-warning/30 bg-warning-soft p-3.5 text-sm">
-            <p className="font-semibold">Bölgenizde olası bir arıza var</p>
-            <p className="text-muted-foreground">Sorun sizden kaynaklı görünmüyor; modeminizde bir şey yapmanıza gerek yok.</p>
+            <p className="font-semibold">Bölgende olası bir arıza var</p>
+            <p className="text-muted-foreground">Sorun senden kaynaklı görünmüyor; modeminde bir şey yapmana gerek yok.</p>
           </div>
         )}
 
         {active ? (
           <Link to="/surec/$id" params={{ id: active.id }} className="flex items-center justify-between rounded-card bg-card p-4 shadow-card">
-            <span className="font-semibold text-primary">Devam eden AI Usta oturumunuz</span>
+            <span className="font-semibold text-primary">Devam eden GIGA Teknik oturumun</span>
             <StatusPill status={active.status} />
           </Link>
         ) : (
@@ -69,16 +73,16 @@ export function AiUstaStartScreen() {
 
         <div className="rounded-card bg-card p-5 text-sm text-muted-foreground shadow-card">
           <p className="flex items-center gap-2 font-semibold text-primary">
-            <ScanEye className="size-5" /> Nasıl çalışır?
+            <ScanEye className="size-5" /> GIGA Teknik nasıl çalışır?
           </p>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
-            <li>Bağlantınızı ve açık arıza kayıtlarını kontrol ederim.</li>
-            <li>Modem ışıklarınızın fotoğrafını isterim.</li>
-            <li>Size tek seferde bir güvenli adım gösteririm, sonucu birlikte doğrularız.</li>
-            <li>Çözülmezse yaptığımız her şeyi uzmana iletirim; sorunu baştan anlatmazsınız.</li>
+            <li>Bağlantını, modem durumunu ve açık arıza kayıtlarını kontrol ederim.</li>
+            <li>Modem ışıklarının fotoğrafını ister, ne anlama geldiklerini açıklarım.</li>
+            <li>Tek seferde bir güvenli adım gösteririm; izin verdiğin uzaktan düzeltmeleri ben yaparım, sonucu birlikte doğrularız.</li>
+            <li>Çözülmezse yaptığımız her şeyi uzmana iletirim; sorunu baştan anlatmazsın.</li>
           </ol>
         </div>
-        <p className="px-1 text-xs text-muted-foreground">Çağrı merkezini aradıysanız, size gönderilen SMS'teki bağlantı sizi doğrudan buraya getirir; sorununuzu tekrar anlatmanıza gerek kalmaz.</p>
+        <p className="px-1 text-xs text-muted-foreground">Çağrı merkezini aradıysan, GIGA'nın gönderdiği SMS'teki bağlantı seni doğrudan buraya getirir; sorununu tekrar anlatmana gerek kalmaz.</p>
         <DemoNote className="pb-2">Görsel analiz bu prototipte simülasyondur; gerçek bir görüntü modeli kullanılmaz.</DemoNote>
       </div>
     </div>

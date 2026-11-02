@@ -7,6 +7,7 @@ import { isActive } from "../rules";
 import { AuditList, DemoNote, TechDetails, WorkflowCard } from "../components/ui";
 import { ConnectivityPanel } from "../components/panels";
 import { IntentBox } from "../components/IntentBox";
+import { GigaAvatar } from "@/features/giga/GigaAvatar";
 
 /** "Benim İçin Takip Et": every workflow, decision and dependency in one place. */
 export function TrackHubScreen() {
@@ -37,10 +38,15 @@ export function TrackHubScreen() {
       <PageHeader title="İşlemlerim" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Benim İçin Takip Et</p>
-          <p className="mt-1 text-xl font-semibold leading-snug">Sizin için takip ettiğimiz işlemler</p>
+          <div className="flex items-center gap-3">
+            <GigaAvatar size={44} mood={decisions.length ? "listening" : active.length ? "working" : "idle"} />
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">GIGA Takip · Benim İçin Takip Et</p>
+              <p className="text-xl font-semibold leading-snug">Senin için takip ettiğim işlemler</p>
+            </div>
+          </div>
           <p className="mt-1 text-sm text-primary-foreground/80">
-            {active.length ? `${active.length} işlem takipte${decisions.length ? ` · ${decisions.length} tanesi kararınızı bekliyor` : ""}` : "Şu an takip ettiğimiz bir işlem yok."}
+            {active.length ? `${active.length} işlem takipte${decisions.length ? ` · ${decisions.length} tanesi kararınızı bekliyor` : ""}` : "Şu an takip ettiğim bir işlem yok."}
           </p>
           <IntentBox onDark className="mt-4" />
         </div>
@@ -91,7 +97,7 @@ export function TrackHubScreen() {
               </Link>
               <Link to="/ai-usta" className="flex flex-col items-center gap-1.5 rounded-2xl bg-icon-box p-3">
                 <ScanEye className="size-5" />
-                AI Usta
+                GIGA Teknik
               </Link>
               <Link to="/fatura-kalkani" className="flex flex-col items-center gap-1.5 rounded-2xl bg-icon-box p-3">
                 <ShieldCheck className="size-5" />

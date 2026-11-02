@@ -93,7 +93,7 @@ export function BillsScreen() {
           </div>
         )}
 
-        <Row title="Fatura Kalkanı" to="/fatura-kalkani" icon={ShieldCheck} />
+        <Row title="GIGA Fatura" to="/fatura-kalkani" icon={ShieldCheck} />
         <Row title="Geçmiş Faturalarımı Görüntüle" to="/faturalar/gecmis" icon={ReceiptText} />
         <Row title="Otomatik Ödeme Talimatı Ver" to="/islem/otomatik-odeme" icon={CreditCard} />
         <Row title="Fatura Tercihlerimi Düzenle" to="/islem/fatura-tercih" icon={ArrowRight} />

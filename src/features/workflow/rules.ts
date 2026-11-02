@@ -125,7 +125,7 @@ export function shouldEscalateAfterRetry(retries: number): boolean {
   return retries >= MAX_EXTERNAL_RETRIES;
 }
 
-/** AI Usta hands over to live support after this many failed self-service steps. */
+/** GIGA Teknik hands over to live support after this many failed self-service steps. */
 export const AI_USTA_MAX_ATTEMPTS = 2;
 
 

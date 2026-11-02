@@ -70,7 +70,7 @@ export function SpeedTestScreen() {
         </div>
         {phase === "done" && net.speed < 40 && (
           <Banner tone="warning" className="mt-4 w-full" title="Hızın paketinin altında">
-            Hız Koruyucu Ajan bunu inceleyebilir.
+            GIGA bunu senin için inceleyebilir.
           </Banner>
         )}
         {phase === "done" && net.speed >= 90 && (
