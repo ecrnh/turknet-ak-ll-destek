@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { PlainNote } from "@/components/tn/primitives";
 import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, Loader2, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
@@ -9,7 +9,7 @@ import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
 import { fmtRelative, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { choiceOf } from "../engine";
-import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY } from "../rules";
+import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY, REPAIR_RESULT, REPAIR_STAGES, repairStageStates, solutionText, type RepairOutcome, type StageState } from "../rules";
 import { rateUsta, repairResults, resumeUsta, ustaIssue } from "../services/aiUsta";
 import { measureNearModem } from "../services/proactive";
 import { resumeBillingReview } from "../services/billing";
@@ -268,7 +268,82 @@ export function UstaWelcome({ wf }: { wf: Workflow }) {
   );
 }
 
-export function AiUstaPanel({ wf }: { wf: Workflow }) {
+const STAGE_LABEL: Record<StageState, string> = { done: "Tamamlandı", running: "Kontrol ediliyor", pending: "Bekliyor" };
+
+/**
+ * "Bağlantı kontrolü": the five background checks shown as three plain stages
+ * and a single result line. The individual checks stay behind "Teknik detayları gör".
+ */
+export function RepairProgress({ wf }: { wf: Workflow }) {
+  const [details, setDetails] = useState(false);
+  const repairStep = wf.steps.find((x) => x.key === "repair")?.status;
+  if (!repairStep || repairStep === "pending") return null;
+  const results = repairResults(wf.data);
+  const checkIdx = Number(wf.data["checkIdx"] ?? 0);
+  const outcome = (String(wf.data["repairOutcome"] ?? "") || null) as RepairOutcome | null;
+  const states = repairStageStates(checkIdx, outcome);
+  const running = repairStep === "in_progress";
+  const issue = ustaIssue(wf.id);
+  const etaH = Number(wf.data["etaH"] ?? 0) || null;
+  return (
+    <Box>
+      <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+        <Radar className="size-4 text-magenta" /> Bağlantı kontrolü
+      </p>
+      <ol className="mt-3 space-y-3">
+        {REPAIR_STAGES.map((st, i) => {
+          const state = states[i]!;
+          return (
+            <li key={st.id} className="flex items-start gap-2.5">
+              <span className="mt-0.5 shrink-0">
+                {state === "done" ? <CheckCircle2 className="size-4 text-success" /> : state === "running" ? <Loader2 className="size-4 animate-spin text-magenta" /> : <span className="block h-4 w-4 rounded-full border-2 border-muted" />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-2">
+                  <span className={cn("text-sm font-semibold", state === "pending" ? "text-muted-foreground" : "text-foreground")}>{st.title}</span>
+                  <span className={cn("shrink-0 text-[11px] font-semibold", state === "done" ? "text-success" : state === "running" ? "text-magenta" : "text-muted-foreground")}>{STAGE_LABEL[state]}</span>
+                </span>
+                <span className="block text-xs text-muted-foreground">{st.id === "solution" && outcome ? solutionText(outcome, etaH) : st.desc}</span>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      {outcome && (
+        <p className={cn("mt-3 rounded-2xl px-3 py-2 text-sm font-semibold", outcome === "clear" ? "bg-success-soft text-success" : "bg-warning-soft text-warning")} role="status">
+          {REPAIR_RESULT[outcome]}
+        </p>
+      )}
+      <button type="button" onClick={() => setDetails((v) => !v)} aria-expanded={details} className="mt-3 text-xs font-semibold text-primary underline-offset-2 hover:underline">
+        {details ? "Teknik detayları gizle" : "Teknik detayları gör"}
+      </button>
+      {details && (
+        <ul className="mt-2 space-y-1.5 rounded-2xl bg-muted/60 p-3">
+          {REPAIR_CHECKS.map((c, i) => {
+            const r = results[c.id];
+            const now = running && i === checkIdx;
+            return (
+              <li key={c.id} className="flex items-start gap-2 text-xs">
+                <span className="mt-px shrink-0">
+                  {r === undefined ? (now ? <Loader2 className="size-3.5 animate-spin text-magenta" /> : <span className="block h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/30" />) : r ? <CheckCircle2 className="size-3.5 text-success" /> : <ShieldAlert className="size-3.5 text-warning" />}
+                </span>
+                <span>
+                  <span className="font-semibold text-foreground">{c.label}</span>
+                  {r !== undefined && <span className="text-muted-foreground"> · {r ? c.ok : c.id === "regional" ? "Bölgede bilinen bir kesinti var" : issue.finding}</span>}
+                  {r === undefined && outcome === "incomplete" && i === checkIdx && <span className="text-muted-foreground"> · yanıt alınamadı</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p className="mt-3 text-[11px] text-muted-foreground">Kontroller bu prototipte simülasyondur; gerçek TürkNet sistemlerine bağlanılmaz.</p>
+    </Box>
+  );
+}
+
+/** `inChat`: the GIGA chat already shows the progress card and its own reply, so they are not repeated. */
+export function AiUstaPanel({ wf, inChat }: { wf: Workflow; inChat?: boolean }) {
   // Picks up a session whose next automatic check never got queued.
   useEffect(() => resumeUsta(wf.id), [wf.id, wf.status]);
   const leds = String(wf.data["leds"] ?? "")
@@ -290,48 +365,8 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
   const open = wf.status !== "completed" && !wf.handoff;
   return (
     <div className="space-y-3">
-    {(repairing || st("repair") === "done") && (
-      <>
-        {repairing && <GigaNote mood="working">Anladım. Önce bağlantını uzaktan kontrol edelim. Dijital onarımı başlatıyorum.</GigaNote>}
-        <Box>
-          <div className="flex items-center justify-between">
-            <p className="flex items-center gap-2 text-sm font-semibold text-primary">
-              <Radar className="size-4 text-magenta" /> Dijital onarım
-            </p>
-            <span className="text-xs font-semibold text-muted-foreground">{Math.min(checkIdx, REPAIR_CHECKS.length)}/{REPAIR_CHECKS.length}</span>
-          </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-magenta transition-all duration-700" style={{ width: `${(Math.min(checkIdx, REPAIR_CHECKS.length) / REPAIR_CHECKS.length) * 100}%` }} />
-          </div>
-          <ul className="mt-3 space-y-2.5">
-            {REPAIR_CHECKS.map((c, i) => {
-              const r = results[c.id];
-              const running = repairing && i === checkIdx;
-              return (
-                <li key={c.id} className="flex items-start gap-2.5 text-sm">
-                  <span className="mt-0.5 shrink-0">
-                    {r === undefined ? (
-                      running ? <Loader2 className="size-4 animate-spin text-magenta" /> : <span className="block h-4 w-4 rounded-full border-2 border-muted" />
-                    ) : r ? (
-                      <CheckCircle2 className="size-4 text-success" />
-                    ) : (
-                      <ShieldAlert className="size-4 text-warning" />
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className={cn("block font-semibold", r === undefined && !running ? "text-muted-foreground" : "text-foreground")}>{c.label}</span>
-                    {(running || r !== undefined) && (
-                      <span className="block text-xs text-muted-foreground">{running ? c.running : r ? c.ok : issue.finding}</span>
-                    )}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-          <p className="mt-3 text-[11px] text-muted-foreground">Kontroller bu prototipte simülasyondur; gerçek TürkNet sistemlerine bağlanılmaz.</p>
-        </Box>
-      </>
-    )}
+    {!inChat && repairing && <GigaNote mood="working">Bağlantını kontrol ediyorum. Önce sorunun evindeki bağlantıdan mı yoksa bölgesel bir kesintiden mi kaynaklandığını anlamaya çalışalım.</GigaNote>}
+    {!inChat && <RepairProgress wf={wf} />}
     {finding && open && (st("remote") === "in_progress" || st("verify") === "in_progress") && (
       <>
         <GigaNote mood="working">Bağlantında bir sorun tespit ettim. Önce uzaktan çözebileceğimiz adımları deneyelim.</GigaNote>
