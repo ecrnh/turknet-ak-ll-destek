@@ -58,7 +58,7 @@ const RULES: Record<Exclude<GigaTopic, "track" | "yes" | "no" | "greeting" | "th
   video: [["goruntulu", 4], ["video", 3], ["kamerali gorus", 4], ["yuz yuze", 3]],
   privacy: [["izliyor", 4], ["izleme", 3], ["gizlilik", 4], ["kisisel veri", 4], ["verilerim", 3], ["kvkk", 4], ["neyi kontrol", 4], ["ne kontrol", 3], ["hangi bilgi", 3], ["mesajlarimi", 3], ["gecmisimi", 3], ["gezinme", 3]],
   hallet: [["hallet", 4], ["benim icin yap", 3]],
-  relocation: [["tasin", 4], ["nakl", 4], ["yeni adres", 4], ["adres degis", 4], ["adresimi degis", 4], ["ev degis", 3], ["yeni ev", 3], ["baska eve", 3], ["baska sehre", 3], ["tasiyorum", 4], ["tasima", 3]],
+  relocation: [["tasin", 4], ["nakil|nakl", 4], ["yeni adres", 4], ["adres degis", 4], ["adresimi degis", 4], ["ev degis", 3], ["yeni ev", 3], ["baska eve", 3], ["baska sehre", 3], ["tasiyorum", 4], ["tasima", 3]],
   billing: [["fatura", 3], ["mukerrer", 4], ["iki kez", 3], ["iki kere", 3], ["tutarsiz", 4], ["borc", 3], ["ucret", 2], ["tahsil", 3], ["pahali", 3], ["yuksek", 1], ["fazla", 1], ["zam", 2], ["itiraz", 3], ["neden bu kadar", 2], ["kampanya bitti", 2]],
   refund: [["iade", 4], ["param geri", 4], ["geri odeme", 4]],
   payment: [["nasil ode", 4], ["odeme yap", 3], ["otomatik odeme", 4], ["talimat", 3], ["son odeme", 3], ["kartla", 2], ["kredi karti", 2], ["ode", 1]],
@@ -106,6 +106,8 @@ function tokenMatches(token: string, stem: string): boolean {
 }
 
 function matches(text: string, tokens: string[], stem: string): boolean {
+  // "a|b": spelling variants that count once.
+  if (stem.includes("|")) return stem.split("|").some((s) => matches(text, tokens, s));
   if (stem.includes(" ")) return text.includes(stem);
   if (stem.length <= 3) return tokens.includes(stem);
   return tokens.some((t) => tokenMatches(t, stem));
