@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { PlainNote } from "@/components/tn/primitives";
 import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
 import { motion } from "framer-motion";

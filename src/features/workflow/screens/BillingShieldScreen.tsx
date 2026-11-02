@@ -1,4 +1,5 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { PlainNote } from "@/components/tn/primitives";
 import { motion } from "framer-motion";
 import { CalendarClock, CheckCircle2, ChevronRight, CreditCard, Loader2, ReceiptText, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useState } from "react";

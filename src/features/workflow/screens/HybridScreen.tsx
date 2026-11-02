@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { PlainNote } from "@/components/tn/primitives";
 import { CheckCircle2, CloudOff, Info, Loader2, Router, ShieldCheck, Signal, TriangleAlert } from "lucide-react";
 import { useEffect } from "react";
 import { PageHeader } from "@/components/layout/headers";
