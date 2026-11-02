@@ -77,27 +77,6 @@ export function AiUstaStartScreen() {
           <Entry icon={Gauge} title="İnternetim yavaş" desc="Hızını ölçer, uzaktan iyileştirebileceğimi denerim" onClick={() => go(startSpeedCheck())} />
           <Entry icon={Router} title="Modemimde sorun var" desc="Modem ışıklarını kamerayla birlikte kontrol edelim" onClick={() => notWorking("modem")} />
         </div>
-
-        <div className="rounded-card bg-card p-5 shadow-card">
-          <p className="font-semibold text-primary">Telefonla destek almak istiyorum</p>
-          <p className="mt-1 text-sm text-muted-foreground">Telefonda da yardımcı olabilirim. İstersen sana SMS ile bir bağlantı gönderirim; uygulamada kaldığımız yerden devam ederiz.</p>
-          <button type="button" onClick={call} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-success text-sm font-semibold text-success-foreground">
-            <Phone className="size-4" /> TürkNet'i ara
-          </button>
-          <p className="mt-2 text-center text-[11px] text-muted-foreground">Gerçek arama yapılmaz · görüşme simülasyondur</p>
-        </div>
-
-        <div className="rounded-card bg-card p-5 text-sm text-muted-foreground shadow-card">
-          <p className="flex items-center gap-2 font-semibold text-primary">
-            <ScanEye className="size-5" /> GIGA Teknik nasıl çalışır?
-          </p>
-          <ol className="mt-2 list-decimal space-y-1 pl-5">
-            <li>Bağlantını, modem durumunu ve açık arıza kayıtlarını kontrol ederim.</li>
-            <li>Kamerayla modem ışıklarına bakar, ne anlama geldiklerini açıklarım.</li>
-            <li>Tek seferde bir güvenli adım gösteririm; sonucu birlikte doğrularız.</li>
-            <li>Çözülmezse yaptığımız her şeyi uzmana iletirim; sorunu baştan anlatmazsın.</li>
-          </ol>
-        </div>
         <GigaNote>Önce birlikte çözmeyi deneyelim. Çözdüğümüz sorunlar için destek kaydı açmam; yalnızca uzman gerekirse kayıt oluştururum.</GigaNote>
         <DemoNote className="pb-2">Görsel analiz ve telefon görüşmesi bu prototipte simülasyondur; gerçek görüntü modeli veya arama kullanılmaz.</DemoNote>
       </div>
