@@ -4,7 +4,7 @@
  * scenario panel (DemoConfig). Replace these adapters with real API clients
  * later; business logic in services/* only depends on their return shapes.
  */
-import { CURRENT_ADDRESS, MODEM_LED_DEMO, type DemoAddress } from "@/data/mock";
+import { CURRENT_ADDRESS, INTERNET_LIGHT_STATES, type DemoAddress, type InternetLight } from "@/data/mock";
 import { useWorkflowStore } from "./store";
 import type { EligibilityResult } from "./rules";
 
@@ -62,8 +62,15 @@ export const MockNetworkAPI = {
 
 export const MockVisionAPI = {
   name: "Görsel analiz (simülasyon · gerçek model yok)",
-  analyzeModemPhoto() {
-    return MODEM_LED_DEMO;
+  /** Reads the light the customer showed (simulated camera); nothing is analysed for real. */
+  analyzeModemPhoto(internet: InternetLight = "red") {
+    const st = INTERNET_LIGHT_STATES.find((x) => x.id === internet) ?? INTERNET_LIGHT_STATES[0];
+    return [
+      { key: "power", name: "Power", state: "Yeşil sabit", ok: true },
+      { key: "wan", name: "WAN / PON", state: "Yeşil sabit", ok: true },
+      { key: "internet", name: "Internet", state: st.label, ok: st.ok },
+      { key: "wifi", name: "Wi-Fi", state: "Yanıp sönüyor", ok: true },
+    ];
   },
 };
 
