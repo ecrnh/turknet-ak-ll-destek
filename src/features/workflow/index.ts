@@ -9,6 +9,8 @@ export * from "./services/billing";
 export * from "./services/aiUsta";
 export * from "./services/proactive";
 export * from "./services/hybrid";
+export * from "./services/liveSupport";
+export * from "./services/autopay";
 export { useWorkflowStore } from "./store";
 
 import { getWf } from "./engine";

@@ -172,3 +172,17 @@ export function verifyProactive(id: string) {
   });
 }
 registerOp("proactive.verify", verifyProactive);
+
+/**
+ * Customer-run diagnostic: "Modeminin yanına yaklaşarak tekrar ölçüm yapalım."
+ * Separates Wi-Fi coverage from line performance. Never changes the plan or claims a fix.
+ */
+export function measureNearModem(id: string): number | null {
+  const wf = getWf(id);
+  if (!wf || (wf.type !== "speed_optimize" && wf.type !== "proactive_fault") || wf.data["nearSpeed"] != null) return null;
+  const before = Number(wf.data["speedBefore"] ?? 20);
+  const near = before + 3; // demo: nearly the same speed next to the modem → not a Wi-Fi coverage problem
+  setData(id, { nearSpeed: near });
+  log(id, "customer", "info", `Modemin yanında ölçüm: ${near} Mbps (demo)`, "Modem yanında da düşükse sorun Wi-Fi kapsaması değil, hat veya modem tarafındadır");
+  return near;
+}

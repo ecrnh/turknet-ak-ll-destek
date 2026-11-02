@@ -3,7 +3,7 @@
  * Branches on the infrastructure answer: eligible / eligible via external
  * provider / no port / no response. Never invents a successful answer.
  */
-import { APPOINTMENT_SLOTS, CURRENT_ADDRESS, SUBSCRIPTION, TEAMS, TEMP_MOBILE_OFFER, type DemoAddress } from "@/data/mock";
+import { APPOINTMENT_SLOTS, CURRENT_ADDRESS, FIELD_TEAMS, SUBSCRIPTION, TEAMS, TEMP_MOBILE_OFFER, type DemoAddress } from "@/data/mock";
 import { ask, book, chain, complete, createWorkflow, escalate, getWf, log, notify, plan, registerDecision, registerOp, schedule, setData, setStatus, setWorkOrder, step, stepStatus, workOrder } from "../engine";
 import { MockInfraAPI, MockProviderAPI } from "../mockServices";
 import { relocationPlan, shouldEscalateAfterRetry, type EligibilityResult } from "../rules";
@@ -12,14 +12,14 @@ import { acceptTempInternet, setConnectivity, switchBackFromTemp, tempOfWorkflow
 
 export const RELOCATION_LABELS: Record<string, string> = {
   context: "Abonelik ve adres kontrolü",
-  eligibility: "Yeni adres altyapı sorgusu",
+  eligibility: "Yeni adres kontrolü",
   infra_followup: "Altyapı / port takip talebi",
   temp_offer: "Geçici internet kararı",
   external: "Altyapı sağlayıcı yanıtı",
-  transfer: "Nakil talebi ve iş emri",
-  appointment: "Kurulum randevusu",
-  install: "Kurulum ve aktivasyon",
-  verify: "Yeni bağlantı doğrulaması",
+  transfer: "Taşınma talebi başlatıldı",
+  appointment: "Randevu talebi ve ekip onayı",
+  install: "Saha ekibi ziyareti ve kurulum",
+  verify: "Yeni bağlantı aktif",
   old_line: "Eski adres hizmet sonlandırma",
 };
 
@@ -127,7 +127,9 @@ export function offerTemp(id: string) {
       prompt: wf?.data["eligibility"] === "no_port" ? "Yeni adresinizde boş port yok. Hazır olana kadar geçici internet ister misiniz?" : "Sabit internetiniz hazır olana kadar geçici internet ister misiniz?",
       detail: `${TEMP_MOBILE_OFFER.coverage}. Otomatik satın alınmaz; onay verirseniz sipariş oluşturulur.`,
       options: [
-        { id: "accept", label: "Teklifi Kabul Et", desc: `${TEMP_MOBILE_OFFER.device} · ${TEMP_MOBILE_OFFER.price} · ${TEMP_MOBILE_OFFER.quota}`, primary: true, terms: TEMP_MOBILE_OFFER.terms },
+        W.getState().config.ownsBox
+          ? { id: "accept", label: "Teklifi Kabul Et", desc: `Evinizdeki Hibrit Box yeni adreste kullanılır; cihaz gönderimi gerekmez · ${TEMP_MOBILE_OFFER.price} · ${TEMP_MOBILE_OFFER.quota}`, primary: true, terms: TEMP_MOBILE_OFFER.terms }
+          : { id: "accept", label: "Teklifi Kabul Et", desc: `${TEMP_MOBILE_OFFER.device} · ${TEMP_MOBILE_OFFER.price} · ${TEMP_MOBILE_OFFER.quota}`, primary: true, terms: TEMP_MOBILE_OFFER.terms },
         { id: "decline", label: "Daha Sonra", desc: "Kurulum gününe kadar beklerim" },
       ],
     },
@@ -217,11 +219,43 @@ export function offerAppointment(id: string) {
 registerOp("relocation.offerAppointment", offerAppointment);
 
 registerDecision("relocation_slot", (id, opt) => {
-  const slot = APPOINTMENT_SLOTS.find((s) => s.id === opt)!;
-  const wo = workOrder(id, { kind: "installation", title: "Yeni adres kurulum iş emri", team: TEAMS.field }, "Randevu seçildi; kurulum iş emri randevuya bağlanır");
+  const slot = APPOINTMENT_SLOTS.find((s) => s.id === opt) ?? APPOINTMENT_SLOTS[0]!;
+  setData(id, { slotId: slot.id, slotLabel: slot.label, match: "searching", team: null, declinedTeam: null });
+  step(id, "appointment", "in_progress", `${slot.label} için adresinize yakın uygun ekipler kontrol ediliyor`);
+  log(id, "system", "info", `Saha ekibi eşleştirme başladı: ${slot.label}`, "Müşteri ekipleri tek tek aramaz; uygun ekip sistem tarafından bulunur (demo)");
+  schedule("relocation.teamRequest", id, 1400, "1");
+});
+
+/** Field-team matching (demo): send the request to the next available team. */
+registerOp("relocation.teamRequest", (id, n) => {
+  const wf = getWf(id);
+  if (!wf || stepStatus(id, "appointment") !== "in_progress") return;
+  const tryN = Number(n ?? 1);
+  const team = FIELD_TEAMS[Math.min(tryN, FIELD_TEAMS.length) - 1]!;
+  setData(id, { match: "requested", team: team.name, teamTry: tryN });
+  log(id, "external", "external", `Randevu isteği gönderildi: ${team.name} · ${String(wf.data["slotLabel"])} (demo)`);
+  schedule("relocation.teamAnswer", id, 1600, String(tryN));
+});
+
+registerOp("relocation.teamAnswer", (id, n) => {
+  const wf = getWf(id);
+  if (!wf || stepStatus(id, "appointment") !== "in_progress") return;
+  const tryN = Number(n ?? 1);
+  const team = FIELD_TEAMS[Math.min(tryN, FIELD_TEAMS.length) - 1]!;
+  if (W.getState().config.teamMatch === "second" && tryN < 2) {
+    setData(id, { match: "declined", declinedTeam: team.name });
+    step(id, "appointment", "in_progress", "Bu saat için ekip uygunluğu değişti; başka bir ekip aranıyor");
+    log(id, "external", "external", `${team.name} bu saati kabul edemedi (demo)`, "Reddedilen istek müşteriye iş olarak yansıtılmaz; sıradaki uygun ekip denenir");
+    notify(id, "Randevunuz için başka bir ekip arıyoruz", "Bu saat için ekip uygunluğu değişti. Sizin için başka bir ekip arıyoruz; tekrar aramanız gerekmiyor.", "quiet");
+    schedule("relocation.teamRequest", id, 1400, String(tryN + 1));
+    return;
+  }
+  const slot = APPOINTMENT_SLOTS.find((s) => s.id === wf.data["slotId"]) ?? APPOINTMENT_SLOTS[0]!;
+  const wo = workOrder(id, { kind: "installation", title: "Yeni adres kurulum iş emri", team: `${TEAMS.field} · ${team.name}` }, "Ekip randevuyu kabul etti; kurulum iş emri randevuya bağlanır");
   book(id, slot, wo.id);
-  step(id, "appointment", "done", slot.label);
-  notify(id, "Randevunuz kaydedildi", `${slot.label} · Teknisyen gelmeden önce SMS alacaksınız (demo).`, "quiet");
+  setData(id, { match: "accepted", team: team.name });
+  step(id, "appointment", "done", `${slot.label} · ${team.name}`);
+  notify(id, "Taşınma randevunuz onaylandı", `${slot.label} · ${team.name}. Ekip yola çıkmadan önce SMS alacaksınız (demo).`);
   chain("relocation.install", id, 4000);
 });
 

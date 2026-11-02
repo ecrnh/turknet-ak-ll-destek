@@ -188,3 +188,7 @@ export function canActivateHybrid(p: { elapsedH: number; fixed: ConnectivityStat
 
 /** Demo usage of the backup connection (no real meter): a base amount plus ~24 MB per minute. */
 export const hybridUsageMb = (activatedAt: number | null, now: number) => (activatedAt ? Math.round(180 + Math.max(0, now - activatedAt) / 60_000 * 24) : 0);
+
+/** Automatic payment: a bill this much above the usual amount waits for the customer's approval. */
+export const UNUSUAL_BILL_RATIO = 1.3;
+export const isUnusualBill = (amount: number, usual: number) => usual > 0 && amount > usual * UNUSUAL_BILL_RATIO;

@@ -67,7 +67,7 @@ export function NotificationsScreen() {
                   {!n.read && <span className="h-2.5 w-2.5 rounded-full bg-magenta" aria-label="Okunmamış" />}
                 </span>
                 <span className="mt-0.5 block text-sm text-muted-foreground">{n.body}</span>
-                <span className="mt-1 block text-[11px] text-muted-foreground">{fmtRelative(n.time)}</span>
+                <span className="mt-1 block text-[11px] text-muted-foreground">{fmtRelative(n.time)}{n.count && n.count > 1 ? ` · ${n.count} güncelleme birleştirildi` : ""}</span>
               </span>
             </button>
           );

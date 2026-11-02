@@ -6,7 +6,7 @@
  */
 import { BILLING_CHECKS, BILLING_SEED, TEAMS } from "@/data/mock";
 import { fmtTL } from "@/lib/format";
-import { ask, chain, choiceOf, complete, createWorkflow, escalate, getWf, log, notify, registerDecision, registerOp, schedule, setData, setStatus, step, stepStatus, teamResolve, workOrder } from "../engine";
+import { ask, chain, choiceOf, complete, createWorkflow, decide, escalate, getWf, log, notify, registerDecision, registerOp, schedule, setData, setStatus, step, stepStatus, teamResolve, workOrder } from "../engine";
 import { MockBillingAPI } from "../mockServices";
 import { compareBilling } from "../rules";
 import { useWorkflowStore as W } from "../store";
@@ -186,4 +186,17 @@ export function financeResolve(id: string) {
     results: ["Borç görünümü düzeltildi", `Fazla tahsilat: ${fmtTL(BILLING_SEED.duplicate.amount)} → ${choice?.label ?? "—"}`, "Onay: Finans · Tahsilat Mutabakat Ekibi (demo)"],
   });
   notify(id, choice?.optionId === "offset" ? "Mahsup talebiniz onaylandı" : "İade talebiniz onaylandı", `${fmtTL(BILLING_SEED.duplicate.amount)} ${choice?.optionId === "offset" ? "Kasım faturanızdan düşülecek" : "3–7 iş günü içinde kartınıza yansıyacak"} (demo).`);
+}
+
+/** "Benim için incele": the customer's consent from the Fatura Kalkanı screen. Same rules as the decision card. */
+export function consentBillingReview(id: string): boolean {
+  const wf = getWf(id);
+  if (!wf || wf.type !== "billing_check") return false;
+  if (choiceOf(id, "billing_start") === "later") {
+    resumeBillingReview(id);
+    return true;
+  }
+  if (stepStatus(id, "explain") === "pending") explainBilling(id);
+  if (getWf(id)?.decision?.key !== "billing_start") return false;
+  return decide(id, "start", "customer");
 }

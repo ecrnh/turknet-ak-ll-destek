@@ -10,7 +10,9 @@ import { HYBRID_COPY as C } from "../copy";
 import { HYBRID_OFFER_AFTER_H, hybridOfferOpen } from "../rules";
 import { activateHybrid, checkHybrid, declineHybrid, outageHours, requestHybridDevice } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
-import { ChecksList, DeviceTracker, FreeBadge, LinkStatus, OutageMeta } from "../components/hybrid";
+import { ChecksList, ConnectionDiagram, DeviceTracker, FreeBadge, LinkStatus, OutageMeta } from "../components/hybrid";
+import { HybridBoxCard } from "../components/hybridBox";
+import { GigaNote } from "@/features/giga/GigaAvatar";
 import { DemoNote, TechDetails } from "../components/ui";
 
 const Card = ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={cn("rounded-card bg-card p-5 shadow-card", className)}>{children}</div>;
@@ -52,12 +54,29 @@ export function HybridScreen() {
               <Router className="size-6" />
             </span>
             <div className="flex-1">
-              <p className="text-lg font-semibold leading-snug">Kesintide bağlı kalın</p>
+              <p className="text-lg font-semibold leading-snug">İnternetin kesilse bile bağlantın devam etsin.</p>
               <FreeBadge onDark className="mt-1" />
             </div>
           </div>
-          <p className="mt-3 text-sm text-primary-foreground/85">{C.what}</p>
+          <p className="mt-3 text-sm text-primary-foreground/85">TürkNet Hibrit İnternet ile sabit bağlantın kesildiğinde mobil yedek bağlantını kullanabilirsin.</p>
         </div>
+
+        <Card>
+          <ConnectionDiagram />
+          <GigaNote mood={h.status === "active" && !h.pausedAt ? "working" : ongoing ? "listening" : "idle"} className="mt-4">
+            {!ongoing
+              ? o?.restoredAt
+                ? "Ev internetin yeniden aktif. Artık ana bağlantını kullanıyorsun."
+                : "Şu anda ana internet bağlantını kullanıyorsun. Kesinti olursa ilk ben fark ederim."
+              : h.status === "active" && !h.pausedAt
+                ? "Yedek bağlantın aktif. İnterneti kullanmaya devam edebilirsin. Ana bağlantın düzelince geçişi ben yaparım."
+                : after24
+                  ? "Ev internetinde kesinti 24 saati aştı. Yedek bağlantını devreye alalım mı?"
+                  : "Ev internetinde kesinti algıladık. Teknik ekip çalışıyor; kesinti 24 saati aşarsa yedek bağlantını açabileceğiz."}
+          </GigaNote>
+        </Card>
+
+        <HybridBoxCard />
 
         {/* No outage */}
         {!o && (

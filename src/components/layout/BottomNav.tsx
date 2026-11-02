@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/features/core/appStore";
 import { GigaAvatar } from "@/features/giga/GigaAvatar";
 
-const OPS_PREFIXES = ["/islemler", "/yardim", "/islem/", "/qr", "/goruntulu-destek", "/hiz-testi", "/dijital-onarim", "/ajanlar", "/hibrit", "/destek-kayitlari", "/takip", "/surec", "/tasinma", "/ai-usta", "/baglanti", "/fatura-kalkani"];
+const OPS_PREFIXES = ["/islemler", "/yardim", "/islem/", "/qr", "/goruntulu-destek", "/hiz-testi", "/dijital-onarim", "/ajanlar", "/hibrit", "/destek-kayitlari", "/takip", "/surec", "/tasinma", "/ai-usta", "/baglanti", "/fatura-kalkani", "/hallet", "/canli-destek"];
 const ACC_PREFIXES = ["/hesabim", "/aile", "/tercihler", "/islem-gecmisi"];
 
 function activeTab(path: string) {
   if (path === "/") return "home";
-  if (path.startsWith("/faturalar")) return "bills";
+  if (path.startsWith("/faturalar") || path.startsWith("/otomatik-odeme")) return "bills";
   if (ACC_PREFIXES.some((p) => path.startsWith(p))) return "account";
   if (OPS_PREFIXES.some((p) => path.startsWith(p))) return "ops";
   return null;

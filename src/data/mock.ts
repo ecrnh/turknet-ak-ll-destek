@@ -3,9 +3,9 @@
  */
 
 export const USER = {
-  firstName: "Çağrı",
-  name: "ÇAĞRI KOYUNCU",
-  initials: "ÇK",
+  firstName: "Ecren",
+  name: "ECREN KOYUNCU",
+  initials: "EK",
   subscriberNo: "4896005",
   location: "İstanbul/Ümraniye",
   phone: "0532 418 22 17",
@@ -27,21 +27,34 @@ export const MANAGED_ACCOUNTS = [
     location: "İstanbul/Kadıköy",
     phone: "0533 761 40 09",
     packageName: "Fiber 50 Mbps Limitsiz",
-    scopes: { ticket: true, video: true, bills: true, plan: true, payment: false, cancel: false },
+    scopes: { view: true, ticket: true, video: true, appointment: true, bills: true, plan: true, payment: false, cancel: false },
     grantedAt: new Date("2026-09-14T10:20:00+03:00").getTime(),
   },
 ];
 
-export type ScopeKey = "ticket" | "video" | "bills" | "plan" | "payment" | "cancel";
+export type ScopeKey = "view" | "ticket" | "video" | "appointment" | "bills" | "plan" | "payment" | "cancel";
+export type ScopeGroup = "view" | "tech" | "appointment" | "finance";
 
-export const SCOPES: { key: ScopeKey; label: string; desc: string; default: boolean }[] = [
-  { key: "ticket", label: "Destek talebi oluştur", desc: "Arıza ve destek kaydı açabilir", default: true },
-  { key: "video", label: "Görüntülü destek başlat", desc: "Uzmanla görüntülü görüşme yapabilir", default: true },
-  { key: "bills", label: "Fatura görüntüle", desc: "Faturaları görür, ödeme yapamaz", default: true },
-  { key: "plan", label: "Hız / paket değişikliği", desc: "Paket ve hız talebi oluşturabilir", default: false },
-  { key: "payment", label: "Fatura ödeme", desc: "Kart ile ödeme yapabilir", default: false },
-  { key: "cancel", label: "Abonelik iptali", desc: "Aboneliği iptal edebilir", default: false },
+/** Family permissions. Finance items marked `ownerApproval` still need the owner's approval every time. */
+export const SCOPES: { key: ScopeKey; group: ScopeGroup; label: string; desc: string; default: boolean; ownerApproval?: boolean }[] = [
+  { key: "view", group: "view", label: "İşlemleri görüntüleme", desc: "Mevcut abonelik, aktif talepler, randevu detayları ve süreç takibi", default: true },
+  { key: "ticket", group: "tech", label: "GIGA ile sorun giderme", desc: "GIGA Teknik'i başlatır, bağlantı durumunu görür, teknik yardım ister", default: true },
+  { key: "video", group: "tech", label: "Görüntülü destek başlat", desc: "Uzmanla görüntülü görüşme yapabilir", default: true },
+  { key: "appointment", group: "appointment", label: "Randevu yönetimi", desc: "Randevuları görür, uygun saat seçer, değişiklik ister", default: false },
+  { key: "bills", group: "finance", label: "Faturaları görüntüle", desc: "Yalnızca açıkça izin verirsen faturaları görür", default: false },
+  { key: "payment", group: "finance", label: "Fatura ödeme", desc: "Her ödeme senin ek onayınla yapılır", default: false, ownerApproval: true },
+  { key: "plan", group: "finance", label: "Paket değişikliği", desc: "Her değişiklik senin ek onayınla yapılır", default: false, ownerApproval: true },
+  { key: "cancel", group: "finance", label: "İptal ve iade talepleri", desc: "Her talep senin ek onayınla yapılır", default: false, ownerApproval: true },
 ];
+
+export const SCOPE_GROUPS: { id: ScopeGroup; title: string }[] = [
+  { id: "view", title: "1. İşlemleri görüntüleme" },
+  { id: "tech", title: "2. Teknik destek işlemleri" },
+  { id: "appointment", title: "3. Randevu yönetimi" },
+  { id: "finance", title: "4. Finansal işlemler" },
+];
+
+export const defaultScopes = (): Record<ScopeKey, boolean> => Object.fromEntries(SCOPES.map((s) => [s.key, s.default])) as Record<ScopeKey, boolean>;
 
 export const RELATIONS = ["Anne", "Baba", "Eş", "Çocuk", "Diğer"] as const;
 
@@ -373,13 +386,23 @@ export const DEMO_NEW_ADDRESS: DemoAddress = {
   city: "İstanbul",
 };
 
+export const DEMO_NEW_ADDRESS_PARTS = { city: "İstanbul", district: "Kadıköy", neighborhood: "Caferağa Mah.", street: "Moda Cd.", building: "No:48 D:3" };
+
 export const DEMO_MOVE_DATE = "2026-11-10";
 
 export const APPOINTMENT_SLOTS = [
-  { id: "slot-1", label: "12 Kas Perşembe · 09:00–12:00" },
-  { id: "slot-2", label: "12 Kas Perşembe · 13:00–17:00" },
-  { id: "slot-3", label: "13 Kas Cuma · 09:00–12:00" },
+  { id: "slot-1", label: "3 Kas Salı · 16:00–18:00" },
+  { id: "slot-2", label: "4 Kas Çarşamba · 09:00–12:00" },
+  { id: "slot-3", label: "4 Kas Çarşamba · 13:00–17:00" },
+  { id: "slot-4", label: "5 Kas Perşembe · 18:00–20:00" },
 ];
+
+/** Demo field teams for appointment matching (no real technician system). */
+export const FIELD_TEAMS = [
+  { id: "T-KDK-07", name: "Kadıköy Saha Ekibi 7" },
+  { id: "T-KDK-12", name: "Kadıköy Saha Ekibi 12" },
+  { id: "T-USK-03", name: "Üsküdar Saha Ekibi 3" },
+] as const;
 
 export const TEAMS = {
   infra: "Altyapı Planlama Ekibi",
@@ -411,6 +434,12 @@ export const BILLING_SEED = {
   duplicate: { id: "PAY-88214", amount: 749.9, at: "27 Eki 2026 21:16", channel: "Otomatik ödeme talimatı", ref: "BNK-5521931" },
 };
 
+/** Masked saved card for the auto-payment demo; full card numbers are never stored. */
+export const SAVED_CARD = "Kayıtlı kart •••• 4417";
+
+/** Active discounts shown on the invoice card (demo). */
+export const BILL_DISCOUNTS = ["12 ay sabit fiyat", "Fiber kampanya indirimi −₺200,00", "Online fatura indirimi"];
+
 export const BILLING_CHECKS = [
   { code: "paid_but_debt", label: "Ödeme yapılmasına rağmen borç görünmesi" },
   { code: "duplicate_payment", label: "Mükerrer ödeme veya fatura kaydı" },
@@ -424,25 +453,46 @@ export const BILLING_CHECKS = [
 
 export const AI_USTA_STEPS = [
   {
-    id: "cables",
-    title: "Güç ve kablo bağlantılarını kontrol edin",
-    text: "Modemin güç kablosunun takılı olduğundan emin olun. Ardından modemin altındaki fiber (WAN) kablosunu nazikçe çıkarıp “tık” sesi gelene kadar geri takın.",
-    safe: "Güvenli adım: kabloyu bükmeyin, reset tuşuna basmayın.",
+    id: "power",
+    title: "Modeminin güç kablosunun takılı olduğundan emin ol",
+    text: "Güç kablosu hem modemde hem prizde yerine oturmuş olsun. Fiber (WAN) kablosu da modemin altında takılı görünmeli.",
+    safe: "Güvenli adım: kabloyu bükme, reset tuşuna basma.",
+    cta: "Kontrol ettim",
   },
   {
     id: "reboot",
-    title: "Modemi yeniden başlatın",
-    text: "Modemin arkasındaki güç düğmesiyle kapatın, 30 saniye bekleyip tekrar açın. Işıkların yerine oturması 2 dakika sürebilir.",
-    safe: "Güvenli adım: ayarlarınız silinmez.",
+    title: "Şimdi modemini kapatıp 20 saniye bekleyelim",
+    text: "Modemin arkasındaki güç düğmesiyle kapat, 20 saniye bekle ve tekrar aç.",
+    safe: "Güvenli adım: ayarların silinmez.",
+    cta: "Tamam, açtım",
   },
 ];
 
-export const MODEM_LED_DEMO = [
-  { key: "power", name: "Power", state: "Yeşil sabit", ok: true },
-  { key: "pon", name: "PON", state: "Yeşil sabit", ok: true },
-  { key: "internet", name: "Internet", state: "Kapalı", ok: false },
-  { key: "wifi", name: "Wi-Fi", state: "Yanıp sönüyor", ok: true },
-];
+/** Modem light picker for the simulated camera. `internet` is the light GIGA Teknik reads. */
+export const MODEM_LIGHTS = [
+  { key: "power", name: "Power" },
+  { key: "wan", name: "WAN / PON" },
+  { key: "internet", name: "Internet" },
+  { key: "wifi", name: "Wi-Fi" },
+] as const;
+
+export const INTERNET_LIGHT_STATES = [
+  { id: "red", label: "Kırmızı", ok: false, say: "İnternet ışığının kırmızı olduğunu görüyorum. Önce bağlantını kontrol edelim." },
+  { id: "off", label: "Kapalı", ok: false, say: "İnternet ışığı yanmıyor görünüyor. Önce bağlantını kontrol edelim." },
+  { id: "blink", label: "Yanıp sönüyor", ok: false, say: "İnternet ışığı yanıp sönüyor; modem bağlanmaya çalışıyor olabilir. Birlikte kontrol edelim." },
+  { id: "green", label: "Yeşil", ok: true, say: "Işıklar normal görünüyor. Yine de bağlantını adım adım kontrol edelim." },
+] as const;
+
+export type InternetLight = (typeof INTERNET_LIGHT_STATES)[number]["id"];
+
+/** Voice menu of the simulated call (GIGA sesli destek). */
+export const IVR_MENU = [
+  { id: "no_internet", key: "1", label: "İnternetim hiç çalışmıyor", issue: "İnternet hiç çalışmıyor" },
+  { id: "slow", key: "2", label: "İnternetim yavaş", issue: "İnternet yavaş" },
+  { id: "drops", key: "3", label: "Bağlantım sık sık kopuyor", issue: "Bağlantı sık sık kopuyor" },
+  { id: "modem", key: "4", label: "Modemimde sorun var", issue: "Modemde sorun var" },
+  { id: "other", key: "5", label: "Diğer işlemler", issue: "Diğer işlemler" },
+] as const;
 
 export const INTENT_KEYWORDS: { intent: "billing" | "ai_usta" | "relocation" | "temp_internet" | "speed" | "track"; words: string[] }[] = [
   { intent: "billing", words: ["borç", "ödeme", "ödedim", "fatura", "mükerrer", "iade", "tahsil", "ücret", "tutarsız"] },

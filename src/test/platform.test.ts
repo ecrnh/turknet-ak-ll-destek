@@ -41,12 +41,15 @@ beforeEach(() => {
 
 describe("Akıllı bildirim katmanı", () => {
   it("rutin gelişme push göndermez, önemli gelişme gönderir", () => {
+    useAppStore.getState().reset();
     const before = useAppStore.getState().notifications.length;
     seedPaidButDebt(false);
     const { wfId } = runBillingShield();
     notify(wfId!, "Rutin", "x", "quiet");
     const pushes = W.getState().messages.filter((m) => m.level !== "quiet").length;
-    expect(useAppStore.getState().notifications.length - before).toBe(pushes);
+    const added = useAppStore.getState().notifications.length - before;
+    // Updates about the same process are combined, never more than the pushes sent.
+    expect(added).toBeLessThanOrEqual(pushes);
     expect(W.getState().messages.some((m) => m.level === "quiet")).toBe(true);
   });
 });
@@ -76,7 +79,10 @@ describe("Fatura Kalkanı onayı", () => {
 describe("AI Usta sesli triyaj", () => {
   it("SMS açılınca çağrıdaki bağlam devralınır, sorun tekrar sorulmaz", () => {
     const id = startUstaCall();
+    expect(getWf(id)!.decision?.key).toBe("usta_ivr_menu");
+    decide(id, "no_internet");
     drain();
+    expect(getWf(id)!.data["issue"]).toBe("İnternet hiç çalışmıyor");
     expect(getWf(id)!.decision?.key).toBe("usta_ivr");
     decide(id, "sms");
     expect(W.getState().sms).toHaveLength(1);

@@ -8,7 +8,7 @@ import { fmtDateTime } from "@/lib/format";
 import { escalate, recheck, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
 import { customerAction, statusSentence, TEAM_FOR, whatsNext } from "../copy";
-import { AiUstaPanel, BillingPanel, ConnectivityPanel, HealthCard, RelocationPanel, SpeedPanel, TempPanel } from "../components/panels";
+import { AiUstaPanel, BillingPanel, ConnectivityPanel, HealthCard, RelocationPanel, SpeedPanel, TempPanel, UstaWelcome } from "../components/panels";
 import { AuditList, DecisionCard, DemoNote, HandoffCard, OutcomeCard, RecordsList, StatusPill, StepTimeline, TechDetails, TYPE_ICON, TYPE_LABEL } from "../components/ui";
 
 export function WorkflowDetailScreen({ id }: { id: string }) {
@@ -63,6 +63,7 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
           </dl>
         </section>
 
+        <UstaWelcome wf={wf} />
         <DecisionCard key={wf.decision?.key ?? "none"} wf={wf} />
         <HandoffCard wf={wf} />
         <OutcomeCard wf={wf} />

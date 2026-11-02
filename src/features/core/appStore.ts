@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { uid } from "@/lib/format";
 import { USER } from "@/data/mock";
+import { mergeNotification, pushAllowed } from "./notifications";
 
 export type NetStatus = "online" | "slow" | "down" | "mobile";
 export type Channel = "Görüntülü" | "QR" | "GIGA" | "Chat" | "Dijital Onarım" | "Otonom";
@@ -17,6 +18,8 @@ export interface AppNotification {
   to?: string;
   /** Sent by GIGA (assistant actions and process tracking). */
   from?: "giga";
+  /** How many updates about the same process this notification combines. */
+  count?: number;
 }
 
 export interface SupportRecord {
@@ -75,6 +78,8 @@ interface Prefs {
   bigText: boolean;
   simpleMode: boolean;
   push: boolean;
+  /** Campaign pushes (process updates are always delivered when push is on). */
+  campaignPush: boolean;
   demoPanel: boolean;
 }
 
@@ -167,7 +172,7 @@ const initial = () => ({
   notifications: seedNotifications(),
   records: seedRecords(),
   history: seedHistory(),
-  prefs: { bigText: false, simpleMode: false, push: true, demoPanel: true },
+  prefs: { bigText: false, simpleMode: false, push: true, campaignPush: true, demoPanel: true },
   savedFieldVisits: 0,
   feedback: [] as FeedbackItem[],
   ratings: [] as Rating[],
@@ -184,7 +189,10 @@ export const useAppStore = create<AppState>()(
       setNet: (p) => set((s) => ({ net: { ...s.net, ...p } })),
       notify: (n, asPush = true) => {
         const item: AppNotification = { ...n, id: uid(), time: Date.now(), read: false };
-        set((s) => ({ notifications: [item, ...s.notifications], push: asPush && s.prefs.push ? item : s.push }));
+        set((s) => {
+          const notifications = mergeNotification(s.notifications, item);
+          return { notifications, push: asPush && pushAllowed(item.kind, s.prefs) ? notifications[0]! : s.push };
+        });
       },
       dismissPush: () => set({ push: null }),
       markRead: (id) => set((s) => ({ notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) })),
@@ -209,7 +217,7 @@ export const useAppStore = create<AppState>()(
       name: "tn-app",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      version: 2,
+      version: 3,
       /** v0 saved gift-internet notifications and old outage states (dropped); v1 used pre-GIGA assistant names (renamed). */
       migrate: (persisted) => {
         const p = persisted as Partial<AppState> & { prefs?: Record<string, unknown> };
@@ -217,6 +225,7 @@ export const useAppStore = create<AppState>()(
         const status = p.net?.status as string | undefined;
         return {
           ...p,
+          ...(p.prefs ? { prefs: { ...p.prefs, campaignPush: p.prefs["campaignPush"] !== false } } : {}),
           net: p.net && (status === "outage" || status === "backup") ? { ...p.net, status: "online" } : p.net,
           notifications: (p.notifications ?? [])
             .filter((n) => (n.kind as string) !== "gift" && !legacy(n.to))

@@ -1,12 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
-import { BILLING_CHECKS, CURRENT_ADDRESS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
+import { motion } from "framer-motion";
+import { BILLING_CHECKS, CURRENT_ADDRESS, INTERNET_LIGHT_STATES, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
+import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
 import { fmtRelative, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { choiceOf } from "../engine";
 import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY } from "../rules";
 import { rateUsta } from "../services/aiUsta";
+import { measureNearModem } from "../services/proactive";
 import { resumeBillingReview } from "../services/billing";
 import { toggleBox } from "../services/connectivity";
 import { useWorkflowStore } from "../store";
@@ -46,9 +49,11 @@ export function RelocationPanel({ wf }: { wf: Workflow }) {
           </p>
         </div>
       </div>
+      {wf.data["match"] && <TeamMatch wf={wf} />}
       {appt && (
         <p className="mt-4 flex items-center gap-2 rounded-2xl bg-success-soft px-3 py-2 text-sm font-semibold">
-          <CalendarCheck className="size-4 text-success" /> Kurulum: {appt.label}
+          <CalendarCheck className="size-4 text-success" /> Randevun onaylandı: {appt.label}
+          {wf.data["team"] ? ` · ${String(wf.data["team"])}` : ""}
         </p>
       )}
       {temp && (
@@ -63,6 +68,37 @@ export function RelocationPanel({ wf }: { wf: Workflow }) {
         Eski hattınız, yeni adreste bağlantınız doğrulanmadan kapatılmaz. Kapatma ücretsizdir, taahhüdünüz aynen devam eder.
       </div>
     </Box>
+  );
+}
+
+const MATCH_STAGES = [
+  { key: "searching", label: "Uygun ekip bulunuyor" },
+  { key: "requested", label: "Randevu isteği gönderildi" },
+  { key: "answer", label: "Ekip onayı bekleniyor" },
+  { key: "accepted", label: "Randevu onaylandı" },
+] as const;
+
+/** Field-team matching (demo): the customer never calls teams one by one. */
+function TeamMatch({ wf }: { wf: Workflow }) {
+  const m = String(wf.data["match"]);
+  const idx = m === "accepted" ? 4 : m === "requested" ? 2 : 0;
+  return (
+    <div className="mt-4 rounded-2xl bg-muted p-3">
+      <p className="text-xs font-semibold text-foreground">Ekip eşleştirme · {String(wf.data["slotLabel"] ?? "")}</p>
+      <ol className="mt-2 space-y-1.5">
+        {MATCH_STAGES.map((st, i) => (
+          <li key={st.key} className="flex items-center gap-2 text-xs">
+            {i < idx || m === "accepted" ? <CheckCircle2 className="size-4 text-success" /> : i === idx ? <span className="h-4 w-4 animate-pulse rounded-full border-2 border-magenta" /> : <span className="h-4 w-4 rounded-full border-2 border-border" />}
+            <span className={i <= idx || m === "accepted" ? "font-semibold text-foreground" : "text-muted-foreground"}>{st.label}</span>
+          </li>
+        ))}
+      </ol>
+      {(m === "declined" || (wf.data["declinedTeam"] && m !== "accepted")) && (
+        <GigaNote mood="working" className="mt-3">Bu saat için ekip uygunluğu değişti. Senin için başka bir ekip arıyorum; tekrar araman gerekmiyor.</GigaNote>
+      )}
+      {m === "accepted" && <GigaNote mood="done" className="mt-3">Randevun onaylandı! {String(wf.data["team"] ?? "")} {String(wf.data["slotLabel"] ?? "")} aralığında gelecek.</GigaNote>}
+      <p className="mt-2 text-[10px] text-muted-foreground">Ekip uygunluğu demo verisidir; gerçek teknisyen sistemi bağlı değildir.</p>
+    </div>
   );
 }
 
@@ -219,6 +255,17 @@ export function BillingPanel({ wf }: { wf: Workflow }) {
   );
 }
 
+/** GIGA picks up the phone conversation in the app: the customer never repeats the problem. */
+export function UstaWelcome({ wf }: { wf: Workflow }) {
+  const fromCall = wf.type === "ai_usta" && wf.data["channel"] === "ivr" && wf.steps.find((x) => x.key === "sms")?.status === "done";
+  if (!fromCall || wf.status === "completed" || wf.handoff) return null;
+  return (
+    <GigaNote mood="listening">
+      Tekrar hoş geldin! Telefon görüşmemizde “{String(wf.data["issue"] ?? "İnternet hiç çalışmıyor")}” demiştin. Kontrollerimize kaldığımız yerden devam edelim.
+    </GigaNote>
+  );
+}
+
 export function AiUstaPanel({ wf }: { wf: Workflow }) {
   const leds = String(wf.data["leds"] ?? "")
     .split("|")
@@ -228,7 +275,32 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
       return { name, ok: ok === "1", state };
     });
   const rating = wf.data["rating"];
+  const st = (k: string) => wf.steps.find((x) => x.key === k)?.status;
+  const light = INTERNET_LIGHT_STATES.find((x) => x.id === wf.data["light"]);
   return (
+    <div className="space-y-3">
+    {st("analysis") === "done" && light && st("recheck") !== "done" && !wf.handoff && <GigaNote>{light.say}</GigaNote>}
+    {st("reconnect") === "in_progress" && (
+      <Box>
+        <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+          <GigaAvatar size={28} mood="working" label={false} /> Bağlantının yeniden kurulmasını bekliyoruz
+        </p>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+          <motion.div className="h-full rounded-full bg-magenta" initial={{ width: "5%" }} animate={{ width: "100%" }} transition={{ duration: 2.4, ease: "easeInOut" }} />
+        </div>
+      </Box>
+    )}
+    {st("recheck") === "in_progress" && (
+      <GigaNote mood="thinking">Şimdi bağlantını tekrar kontrol ediyorum.</GigaNote>
+    )}
+    {wf.status === "completed" && wf.outcome?.resolved && (
+      <div className="rounded-card bg-success-soft p-5 text-center">
+        <GigaAvatar size={56} mood="done" className="mx-auto" />
+        <p className="mt-2 text-lg font-semibold text-foreground">Harika! Bağlantın yeniden aktif görünüyor.</p>
+        <p className="text-sm text-muted-foreground">İnternetini tekrar kullanabilirsin. Destek kaydı açmadık.</p>
+        <Link to="/" className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">Ana sayfaya dön</Link>
+      </div>
+    )}
     <Box>
       <div className="flex items-center gap-4">
         <img src={modemImg} alt="Modem görseli" width={120} height={120} className="h-24 w-24 object-contain" loading="lazy" />
@@ -245,7 +317,7 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
               ))}
             </ul>
           ) : (
-            <p className="mt-1 text-sm text-muted-foreground">Modem ışıklarını görmek için fotoğraf bekliyoruz.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Modem ışıklarını görmek için kamera görüntüsünü bekliyorum.</p>
           )}
         </div>
       </div>
@@ -275,6 +347,7 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
         </div>
       )}
     </Box>
+    </div>
   );
 }
 
@@ -295,7 +368,28 @@ export function SpeedPanel({ wf }: { wf: Workflow }) {
       </div>
     </div>
   );
+  const near = wf.data["nearSpeed"] != null ? Number(wf.data["nearSpeed"]) : null;
+  const done = wf.steps.filter((x) => x.status === "done" && ["remote", "retest", "field"].includes(x.key));
   return (
+    <div className="space-y-3">
+    {before != null && after == null && wf.status !== "completed" && (
+      <Box>
+        <GigaNote mood={near == null ? "listening" : "working"}>
+          {near == null
+            ? wf.type === "proactive_fault"
+              ? "Bağlantında kısa süreli kopmalar fark ettim. Senin için kontrol ediyorum. İstersen modeminin yanına yaklaşıp bir ölçüm yap; Wi-Fi ile hat sorununu ayırmama yardım eder."
+              : "İnternet hızında beklenenden düşük bir değer görüyorum. Modeminin yanına yaklaşarak tekrar ölçüm yapalım."
+            : near < pkg * 0.6
+              ? `Modeminin yanında da ${near} Mbps ölçtüm. Sorun Wi-Fi kapsaması değil; hattını uzaktan iyileştirmeyi deniyorum.`
+              : `Modeminin yanında ${near} Mbps ölçtüm. Sorun büyük olasılıkla Wi-Fi kapsamasıyla ilgili.`}
+        </GigaNote>
+        {near == null && (
+          <button type="button" onClick={() => measureNearModem(wf.id)} className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+            <Gauge className="size-4" /> Yeniden ölç
+          </button>
+        )}
+      </Box>
+    )}
     <Box>
       <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-primary">
         <Gauge className="size-5" /> Hızınız: önce ve sonra
@@ -318,7 +412,20 @@ export function SpeedPanel({ wf }: { wf: Workflow }) {
       <p className="mt-3 flex items-start gap-1.5 text-[11px] text-muted-foreground">
         <Info className="mt-0.5 size-3.5 shrink-0" /> Hızınız hattınızın fiziksel kapasitesinin üzerine çıkarılamaz. Uzaktan düzelmezse teknik ekip yönlendirilir.
       </p>
+      {near != null && <p className="mt-2 text-xs text-muted-foreground">Modem yanında ölçüm: {near} Mbps (demo)</p>}
+      {done.length > 0 && (
+        <>
+          <p className="mb-1.5 mt-4 text-xs font-semibold text-foreground">Yapılan işlemler</p>
+          <ul className="space-y-1 text-xs text-muted-foreground">
+            {done.map((x) => (
+              <li key={x.key}>✓ {x.note ?? x.label}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {after != null && <p className={cn("mt-3 text-sm font-semibold", after >= pkg * 0.8 ? "text-success" : "text-warning")}>{after >= pkg * 0.8 ? "Bağlantındaki sorunu uzaktan giderdik. Şu anda bağlantın normal görünüyor." : "Sorunun devam ettiğini görüyorum. Bu fiziksel bir müdahale gerektiriyor; gerekli teknik süreci senin için başlatıyorum."}</p>}
     </Box>
+    </div>
   );
 }
 

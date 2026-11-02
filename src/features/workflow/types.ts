@@ -237,6 +237,55 @@ export interface DemoConfig {
   reconciliation: "settled" | "duplicate";
   aiFix: "fixed" | "not_fixed";
   proactive: "remote_fix" | "field";
+  /** Field-team matching for the relocation appointment: first team accepts, or first declines and a second team takes it. */
+  teamMatch: "first" | "second";
+  /** Is the TürkNet app installed on the phone that receives the SMS link? */
+  appInstalled: boolean;
+  /** Customer already owns a compatible Hibrit Box (no device shipment for relocation temp internet). */
+  ownsBox: boolean;
+  /** Result of the next simulated automatic collection. */
+  autoPayResult: "success" | "fail";
+}
+
+/* ---------------- Canlı destek (simulated live chat after a GIGA handoff) ---------------- */
+export interface LiveChatMessage {
+  id: string;
+  from: "agent" | "customer" | "giga";
+  text: string;
+  at: number;
+  /** Agent message offering an action the customer can accept. */
+  offer?: "field_visit";
+}
+
+export interface LiveChat {
+  workflowId: string;
+  agent: string;
+  startedAt: number;
+  messages: LiveChatMessage[];
+}
+
+/* ---------------- Akıllı Otomatik Ödeme (simulated mandate) ---------------- */
+export interface AutoPayMethod {
+  kind: "card" | "bank";
+  /** Masked label only; full numbers are never stored or shown. */
+  label: string;
+}
+
+export interface AutoPayState {
+  status: "off" | "active";
+  method: AutoPayMethod | null;
+  /** Ask before collecting when the bill is clearly higher than usual. */
+  askIfUnusual: boolean;
+  setupAt: number | null;
+  /** Latest simulated collection cycle. */
+  cycle: {
+    amount: number;
+    usual: number;
+    due: string;
+    status: "notified" | "held_for_approval" | "paid" | "failed" | "skipped";
+    at: number;
+  } | null;
+  log: { at: number; text: string }[];
 }
 
 /* ---------------- Hibrit İnternet (free outage backup, included in the subscription) ---------------- */
@@ -286,4 +335,8 @@ export interface HybridService {
   endedAt: number | null;
   declinedAt: number | null;
   device: DeviceRequest | null;
+  /** Customer switched the active backup off from the app (can switch it on again). */
+  pausedAt: number | null;
+  /** Customer pre-approved: switch to the backup automatically once the 24-hour rule opens it. */
+  autoFailover: boolean;
 }

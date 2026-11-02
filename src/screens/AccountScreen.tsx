@@ -15,7 +15,7 @@ export function ProfileSwitcher() {
   return (
     <div className="flex gap-1 rounded-full bg-muted p-1" role="tablist" aria-label="Profil değiştir">
       <button role="tab" aria-selected={!actingAs} onClick={() => switchTo(null)} className={cn("min-h-10 flex-1 rounded-full text-sm font-semibold", !actingAs ? "bg-primary text-primary-foreground shadow" : "text-primary")}>
-        Çağrı (Ben)
+        {USER.firstName} (Ben)
       </button>
       {managed.map((m) => (
         <button
@@ -59,7 +59,7 @@ export function AccountScreen() {
         {!acting && <ReferralCard />}
 
         <ListCard>
-          <ListRow title="Aile Yetkilendirme" to="/aile" badge={<NewBadge />} desc="Yakınların adına işlem yap, yetki ver" />
+          <ListRow title="Aile ve Yetkilendirme" to="/aile" badge={<NewBadge />} desc="Yakınların adına işlem yap, yetki ver" />
           <ListRow title="Tercihlerim" to="/tercihler" desc="Büyük yazı, basit mod, GIGA izinleri" />
           <ListRow title="Şifre Değiştir" to="/islem/sifre-degistir" />
           <ListRow title="Belgelerim" to="/islem/belgelerim" />

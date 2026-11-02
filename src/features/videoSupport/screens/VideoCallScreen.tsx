@@ -111,7 +111,7 @@ export function VideoCallScreen() {
   const endCall = () => {
     cam.stop();
     const steps = CALL_CHECKLIST.filter((_, i) => done[i]);
-    const participants = ["Turknet Uzmanı (Zeynep)", actingAs ? `Çağrı Koyuncu (yetkili)` : "Çağrı Koyuncu", ...(guestJoined && guest ? [guest] : [])];
+    const participants = ["Turknet Uzmanı (Zeynep)", actingAs ? `${USER.firstName} Koyuncu (yetkili)` : `${USER.firstName} Koyuncu`, ...(guestJoined && guest ? [guest] : [])];
     const topicLabel = VIDEO_TOPICS.find((t) => t.id === topic)?.label ?? "Diğer";
     const recordId = addRecord({
       channel: "Görüntülü",

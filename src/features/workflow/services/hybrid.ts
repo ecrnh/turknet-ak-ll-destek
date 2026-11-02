@@ -63,6 +63,10 @@ function evaluate(wfId: string) {
     patchHybrid({ status: "offered" });
     step(wfId, "hybrid_offer", "done", "Kesinti 24 saati aştı · ücretsiz Hibrit İnternet sunuldu", "Kural: 24 saat içinde çözülemeyen kesintide aboneliğe dahil yedek bağlantı sunulur");
     notify(wfId, "İnternet kesintiniz 24 saati aştı", "Bağlantınızı sürdürmeniz için ücretsiz Hibrit İnternet desteğinizi etkinleştirebilirsiniz.", "push", "/hibrit");
+    if (W.getState().hybrid.autoFailover) {
+      log(wfId, "system", "info", "Otomatik geçiş izni var: uygunluk kontrolü başlatıldı", "Müşteri, 24 saati aşan kesintide yedek bağlantıya otomatik geçişi önceden onayladı");
+      checkHybrid();
+    }
   } else if (status === "offered") {
     patchHybrid({ status: "unavailable" });
     step(wfId, "hybrid_offer", "pending");
@@ -87,7 +91,7 @@ export function startOutage(hours = 0.2): string {
     why: "Ağ izleme servisi ana bağlantıda oturum kaybı bildirdi (demo izleme verisi)",
   });
   const t = now();
-  W.setState({ outage: { wfId: wf.id, startedAt: t - hours * H, lastUpdateAt: t, repairNote: "", restoredAt: null, dismissed: false }, hybrid: initialHybrid() });
+  W.setState({ outage: { wfId: wf.id, startedAt: t - hours * H, lastUpdateAt: t, repairNote: "", restoredAt: null, dismissed: false }, hybrid: initialHybrid(W.getState().hybrid.autoFailover) });
   step(wf.id, "signal", "done", "Modem oturumu yok · komşu hatlar kontrol edildi (demo)");
   notify(wf.id, "İnternet bağlantınızda kesinti tespit ettik", "Teknik ekibimiz sorunun çözümü için çalışıyor. Gelişmeleri sizin için takip ediyoruz.", "push", "/");
   evaluate(wf.id);
@@ -129,6 +133,7 @@ registerOp("hybrid.checked", (id) => {
     notify(id, "Yedek bağlantı şu an kullanılamıyor", "Bulunduğunuz konumda yedek bağlantı için yeterli mobil kapsama bulunamadı. Arıza takibiniz devam ediyor.", "quiet");
   } else {
     step(id, "hybrid", "waiting", "Cihaz, SIM ve kapsama uygun · onayınız bekleniyor");
+    if (W.getState().hybrid.autoFailover) activateHybrid();
   }
 });
 
@@ -240,7 +245,7 @@ registerOp("outage.verify", (id) => {
   const usageMb = hybridUsageMb(h.activatedAt, now());
   if (used) {
     setConnectivity({ mobile: "off", mode: "fixed", hybridEnabled: false }, "Yedek bağlantıdan ana bağlantıya dönüldü");
-    patchHybrid({ status: "ended", endedAt: now() });
+    patchHybrid({ status: "ended", endedAt: now(), pausedAt: null });
     step(id, "switch_back", "done", "Yedek bağlantı kapatıldı, ana bağlantıya dönüldü");
   }
   step(id, "verify", "done", "10 dk kesintisiz bağlantı, ölçüm 96 Mbps (demo)");
@@ -258,6 +263,36 @@ registerOp("outage.verify", (id) => {
     results: [`Kesinti süresi: yaklaşık ${hours} saat (demo)`, used ? `Hibrit İnternet kullanıldı · ${(usageMb / 1024).toFixed(1).replace(".", ",")} GB (demo)` : "Hibrit İnternet kullanılmadı", "Ana bağlantı 96 Mbps ile doğrulandı (demo)"],
   });
 });
+
+/** Customer switches the active backup off from the app; the service stays theirs to switch on again. */
+export function pauseHybrid(): boolean {
+  const o = openOutage();
+  const h = W.getState().hybrid;
+  if (!o || h.status !== "active" || h.pausedAt) return false;
+  patchHybrid({ pausedAt: now() });
+  setConnectivity({ mobile: "standby" }, "Yedek bağlantı müşteri tarafından kapatıldı");
+  log(o.wfId, "customer", "info", "Müşteri yedek bağlantıyı uygulamadan kapattı (demo cihaz komutu)");
+  return true;
+}
+
+export function resumeHybrid(): boolean {
+  const o = openOutage();
+  const h = W.getState().hybrid;
+  if (!o || h.status !== "active" || !h.pausedAt) return false;
+  patchHybrid({ pausedAt: null });
+  setConnectivity({ mobile: "active", mode: "hybrid_backup" }, "Yedek bağlantı müşteri tarafından açıldı");
+  log(o.wfId, "customer", "info", "Müşteri yedek bağlantıyı uygulamadan açtı (demo cihaz komutu)");
+  return true;
+}
+
+/** Customer preference: switch to the backup automatically once the 24-hour rule opens it. */
+export function setAutoFailover(on: boolean) {
+  patchHybrid({ autoFailover: on });
+  log(W.getState().outage?.wfId ?? null, "customer", "info", on ? "Otomatik yedek bağlantı geçişine izin verildi" : "Otomatik yedek bağlantı geçişi kapatıldı", "Geçiş yine yalnızca 24 saati aşan kesintide ve uygunluk kontrolünden sonra yapılır");
+  const o = openOutage();
+  if (on && o && W.getState().hybrid.status === "offered") checkHybrid();
+  else if (on && o && W.getState().hybrid.status === "ready") activateHybrid();
+}
 
 /** Customer closes the "internet is back" card. */
 export function dismissOutage() {

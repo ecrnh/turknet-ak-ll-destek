@@ -18,11 +18,13 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DestekKayitlariRouteImport } from './routes/destek-kayitlari'
 import { Route as DijitalOnarimRouteImport } from './routes/dijital-onarim'
 import { Route as FaturaKalkaniRouteImport } from './routes/fatura-kalkani'
+import { Route as HalletRouteImport } from './routes/hallet'
 import { Route as HesabimRouteImport } from './routes/hesabim'
 import { Route as HibritRouteImport } from './routes/hibrit'
 import { Route as HizTestiRouteImport } from './routes/hiz-testi'
 import { Route as IslemGecmisiRouteImport } from './routes/islem-gecmisi'
 import { Route as IslemlerRouteImport } from './routes/islemler'
+import { Route as OtomatikOdemeRouteImport } from './routes/otomatik-odeme'
 import { Route as TakipRouteImport } from './routes/takip'
 import { Route as TasinmaRouteImport } from './routes/tasinma'
 import { Route as TercihlerRouteImport } from './routes/tercihler'
@@ -31,6 +33,7 @@ import { Route as AileIndexRouteImport } from './routes/aile.index'
 import { Route as AileYeniRouteImport } from './routes/aile.yeni'
 import { Route as AjanlarIndexRouteImport } from './routes/ajanlar.index'
 import { Route as AjanlarHizRouteImport } from './routes/ajanlar.hiz'
+import { Route as CanliDestekIdRouteImport } from './routes/canli-destek.$id'
 import { Route as FaturalarIndexRouteImport } from './routes/faturalar.index'
 import { Route as FaturalarGecmisRouteImport } from './routes/faturalar.gecmis'
 import { Route as GoruntuluDestekIndexRouteImport } from './routes/goruntulu-destek.index'
@@ -88,6 +91,11 @@ const FaturaKalkaniRoute = FaturaKalkaniRouteImport.update({
   path: '/fatura-kalkani',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HalletRoute = HalletRouteImport.update({
+  id: '/hallet',
+  path: '/hallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HesabimRoute = HesabimRouteImport.update({
   id: '/hesabim',
   path: '/hesabim',
@@ -111,6 +119,11 @@ const IslemGecmisiRoute = IslemGecmisiRouteImport.update({
 const IslemlerRoute = IslemlerRouteImport.update({
   id: '/islemler',
   path: '/islemler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OtomatikOdemeRoute = OtomatikOdemeRouteImport.update({
+  id: '/otomatik-odeme',
+  path: '/otomatik-odeme',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TakipRoute = TakipRouteImport.update({
@@ -151,6 +164,11 @@ const AjanlarIndexRoute = AjanlarIndexRouteImport.update({
 const AjanlarHizRoute = AjanlarHizRouteImport.update({
   id: '/ajanlar/hiz',
   path: '/ajanlar/hiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CanliDestekIdRoute = CanliDestekIdRouteImport.update({
+  id: '/canli-destek/$id',
+  path: '/canli-destek/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaturalarIndexRoute = FaturalarIndexRouteImport.update({
@@ -219,17 +237,20 @@ export interface FileRoutesByFullPath {
   '/destek-kayitlari': typeof DestekKayitlariRoute
   '/dijital-onarim': typeof DijitalOnarimRoute
   '/fatura-kalkani': typeof FaturaKalkaniRoute
+  '/hallet': typeof HalletRoute
   '/hesabim': typeof HesabimRoute
   '/hibrit': typeof HibritRoute
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
+  '/otomatik-odeme': typeof OtomatikOdemeRoute
   '/takip': typeof TakipRoute
   '/tasinma': typeof TasinmaRoute
   '/tercihler': typeof TercihlerRoute
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
   '/ajanlar/hiz': typeof AjanlarHizRoute
+  '/canli-destek/$id': typeof CanliDestekIdRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
@@ -254,17 +275,20 @@ export interface FileRoutesByTo {
   '/destek-kayitlari': typeof DestekKayitlariRoute
   '/dijital-onarim': typeof DijitalOnarimRoute
   '/fatura-kalkani': typeof FaturaKalkaniRoute
+  '/hallet': typeof HalletRoute
   '/hesabim': typeof HesabimRoute
   '/hibrit': typeof HibritRoute
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
+  '/otomatik-odeme': typeof OtomatikOdemeRoute
   '/takip': typeof TakipRoute
   '/tasinma': typeof TasinmaRoute
   '/tercihler': typeof TercihlerRoute
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
   '/ajanlar/hiz': typeof AjanlarHizRoute
+  '/canli-destek/$id': typeof CanliDestekIdRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
@@ -290,17 +314,20 @@ export interface FileRoutesById {
   '/destek-kayitlari': typeof DestekKayitlariRoute
   '/dijital-onarim': typeof DijitalOnarimRoute
   '/fatura-kalkani': typeof FaturaKalkaniRoute
+  '/hallet': typeof HalletRoute
   '/hesabim': typeof HesabimRoute
   '/hibrit': typeof HibritRoute
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
+  '/otomatik-odeme': typeof OtomatikOdemeRoute
   '/takip': typeof TakipRoute
   '/tasinma': typeof TasinmaRoute
   '/tercihler': typeof TercihlerRoute
   '/yardim': typeof YardimRoute
   '/aile/yeni': typeof AileYeniRoute
   '/ajanlar/hiz': typeof AjanlarHizRoute
+  '/canli-destek/$id': typeof CanliDestekIdRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
@@ -327,17 +354,20 @@ export interface FileRouteTypes {
     | '/destek-kayitlari'
     | '/dijital-onarim'
     | '/fatura-kalkani'
+    | '/hallet'
     | '/hesabim'
     | '/hibrit'
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
+    | '/otomatik-odeme'
     | '/takip'
     | '/tasinma'
     | '/tercihler'
     | '/yardim'
     | '/aile/yeni'
     | '/ajanlar/hiz'
+    | '/canli-destek/$id'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
     | '/goruntulu-destek/sonuc'
@@ -362,17 +392,20 @@ export interface FileRouteTypes {
     | '/destek-kayitlari'
     | '/dijital-onarim'
     | '/fatura-kalkani'
+    | '/hallet'
     | '/hesabim'
     | '/hibrit'
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
+    | '/otomatik-odeme'
     | '/takip'
     | '/tasinma'
     | '/tercihler'
     | '/yardim'
     | '/aile/yeni'
     | '/ajanlar/hiz'
+    | '/canli-destek/$id'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
     | '/goruntulu-destek/sonuc'
@@ -397,17 +430,20 @@ export interface FileRouteTypes {
     | '/destek-kayitlari'
     | '/dijital-onarim'
     | '/fatura-kalkani'
+    | '/hallet'
     | '/hesabim'
     | '/hibrit'
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
+    | '/otomatik-odeme'
     | '/takip'
     | '/tasinma'
     | '/tercihler'
     | '/yardim'
     | '/aile/yeni'
     | '/ajanlar/hiz'
+    | '/canli-destek/$id'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
     | '/goruntulu-destek/sonuc'
@@ -433,17 +469,20 @@ export interface RootRouteChildren {
   DestekKayitlariRoute: typeof DestekKayitlariRoute
   DijitalOnarimRoute: typeof DijitalOnarimRoute
   FaturaKalkaniRoute: typeof FaturaKalkaniRoute
+  HalletRoute: typeof HalletRoute
   HesabimRoute: typeof HesabimRoute
   HibritRoute: typeof HibritRoute
   HizTestiRoute: typeof HizTestiRoute
   IslemGecmisiRoute: typeof IslemGecmisiRoute
   IslemlerRoute: typeof IslemlerRoute
+  OtomatikOdemeRoute: typeof OtomatikOdemeRoute
   TakipRoute: typeof TakipRoute
   TasinmaRoute: typeof TasinmaRoute
   TercihlerRoute: typeof TercihlerRoute
   YardimRoute: typeof YardimRoute
   AileYeniRoute: typeof AileYeniRoute
   AjanlarHizRoute: typeof AjanlarHizRoute
+  CanliDestekIdRoute: typeof CanliDestekIdRoute
   FaturalarGecmisRoute: typeof FaturalarGecmisRoute
   GoruntuluDestekGorusmeRoute: typeof GoruntuluDestekGorusmeRoute
   GoruntuluDestekSonucRoute: typeof GoruntuluDestekSonucRoute
@@ -524,6 +563,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaturaKalkaniRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hallet': {
+      id: '/hallet'
+      path: '/hallet'
+      fullPath: '/hallet'
+      preLoaderRoute: typeof HalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hesabim': {
       id: '/hesabim'
       path: '/hesabim'
@@ -557,6 +603,13 @@ declare module '@tanstack/react-router' {
       path: '/islemler'
       fullPath: '/islemler'
       preLoaderRoute: typeof IslemlerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/otomatik-odeme': {
+      id: '/otomatik-odeme'
+      path: '/otomatik-odeme'
+      fullPath: '/otomatik-odeme'
+      preLoaderRoute: typeof OtomatikOdemeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/takip': {
@@ -613,6 +666,13 @@ declare module '@tanstack/react-router' {
       path: '/ajanlar/hiz'
       fullPath: '/ajanlar/hiz'
       preLoaderRoute: typeof AjanlarHizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/canli-destek/$id': {
+      id: '/canli-destek/$id'
+      path: '/canli-destek/$id'
+      fullPath: '/canli-destek/$id'
+      preLoaderRoute: typeof CanliDestekIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faturalar/': {
@@ -705,17 +765,20 @@ const rootRouteChildren: RootRouteChildren = {
   DestekKayitlariRoute: DestekKayitlariRoute,
   DijitalOnarimRoute: DijitalOnarimRoute,
   FaturaKalkaniRoute: FaturaKalkaniRoute,
+  HalletRoute: HalletRoute,
   HesabimRoute: HesabimRoute,
   HibritRoute: HibritRoute,
   HizTestiRoute: HizTestiRoute,
   IslemGecmisiRoute: IslemGecmisiRoute,
   IslemlerRoute: IslemlerRoute,
+  OtomatikOdemeRoute: OtomatikOdemeRoute,
   TakipRoute: TakipRoute,
   TasinmaRoute: TasinmaRoute,
   TercihlerRoute: TercihlerRoute,
   YardimRoute: YardimRoute,
   AileYeniRoute: AileYeniRoute,
   AjanlarHizRoute: AjanlarHizRoute,
+  CanliDestekIdRoute: CanliDestekIdRoute,
   FaturalarGecmisRoute: FaturalarGecmisRoute,
   GoruntuluDestekGorusmeRoute: GoruntuluDestekGorusmeRoute,
   GoruntuluDestekSonucRoute: GoruntuluDestekSonucRoute,

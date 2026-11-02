@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Activity, BarChart3, ChevronRight, Gauge, QrCode, RotateCcw, Video, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { USER } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
 import { useActingAccount } from "@/features/family/store";
 import { NET_LABEL, NET_TEXT } from "@/components/tn/NetStatus";
@@ -56,7 +57,7 @@ export function DemoPanel({ onHide }: { onHide?: () => void }) {
         </div>
         <div>
           <p className="text-muted-foreground">Profil</p>
-          <p className="font-bold text-foreground">{acting ? acting.short : "Çağrı (Ben)"}</p>
+          <p className="font-bold text-foreground">{acting ? acting.short : `${USER.firstName} (Ben)`}</p>
         </div>
       </div>
 

@@ -221,3 +221,30 @@ export function OutageHomeCard() {
     </div>
   );
 }
+
+/** Main fixed line ↔ Hibrit Box ↔ mobile backup, with the path in use highlighted. */
+export function ConnectionDiagram() {
+  const c = useWorkflowStore((s) => s.connectivity);
+  const h = useWorkflowStore((s) => s.hybrid);
+  const backupOn = h.status === "active" && !h.pausedAt;
+  const fixedUp = c.fixed === "up";
+  const Node = ({ icon: Icon, label, state, on, bad }: { icon: typeof Router; label: string; state: string; on: boolean; bad?: boolean }) => (
+    <div className="flex flex-1 flex-col items-center text-center">
+      <span className={cn("flex h-12 w-12 items-center justify-center rounded-2xl", on ? "bg-success-soft text-success" : bad ? "bg-destructive-soft text-destructive" : "bg-muted text-muted-foreground")}>
+        <Icon className="size-6" strokeWidth={1.5} />
+      </span>
+      <span className="mt-1.5 text-[11px] font-semibold text-foreground">{label}</span>
+      <span className={cn("text-[10px] font-semibold", on ? "text-success" : bad ? "text-destructive" : "text-muted-foreground")}>{state}</span>
+    </div>
+  );
+  const Line = ({ on }: { on: boolean }) => <div className={cn("mt-6 h-1 w-6 shrink-0 rounded-full", on ? "bg-success" : "bg-border")} />;
+  return (
+    <div className="flex items-start" aria-label={`Kullanılan bağlantı: ${fixedUp ? "ana internet" : backupOn ? "mobil yedek" : "yok"}`}>
+      <Node icon={fixedUp ? Router : WifiOff} label="Ana internet" state={fixedUp ? "Kullanılıyor" : "Kesik"} on={fixedUp} bad={!fixedUp} />
+      <Line on={fixedUp} />
+      <Node icon={Router} label="Hibrit Box" state={fixedUp ? "Hazır" : backupOn ? "Yedekte" : "Beklemede"} on={fixedUp || backupOn} />
+      <Line on={backupOn} />
+      <Node icon={Signal} label="Mobil yedek" state={backupOn ? "Kullanılıyor" : "Kapalı"} on={backupOn} />
+    </div>
+  );
+}
