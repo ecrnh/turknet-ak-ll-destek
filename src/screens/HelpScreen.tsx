@@ -3,6 +3,7 @@ import { ChevronRight, Gauge, HeartPulse, Phone, QrCode, Router, Video, Wifi, Wi
 import { TabHeader } from "@/components/layout/headers";
 import { FeedbackButton } from "@/components/tn/FeedbackButton";
 import { ListCard, ListRow } from "@/components/tn/cards";
+import { USER } from "@/data/mock";
 import { startAiUsta, startSpeedCheck, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "@/features/workflow/rules";
 import { useActingAccount, useCan } from "@/features/family/store";
@@ -15,7 +16,7 @@ export function HelpScreen() {
   const canTech = useCan("tech");
   const usta = useWorkflowStore((s) => s.workflows.find((w) => w.type === "ai_usta" && isActive(w)));
   const speed = useWorkflowStore((s) => s.workflows.find((w) => w.type === "speed_optimize" && isActive(w)));
-  const by = acting ? acting.name : undefined;
+  const by = acting ? `${USER.firstName} · ${acting.short} adına` : undefined;
 
   const entries = [
     {
