@@ -376,10 +376,18 @@ export const DEMO_NEW_ADDRESS: DemoAddress = {
 export const DEMO_MOVE_DATE = "2026-11-10";
 
 export const APPOINTMENT_SLOTS = [
-  { id: "slot-1", label: "12 Kas Perşembe · 09:00–12:00" },
-  { id: "slot-2", label: "12 Kas Perşembe · 13:00–17:00" },
-  { id: "slot-3", label: "13 Kas Cuma · 09:00–12:00" },
+  { id: "slot-1", label: "3 Kas Salı · 16:00–18:00" },
+  { id: "slot-2", label: "4 Kas Çarşamba · 09:00–12:00" },
+  { id: "slot-3", label: "4 Kas Çarşamba · 13:00–17:00" },
+  { id: "slot-4", label: "5 Kas Perşembe · 18:00–20:00" },
 ];
+
+/** Demo field teams for appointment matching (no real technician system). */
+export const FIELD_TEAMS = [
+  { id: "T-KDK-07", name: "Kadıköy Saha Ekibi 7" },
+  { id: "T-KDK-12", name: "Kadıköy Saha Ekibi 12" },
+  { id: "T-USK-03", name: "Üsküdar Saha Ekibi 3" },
+] as const;
 
 export const TEAMS = {
   infra: "Altyapı Planlama Ekibi",
