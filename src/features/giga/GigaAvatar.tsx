@@ -35,7 +35,7 @@ export function GigaAvatar({ size = 40, mood = "idle", className, label = true }
         style={{ width: eyeW, height: eyeH }}
         animate={
           still
-            ? undefined
+            ? false
             : mood === "thinking"
               ? { x: [-eyeW * 0.5, eyeW * 0.5, -eyeW * 0.5] }
               : mood === "listening"
@@ -71,7 +71,7 @@ export function GigaAvatar({ size = 40, mood = "idle", className, label = true }
         <motion.span
           className="giga-orbit absolute rounded-full"
           style={{ left: (size - head) / 2 - size * 0.08, bottom: -size * 0.08, width: head + size * 0.16, height: head + size * 0.16 }}
-          animate={still ? undefined : { rotate: 360 }}
+          animate={still ? false : { rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1.3, ease: "linear" }}
         />
       )}
@@ -87,7 +87,7 @@ export function GigaAvatar({ size = 40, mood = "idle", className, label = true }
         <motion.span
           className="absolute left-1/2 rounded-full bg-magenta"
           style={{ top: 0, width: size * 0.15, height: size * 0.15, marginLeft: -size * 0.075 }}
-          animate={!still && (mood === "thinking" || mood === "working") ? { scale: [1, 1.35, 1], opacity: [1, 0.7, 1] } : undefined}
+          animate={!still && (mood === "thinking" || mood === "working") ? { scale: [1, 1.35, 1], opacity: [1, 0.7, 1] } : false}
           transition={{ repeat: Infinity, duration: 0.9 }}
         />
         {/* head */}
