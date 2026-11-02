@@ -11,7 +11,7 @@ export const nextLed = (s: LedState) => NEXT[s];
 export function ModemFront({ leds, onToggle, scanning, className }: { leds: Leds; onToggle?: (k: LedKey) => void; scanning?: boolean; className?: string }) {
   return (
     <div className={cn("relative overflow-hidden rounded-[28px] bg-card p-4 shadow-card", className)}>
-      {scanning && <div className="scan-line pointer-events-none absolute inset-x-0 top-0 h-full" aria-hidden />}
+      {scanning && <div className="scan-line pointer-events-none absolute inset-x-4 top-4 h-0.5 rounded-full bg-magenta/70" aria-hidden />}
       <div className="mx-auto h-3 w-24 rounded-full bg-muted" aria-hidden />
       <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">TürkNet Modem</p>
       <div className="mt-4 grid grid-cols-4 gap-2">

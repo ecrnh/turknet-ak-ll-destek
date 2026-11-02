@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Camera, CheckCircle2, Headset, Home, Loader2, Phone, ScanEye, TriangleAlert } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { EmptyState } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,6 @@ function CameraStage({ wf }: { wf: Workflow }) {
   const [open, setOpen] = useState(false);
   const [leds, setLeds] = useState<Leds>(() => decodeLeds(wf.data["leds"]) ?? { ...MODEM_LED_DEMO });
   const toggle = (k: keyof Leds) => setLeds((p) => ({ ...p, [k]: nextLed(p[k]) }));
-  useEffect(() => () => cam.stop(), [cam]);
 
   if (!open)
     return (
