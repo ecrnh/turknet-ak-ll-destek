@@ -48,9 +48,11 @@ export function RelocationPanel({ wf }: { wf: Workflow }) {
           </p>
         </div>
       </div>
+      {wf.data["match"] && <TeamMatch wf={wf} />}
       {appt && (
         <p className="mt-4 flex items-center gap-2 rounded-2xl bg-success-soft px-3 py-2 text-sm font-semibold">
-          <CalendarCheck className="size-4 text-success" /> Kurulum: {appt.label}
+          <CalendarCheck className="size-4 text-success" /> Randevun onaylandı: {appt.label}
+          {wf.data["team"] ? ` · ${String(wf.data["team"])}` : ""}
         </p>
       )}
       {temp && (
@@ -65,6 +67,37 @@ export function RelocationPanel({ wf }: { wf: Workflow }) {
         Eski hattınız, yeni adreste bağlantınız doğrulanmadan kapatılmaz. Kapatma ücretsizdir, taahhüdünüz aynen devam eder.
       </div>
     </Box>
+  );
+}
+
+const MATCH_STAGES = [
+  { key: "searching", label: "Uygun ekip bulunuyor" },
+  { key: "requested", label: "Randevu isteği gönderildi" },
+  { key: "answer", label: "Ekip onayı bekleniyor" },
+  { key: "accepted", label: "Randevu onaylandı" },
+] as const;
+
+/** Field-team matching (demo): the customer never calls teams one by one. */
+function TeamMatch({ wf }: { wf: Workflow }) {
+  const m = String(wf.data["match"]);
+  const idx = m === "accepted" ? 3 : m === "requested" ? 2 : m === "declined" ? 0 : 0;
+  return (
+    <div className="mt-4 rounded-2xl bg-muted p-3">
+      <p className="text-xs font-semibold text-foreground">Ekip eşleştirme · {String(wf.data["slotLabel"] ?? "")}</p>
+      <ol className="mt-2 space-y-1.5">
+        {MATCH_STAGES.map((st, i) => (
+          <li key={st.key} className="flex items-center gap-2 text-xs">
+            {i < idx || m === "accepted" ? <CheckCircle2 className="size-4 text-success" /> : i === idx ? <span className="h-4 w-4 animate-pulse rounded-full border-2 border-magenta" /> : <span className="h-4 w-4 rounded-full border-2 border-border" />}
+            <span className={i <= idx || m === "accepted" ? "font-semibold text-foreground" : "text-muted-foreground"}>{st.label}</span>
+          </li>
+        ))}
+      </ol>
+      {(m === "declined" || (wf.data["declinedTeam"] && m !== "accepted")) && (
+        <GigaNote mood="working" className="mt-3">Bu saat için ekip uygunluğu değişti. Senin için başka bir ekip arıyorum; tekrar araman gerekmiyor.</GigaNote>
+      )}
+      {m === "accepted" && <GigaNote mood="done" className="mt-3">Randevun onaylandı! {String(wf.data["team"] ?? "")} {String(wf.data["slotLabel"] ?? "")} aralığında gelecek.</GigaNote>}
+      <p className="mt-2 text-[10px] text-muted-foreground">Ekip uygunluğu demo verisidir; gerçek teknisyen sistemi bağlı değildir.</p>
+    </div>
   );
 }
 
