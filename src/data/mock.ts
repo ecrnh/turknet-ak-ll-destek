@@ -467,6 +467,41 @@ export const AI_USTA_STEPS = [
   },
 ];
 
+/** Replaces step 1 when the customer said the cables are not (or may not be) connected. */
+export const AI_USTA_CABLE_STEP = {
+  id: "cable",
+  title: "Modeminin kablo bağlantılarını kontrol edelim",
+  text: "Modemin arkasındaki fiber kablo yuvasına tam oturmalı, güç kablosu da hem modemde hem prizde takılı olmalı. Gevşek görünen kabloyu çıkarıp yerine sıkıca tak.",
+  safe: "Güvenli adım: fiber kabloyu bükme, ucuna dokunma, reset tuşuna basma.",
+  cta: "Kabloları kontrol ettim",
+};
+
+/** "İnternetim çalışmıyor" → what exactly? Kept for the whole session. `finding`/`fix` are the simulated detected issue and remote action. */
+export const USTA_ISSUES = [
+  { id: "no_connect", label: "İnternete hiç bağlanamıyorum.", issue: "İnternete hiç bağlanamıyor", check: "session", finding: "İnternet oturumun kapanmış görünüyor; modemin hatta bağlı ama internete çıkamıyor.", fix: "İnternet oturumunu uzaktan yeniliyorum" },
+  { id: "slow", label: "İnternetim yavaş.", issue: "İnternet yavaş", check: "line", finding: "Hattında paketine göre belirgin bir hız düşüşü görünüyor.", fix: "Hat ayarlarını uzaktan yeniliyorum" },
+  { id: "drops", label: "Bağlantım sürekli kopuyor.", issue: "Bağlantı sürekli kopuyor", check: "line", finding: "Son saatlerde bağlantında sık kopma görünüyor.", fix: "Hattını uzaktan yeniden eşitliyorum" },
+  { id: "wifi", label: "Wi-Fi ağıma bağlanamıyorum.", issue: "Wi-Fi ağına bağlanamıyor", check: "diag", finding: "Wi-Fi kanalın çevredeki ağlar nedeniyle çok yoğun görünüyor.", fix: "Wi-Fi'ını daha az yoğun bir kanala alıyorum" },
+] as const;
+export type UstaIssueId = (typeof USTA_ISSUES)[number]["id"];
+
+/** Digital repair checks, in the order the customer sees them. All results are simulated. */
+export const REPAIR_CHECKS = [
+  { id: "modem", label: "Modem bağlantı durumu", running: "Modeminin hatta bağlı olup olmadığına bakıyorum…", ok: "Modemin hatta bağlı görünüyor" },
+  { id: "session", label: "İnternet oturumu", running: "İnternet oturumunu kontrol ediyorum…", ok: "İnternet oturumun açık görünüyor" },
+  { id: "line", label: "Hat ve altyapı durumu", running: "Hattını ve altyapını kontrol ediyorum…", ok: "Hattında bir sorun görünmüyor" },
+  { id: "regional", label: "Bölgesel arıza bilgisi", running: "Bölgende bilinen bir arıza var mı bakıyorum…", ok: "Bölgende bilinen bir arıza yok" },
+  { id: "diag", label: "Bağlantı teşhisleri", running: "Bağlantı teşhislerini çalıştırıyorum…", ok: "Teşhislerde sorun bulunmadı" },
+] as const;
+
+export const CABLE_STATES = [
+  { id: "ok", label: "Takılı", say: "Kablolar takılı" },
+  { id: "unsure", label: "Emin değilim", say: "Kablolardan emin değil" },
+  { id: "loose", label: "Takılı değil / gevşek", say: "Kablo takılı değil veya gevşek" },
+] as const;
+export type CableState = (typeof CABLE_STATES)[number]["id"];
+
+
 /** Modem light picker for the simulated camera. `internet` is the light GIGA Teknik reads. */
 export const MODEM_LIGHTS = [
   { key: "power", name: "Power" },
