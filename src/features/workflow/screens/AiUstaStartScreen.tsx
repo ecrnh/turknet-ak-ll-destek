@@ -1,9 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRight, Gauge, Router, WifiOff } from "lucide-react";
-import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
 import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
-import { startAiUsta, startSpeedCheck, startUstaCall, useWorkflowStore } from "@/features/workflow";
+import { startAiUsta, startSpeedCheck, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
 import { openOutage } from "../services/hybrid";
 import { DemoNote, StatusPill } from "../components/ui";
