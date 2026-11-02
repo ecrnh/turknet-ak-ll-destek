@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
+import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, Loader2, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
 import { BILLING_CHECKS, CURRENT_ADDRESS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
 import { fmtRelative, fmtTL } from "@/lib/format";
@@ -46,9 +46,10 @@ export function RelocationPanel({ wf }: { wf: Workflow }) {
           </p>
         </div>
       </div>
+      <TeamMatch wf={wf} />
       {appt && (
         <p className="mt-4 flex items-center gap-2 rounded-2xl bg-success-soft px-3 py-2 text-sm font-semibold">
-          <CalendarCheck className="size-4 text-success" /> Kurulum: {appt.label}
+          <CalendarCheck className="size-4 text-success" /> Randevunuz onaylandı: {appt.label}
         </p>
       )}
       {temp && (
@@ -63,6 +64,33 @@ export function RelocationPanel({ wf }: { wf: Workflow }) {
         Eski hattınız, yeni adreste bağlantınız doğrulanmadan kapatılmaz. Kapatma ücretsizdir, taahhüdünüz aynen devam eder.
       </div>
     </Box>
+  );
+}
+
+/** Simulated field-team matching: search → request → team answer → confirmation. */
+function TeamMatch({ wf }: { wf: Workflow }) {
+  const match = wf.data["match"];
+  if (!match) return null;
+  const declined = wf.decisions.some((d) => d.key === "relocation_alt") || match === "declined";
+  const rows: { label: string; state: "done" | "now" | "todo" | "warn" }[] = [
+    { label: "Adresinizdeki uygun ekipler kontrol ediliyor", state: match === "searching" ? "now" : "done" },
+    { label: `Randevu talebi gönderildi${wf.data["team"] ? ` · ${String(wf.data["team"])}` : ""}`, state: match === "searching" ? "todo" : match === "requested" ? "now" : "done" },
+    ...(declined ? [{ label: "Bu saat için ekip uygunluğu değişti; sizin için başka bir ekip aradık", state: "warn" as const }] : []),
+    { label: "Ekip randevuyu kabul etti", state: match === "accepted" ? "done" : "todo" },
+    { label: "Randevunuz onaylandı", state: match === "accepted" ? "done" : "todo" },
+  ];
+  return (
+    <div className="mt-4 rounded-2xl border border-border p-3" aria-live="polite">
+      <p className="mb-2 text-xs font-semibold text-foreground">Ekip eşleştirme (simülasyon)</p>
+      <ul className="space-y-1.5 text-xs">
+        {rows.map((r) => (
+          <li key={r.label} className="flex items-center gap-2">
+            {r.state === "done" ? <CheckCircle2 className="size-4 text-success" /> : r.state === "now" ? <Loader2 className="size-4 animate-spin text-magenta" /> : r.state === "warn" ? <Info className="size-4 text-warning" /> : <span className="m-1 h-2 w-2 rounded-full bg-border" />}
+            <span className={r.state === "todo" ? "text-muted-foreground" : "text-foreground"}>{r.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
