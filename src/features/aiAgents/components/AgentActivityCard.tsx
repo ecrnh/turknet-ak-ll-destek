@@ -30,7 +30,7 @@ export function AgentActivityCard() {
             <GigaName />
           </p>
           <p className="text-sm font-semibold leading-snug">
-            {running ? "Hızını düzeltmeye çalışıyorum…" : backupOn ? "Yedek bağlantıdasın; ana bağlantın düzelince haber vereceğiz" : `Merhaba, hoş geldin ${acting ? acting.short : USER.firstName}!`}
+            {running ? "Hızını düzeltmeye çalışıyorum…" : backupOn ? "Yedek bağlantıdasın; ana bağlantın düzelince haber vereceğiz" : `Merhaba, hoş geldin ${acting ? acting.short : USER.firstName}, destek için yanındayım!`}
           </p>
         </div>
         <ChevronRight className="size-5 shrink-0" />
