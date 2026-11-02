@@ -40,7 +40,7 @@ export function detectAnomaly(): string | null {
     dedupeKey: `proactive:${SUBSCRIPTION.id}`,
     steps: [{ key: "signal", label: "Bağlantıda dalgalanma tespit edildi" }, { key: "scope", label: "Sorunun kapsamı değerlendiriliyor" }, ...SPEED_STEPS],
     data: { pkg: SUBSCRIPTION.speed },
-    why: "Müşteri şikâyet etmeden izleme verisinde eşik aşımı görüldü",
+    why: "Teknik bağlantı ölçümlerinde eşik aşımı görüldü (optik güç, kopma sayısı)",
   });
   if (!created) return wf.id;
   step(wf.id, "signal", "done", `Optik ${m.optic} dBm (normal ${NORMAL.optic}) · ${m.drops} kopma/saat`);
