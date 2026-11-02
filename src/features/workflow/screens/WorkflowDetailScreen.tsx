@@ -87,11 +87,6 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
                 <RefreshCw /> Tekrar Kontrol Et
               </Button>
             )}
-            {!wf.handoff && (
-              <Button variant="outline" className="flex-1" onClick={() => escalate(wf.id, TEAM_FOR[wf.type], "Müşteri canlı destek istedi", "customer")}>
-                <Headset /> Canlı Desteğe Bağlan
-              </Button>
-            )}
           </div>
         )}
 
