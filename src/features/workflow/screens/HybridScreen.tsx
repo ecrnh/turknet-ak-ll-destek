@@ -1,248 +1,206 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { PlainNote } from "@/components/tn/primitives";
-import { CheckCircle2, CloudOff, Info, Loader2, Router, ShieldCheck, Signal, TriangleAlert } from "lucide-react";
-import { useEffect } from "react";
+import { Link } from "@tanstack/react-router";
+import { CheckCircle2, CloudOff, Info, Loader2, Power, Router, Signal, Smartphone, TriangleAlert, Wifi } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
+import { ToggleRow } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
+import { HYBRID_BACKUP_QUOTA_MB } from "@/data/mock";
 import { useNow } from "@/hooks/use-now";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
-import { HYBRID_OFFER_AFTER_H, hybridOfferOpen } from "../rules";
-import { activateHybrid, checkHybrid, declineHybrid, outageHours, requestHybridDevice } from "../services/hybrid";
+import { HYBRID_OFFER_AFTER_H, hybridOfferOpen, hybridUsageMb } from "../rules";
+import { activateHybrid, checkHybrid, outageHours, requestHybridDevice, resumeHybrid, setAutoFailover } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
-import { ChecksList, ConnectionDiagram, DeviceTracker, FreeBadge, LinkStatus, OutageMeta } from "../components/hybrid";
-import { HybridBoxCard } from "../components/hybridBox";
+import { ChecksList, DeviceTracker, FreeBadge, fmtOngoing, fmtUsage, OutageMeta } from "../components/hybrid";
 import { DemoNote, TechDetails } from "../components/ui";
 
-const Card = ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={cn("rounded-card bg-card p-5 shadow-card", className)}>{children}</div>;
+type Tone = "ok" | "warn" | "down" | "info";
+const TONE: Record<Tone, string> = { ok: "bg-success-soft text-success", warn: "bg-warning-soft text-warning", down: "bg-destructive-soft text-destructive", info: "bg-icon-box text-primary" };
 
-/** Hibrit İnternet: explanation, eligibility check, consent, live status and switch-back. */
+/**
+ * Hibrit İnternet, simplified: one connection card (main line, Hibrit Box,
+ * mobile backup, remaining backup data), one action ("Hibrit Box'ı Aç"), one
+ * automatic-switch setting, and everything technical behind "Teknik detayları gör".
+ * There is no switch-off button: the backup closes itself when the main line is back.
+ */
 export function HybridScreen() {
   const flow = useFlow("hybrid_internet");
-  const navigate = useNavigate();
   const o = useWorkflowStore((s) => s.outage);
   const h = useWorkflowStore((s) => s.hybrid);
+  const c = useWorkflowStore((s) => s.connectivity);
+  const hasDevice = useWorkflowStore((s) => s.config.hybridDevice);
   const verify = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status);
   const now = Math.max(useNow(5_000), o?.lastUpdateAt ?? 0);
+  const [wantOpen, setWantOpen] = useState(false);
 
   const ongoing = !!o && !o.restoredAt;
   const hours = ongoing ? outageHours(o, now) : 0;
-  const after24 = ongoing && hybridOfferOpen(hours, o.etaH);
+  const offerOpen = ongoing && hybridOfferOpen(hours, o.etaH);
+  const backupOn = h.status === "active" && !h.pausedAt;
+  const mainUp = c.fixed === "up";
+  const used = h.activatedAt ? hybridUsageMb(h.activatedAt, h.pausedAt ?? h.endedAt ?? now) : 0;
+  const left = Math.max(0, HYBRID_BACKUP_QUOTA_MB - used);
 
-  // Entering the activation screen runs the device / SIM / coverage check once.
+  // Eligibility (device, SIM, coverage) is checked quietly once the backup may be opened.
   useEffect(() => {
-    if (after24 && h.status === "offered") checkHybrid();
-  }, [after24, h.status]);
+    if (offerOpen && h.status === "offered") checkHybrid();
+  }, [offerOpen, h.status]);
+
+  // "Hibrit Box'ı Aç" tapped while the check was still running: open as soon as it is ready.
+  useEffect(() => {
+    if (wantOpen && h.status === "ready") {
+      setWantOpen(false);
+      activateHybrid("customer");
+    }
+    if (wantOpen && (h.status === "no_device" || h.status === "no_coverage")) setWantOpen(false);
+  }, [wantOpen, h.status]);
 
   useEffect(() => {
     if (h.status === "active") flow.complete({ attempts: h.attempts });
   }, [h.status, h.attempts, flow]);
 
-  const notNow = () => {
-    declineHybrid();
-    navigate({ to: "/" });
+  const openBox = () => {
+    if (h.status === "active" && h.pausedAt) return void resumeHybrid();
+    if (h.status === "ready" || h.status === "failed") return void activateHybrid("customer");
+    if (h.status === "offered" || h.status === "checking") {
+      setWantOpen(true);
+      if (h.status === "offered") checkHybrid();
+      return;
+    }
+    toast("Hibrit Box şu an açılamıyor", { description: `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştığında ya da aşması beklendiğinde açılabilir.` });
   };
+
+  // One status message for the whole page.
+  let tone: Tone = "ok";
+  let title = "Bağlantın normal";
+  let text = "Ana internetini kullanıyorsun. Hibrit Box hazır; kesinti olursa devreye girer.";
+  if (o?.restoredAt) {
+    tone = verify === "done" ? "ok" : "info";
+    title = verify === "done" ? "Ana bağlantına döndün" : "Ana bağlantın doğrulanıyor";
+    text = h.status === "ended" ? "Ana internetin geri geldi. Hibrit Box'ın mobil bağlantısı otomatik olarak kapatıldı." : "Kesinti giderildi ve bağlantını doğruladık.";
+  } else if (ongoing && backupOn) {
+    tone = "info";
+    title = "Mobil yedek bağlantın aktif";
+    text = h.activatedBy === "auto" ? `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştığı için Hibrit Box, önceden verdiğin izinle otomatik açıldı.` : "Hibrit Box'ı açtın; internetini mobil yedek bağlantı üzerinden kullanıyorsun.";
+  } else if (ongoing && h.status === "activating") {
+    tone = "info";
+    title = "Hibrit Box açılıyor…";
+    text = h.activatedBy === "auto" ? "Önceden verdiğin izinle yedek bağlantı otomatik açılıyor." : "Yedek bağlantın birkaç saniye içinde hazır olacak.";
+  } else if (ongoing && offerOpen) {
+    tone = "warn";
+    title = hours >= HYBRID_OFFER_AFTER_H ? `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştı` : `Kesintinin ${HYBRID_OFFER_AFTER_H} saatten uzun sürmesi bekleniyor`;
+    text =
+      h.status === "no_device"
+        ? "Hibrit Box için uyumlu cihaz veya aktif SIM bulunamadı. Cihazı ücretsiz gönderebiliriz."
+        : h.status === "no_coverage"
+          ? "Adresinde yedek bağlantı için yeterli mobil kapsama yok. Arıza takibin sürüyor."
+          : h.status === "failed"
+            ? "Hibrit Box mobil ağa bağlanamadı. Tekrar açmayı deneyebilirsin."
+            : "Hibrit Box'ı açarak internete bağlı kalabilirsin.";
+  } else if (ongoing) {
+    tone = "down";
+    title = "Ana internetinde kesinti var";
+    text = `${fmtOngoing(hours)} sürüyor; teknik ekibimiz çalışıyor. ${h.autoFailover ? `Kesinti ${HYBRID_OFFER_AFTER_H} saati aşarsa yedek bağlantın otomatik açılacak.` : `Kesinti ${HYBRID_OFFER_AFTER_H} saati aşarsa Hibrit Box'ı buradan açabileceksin.`}`;
+  }
+
+  const rows: { icon: typeof Router; label: string; value: string; on: boolean }[] = [
+    { icon: Wifi, label: "Ana internet", value: mainUp ? "Bağlı" : "Kesik", on: mainUp },
+    { icon: Router, label: "Hibrit Box", value: !hasDevice ? "Cihaz yok" : backupOn ? "Açık" : "Hazır", on: hasDevice },
+    { icon: Smartphone, label: "Mobil yedek", value: backupOn ? "Aktif" : "Kapalı", on: backupOn },
+  ];
+
+  const showButton = ongoing && !backupOn && h.status !== "activating" && h.status !== "no_device" && h.status !== "no_coverage";
+  const buttonReady = offerOpen && (h.status === "ready" || h.status === "failed" || h.status === "offered" || h.status === "checking" || !!h.pausedAt);
 
   return (
     <div>
       <PageHeader title={C.name} />
       <div className="space-y-4 px-4 pb-4">
-        <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">
-              <Router className="size-6" />
-            </span>
-            <div className="flex-1">
-              <p className="text-lg font-semibold leading-snug">İnternetin kesilse bile bağlantın devam etsin.</p>
-              <FreeBadge onDark className="mt-1" />
-            </div>
-          </div>
-          <p className="mt-3 text-sm text-primary-foreground/85">TürkNet Hibrit İnternet ile sabit bağlantın kesildiğinde mobil yedek bağlantını kullanabilirsin.</p>
+        <div>
+          <p className="text-lg font-semibold leading-snug text-primary">İnternetin kesilse bile bağlantın devam etsin.</p>
+          <FreeBadge className="mt-1.5" />
         </div>
 
-        <Card>
-          <ConnectionDiagram />
-          <PlainNote className="mt-4 shadow-none bg-muted">
-            {!ongoing
-              ? o?.restoredAt
-                ? "Ev internetin yeniden aktif. Artık ana bağlantını kullanıyorsun."
-                : "Şu anda ana internet bağlantını kullanıyorsun. Kesinti olursa durumu sana bildireceğiz."
-              : h.status === "active" && !h.pausedAt
-                ? "Yedek bağlantın aktif. İnterneti kullanmaya devam edebilirsin. Ana bağlantın düzelince geçiş otomatik yapılır."
-                : after24
-                  ? "Ev internetinde kesinti 24 saati aştı. Yedek bağlantını devreye alalım mı?"
-                  : "Ev internetinde kesinti algıladık. Teknik ekip çalışıyor; kesinti 24 saati aşarsa yedek bağlantını açabileceğiz."}
-          </PlainNote>
-        </Card>
+        <section className="rounded-card bg-card p-5 shadow-card" aria-live="polite">
+          <div className={cn("flex items-start gap-2.5 rounded-2xl px-3 py-2.5", TONE[tone])}>
+            {tone === "ok" ? <CheckCircle2 className="mt-0.5 size-5 shrink-0" /> : tone === "down" ? <CloudOff className="mt-0.5 size-5 shrink-0" /> : tone === "warn" ? <TriangleAlert className="mt-0.5 size-5 shrink-0" /> : h.status === "activating" || (o?.restoredAt && verify !== "done") ? <Loader2 className="mt-0.5 size-5 shrink-0 animate-spin" /> : <Signal className="mt-0.5 size-5 shrink-0" />}
+            <div>
+              <p className="text-sm font-semibold">{title}</p>
+              <p className="mt-0.5 text-xs text-foreground/80">{text}</p>
+            </div>
+          </div>
 
-        <HybridBoxCard />
-
-        {/* No outage */}
-        {!o && (
-          <Card>
-            <p className="flex items-center gap-2 font-semibold text-primary">
-              <CheckCircle2 className="size-5 text-success" /> Bağlantınız normal
-            </p>
-            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              {C.how.map((t) => (
-                <li key={t} className="flex gap-2">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-magenta" /> {t}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs font-semibold text-success">{C.included}</p>
-          </Card>
-        )}
-
-        {/* First 24 hours: tracking only */}
-        {ongoing && !after24 && (
-          <Card>
-            <p className="flex items-center gap-2 font-semibold text-primary">
-              <CloudOff className="size-5 text-destructive" /> {C.detected.title}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">{C.detected.text}</p>
-            <OutageMeta o={o} now={now} className="mt-4" />
-            <div className="mt-4">
-              <div className="h-1.5 overflow-hidden rounded-full bg-border">
-                <div className="h-full rounded-full bg-magenta" style={{ width: `${Math.min(100, (hours / HYBRID_OFFER_AFTER_H) * 100)}%` }} />
+          <dl className="mt-4 grid grid-cols-3 gap-2">
+            {rows.map((r) => (
+              <div key={r.label} className="rounded-2xl bg-muted p-3">
+                <dt className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <r.icon className="size-3.5" /> {r.label}
+                </dt>
+                <dd className={cn("mt-0.5 text-sm font-semibold", r.on ? "text-foreground" : "text-muted-foreground", r.label === "Ana internet" && !r.on && "text-destructive")}>{r.value}</dd>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">Şu an sizden bir işlem beklenmiyor. Kesinti {HYBRID_OFFER_AFTER_H} saati aşarsa size haber vereceğiz ve ücretsiz yedek bağlantınızı buradan etkinleştirebileceksiniz.</p>
+            ))}
+          </dl>
+
+          <div className="mt-3">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Kalan yedek internet (demo)</span>
+              <span className="font-semibold text-foreground">{fmtUsage(left)} / {fmtUsage(HYBRID_BACKUP_QUOTA_MB)}</span>
             </div>
-          </Card>
-        )}
+            <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-magenta" style={{ width: `${(left / HYBRID_BACKUP_QUOTA_MB) * 100}%` }} />
+            </div>
+          </div>
 
-        {/* After 24 hours */}
-        {after24 && (
-          <>
-            {h.status !== "active" && (
-              <Card>
-                <p className="font-semibold text-primary">Uygunluk kontrolü</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Yedek bağlantı için cihazınızı, SIM'inizi ve mobil kapsamayı kontrol ediyoruz.</p>
-                <div className="mt-3">
-                  <ChecksList checks={h.checks} checking={h.status === "checking" || h.status === "offered"} />
-                </div>
-              </Card>
-            )}
-
-            {h.status === "ready" && (
-              <Card>
-                <p className="flex items-center gap-2 font-semibold text-primary">
-                  <ShieldCheck className="size-5 text-success" /> Her şey hazır
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">Onay verirseniz yedek bağlantınızı hemen açarız. Ana bağlantınız düzelince otomatik olarak geri döneriz.</p>
-                <Button size="xl" className="mt-4 w-full rounded-full" onClick={() => activateHybrid()}>
-                  {C.consent}
-                </Button>
-                <p className="mt-2 text-center text-xs font-semibold text-success">{C.included}</p>
-                <button type="button" onClick={notNow} className="mt-2 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-primary">
-                  {C.notNow}
-                </button>
-              </Card>
-            )}
-
-            {h.status === "activating" && (
-              <Card className="flex items-center gap-3">
-                <Loader2 className="size-6 animate-spin text-magenta" />
-                <p className="font-semibold text-primary">Yedek bağlantınız etkinleştiriliyor…</p>
-              </Card>
-            )}
-
-            {h.status === "failed" && (
-              <Card>
-                <p className="flex items-center gap-2 font-semibold text-primary">
-                  <TriangleAlert className="size-5 text-warning" /> {C.failed.title}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">{C.failed.text}</p>
-                <Button size="xl" className="mt-4 w-full rounded-full" onClick={() => activateHybrid()}>
-                  {C.failed.cta}
-                </Button>
-                <button type="button" onClick={() => navigate({ to: "/yardim" })} className="mt-2 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-primary">
-                  Destek Al
-                </button>
-              </Card>
-            )}
-
-            {h.status === "no_device" && (
-              <Card>
-                <p className="font-semibold text-primary">{C.noDevice.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{C.noDevice.text}</p>
-                {h.device ? (
-                  <div className="mt-4 rounded-2xl bg-muted p-3">
-                    <DeviceTracker d={h.device} />
-                    <p className="mt-2 text-xs text-muted-foreground">Cihaz teslim edilince uygunluğunuzu otomatik olarak yeniden kontrol edeceğiz.</p>
-                  </div>
-                ) : (
-                  <>
-                    <Button size="xl" className="mt-4 w-full rounded-full" onClick={() => requestHybridDevice()}>
-                      {C.noDevice.cta}
-                    </Button>
-                    <button type="button" onClick={notNow} className="mt-2 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-primary">
-                      {C.notNow}
-                    </button>
-                  </>
-                )}
-              </Card>
-            )}
-
-            {h.status === "no_coverage" && (
-              <Card>
-                <p className="flex items-center gap-2 font-semibold text-primary">
-                  <Signal className="size-5 text-muted-foreground" /> {C.noCoverage.title}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">{C.noCoverage.text}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{C.noCoverage.after}</p>
-                <button type="button" onClick={() => checkHybrid()} className="mt-4 flex min-h-12 w-full items-center justify-center rounded-full border border-primary/20 text-sm font-semibold text-primary">
-                  Tekrar Kontrol Et
-                </button>
-              </Card>
-            )}
-
-            {h.status === "active" && (
-              <Card>
-                <p className="flex items-center gap-2 font-semibold text-primary">
-                  <CheckCircle2 className="size-5 text-success" /> {C.active.title}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">{C.active.text}</p>
-                <div className="mt-4">
-                  <LinkStatus now={now} />
-                </div>
-                <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
-                  <Info className="mt-0.5 size-3.5 shrink-0" /> Ana bağlantınız düzelince otomatik olarak geri döneceğiz. Sizin bir şey yapmanız gerekmiyor.
-                </p>
-              </Card>
-            )}
-
-            <Card>
-              <p className="mb-3 text-sm font-semibold text-primary">Arıza takibi</p>
-              <OutageMeta o={o!} now={now} />
-            </Card>
-          </>
-        )}
-
-        {/* Restored */}
-        {o?.restoredAt && (
-          <Card>
-            {verify !== "done" ? (
-              <p className="flex items-center gap-2 font-semibold text-primary">
-                <Loader2 className="size-5 animate-spin text-magenta" /> Ana bağlantınız doğrulanıyor
-              </p>
+          {showButton && (
+            <Button size="xl" className="mt-4 w-full rounded-full" onClick={openBox} disabled={!buttonReady || (wantOpen && h.status === "checking")}>
+              {wantOpen && h.status === "checking" ? <Loader2 className="animate-spin" /> : <Power />} Hibrit Box'ı Aç
+            </Button>
+          )}
+          {ongoing && h.status === "no_device" && (
+            h.device ? (
+              <div className="mt-4 rounded-2xl bg-muted p-3">
+                <DeviceTracker d={h.device} />
+              </div>
             ) : (
-              <>
-                <p className="flex items-center gap-2 font-semibold text-primary">
-                  <CheckCircle2 className="size-5 text-success" /> {h.status === "ended" ? C.restored.title : "İnternetiniz normale döndü"}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">{h.status === "ended" ? C.restored.text : C.restored.plain}</p>
-              </>
-            )}
-            <div className="mt-4">
-              <LinkStatus now={now} />
-            </div>
-            <OutageMeta o={o} now={now} className="mt-3" />
-          </Card>
-        )}
+              <Button size="xl" className="mt-4 w-full rounded-full" onClick={() => requestHybridDevice()}>
+                {C.noDevice.cta}
+              </Button>
+            )
+          )}
+
+          <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
+            <Info className="mt-0.5 size-3.5 shrink-0" /> Ana internetin düzelince mobil yedek bağlantı otomatik kapanır ve ana bağlantına dönersin.
+          </p>
+        </section>
+
+        <section className="rounded-card bg-card px-5 py-1 shadow-card">
+          <ToggleRow id="hybrid-auto" title="Otomatik yedek geçişi" desc="Kesinti 24 saati aşarsa yedek bağlantın otomatik açılsın." checked={h.autoFailover} onChange={(v) => setAutoFailover(v)} />
+        </section>
 
         <TechDetails>
+          <dl className="space-y-1.5 text-xs">
+            {[
+              ["Cihaz", hasDevice ? "Uyumlu Hibrit Box · bağlı" : "Evde uyumlu cihaz yok"],
+              ["SIM", hasDevice ? (backupOn ? "Aktif" : "Hazır") : "Yok"],
+              ["Mobil bağlantı", backupOn ? "Bağlı · 4.5G · sinyal iyi" : "Beklemede"],
+              ["Bağlantı modu", backupOn ? "Mobil yedek" : "Ana hat (fiber)"],
+              ["Açan", h.activatedBy === "auto" ? "Otomatik yedek geçişi" : h.activatedBy === "customer" ? "Sen (manuel)" : "—"],
+            ].map(([k, v]) => (
+              <div key={k} className="flex gap-2">
+                <dt className="w-28 shrink-0 text-muted-foreground">{k}</dt>
+                <dd className="font-semibold text-foreground">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          {(h.checks || h.status === "checking") && (
+            <div>
+              <p className="mb-2 text-xs font-semibold text-primary">Uygunluk kontrolü</p>
+              <ChecksList checks={h.checks} checking={h.status === "checking"} />
+            </div>
+          )}
+          {o && <OutageMeta o={o} now={now} />}
           {o && (
             <Link to="/surec/$id" params={{ id: o.wfId }} className="block text-sm font-semibold text-primary">
               İşlem adımlarını gör →
