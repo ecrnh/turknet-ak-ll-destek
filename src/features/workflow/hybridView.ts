@@ -165,7 +165,7 @@ export function outageRemainingH(hours: number, etaH: number | null | undefined,
     const left = etaH - hours;
     return left > 0 ? Math.max(1, Math.ceil(left)) : null;
   }
-  const total = Math.max(regional ? 12 : 6, Math.ceil(hours) + 4);
+  const total = Math.max(regional ? 12 : 6, Math.floor(hours) + 4);
   return Math.max(1, Math.ceil(total - hours));
 }
 
