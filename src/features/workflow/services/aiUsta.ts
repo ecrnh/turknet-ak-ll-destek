@@ -14,6 +14,7 @@ import { MockNetworkAPI, MockVisionAPI } from "../mockServices";
 import { AI_USTA_MAX_ATTEMPTS } from "../rules";
 import { useWorkflowStore as W } from "../store";
 import { setConnectivity } from "./connectivity";
+import { startOutage } from "./hybrid";
 import { openLiveChat } from "./liveSupport";
 
 const USTA_STEPS = [
