@@ -371,7 +371,9 @@ export function SpeedPanel({ wf }: { wf: Workflow }) {
       <Box>
         <GigaNote mood={near == null ? "listening" : "working"}>
           {near == null
-            ? "İnternet hızında beklenenden düşük bir değer görüyorum. Modeminin yanına yaklaşarak tekrar ölçüm yapalım."
+            ? wf.type === "proactive_fault"
+              ? "Bağlantında kısa süreli kopmalar fark ettim. Senin için kontrol ediyorum. İstersen modeminin yanına yaklaşıp bir ölçüm yap; Wi-Fi ile hat sorununu ayırmama yardım eder."
+              : "İnternet hızında beklenenden düşük bir değer görüyorum. Modeminin yanına yaklaşarak tekrar ölçüm yapalım."
             : near < pkg * 0.6
               ? `Modeminin yanında da ${near} Mbps ölçtüm. Sorun Wi-Fi kapsaması değil; hattını uzaktan iyileştirmeyi deniyorum.`
               : `Modeminin yanında ${near} Mbps ölçtüm. Sorun büyük olasılıkla Wi-Fi kapsamasıyla ilgili.`}
@@ -416,7 +418,7 @@ export function SpeedPanel({ wf }: { wf: Workflow }) {
           </ul>
         </>
       )}
-      {after != null && <p className={cn("mt-3 text-sm font-semibold", after >= pkg * 0.8 ? "text-success" : "text-warning")}>{after >= pkg * 0.8 ? "Hızın normale döndü." : "Uzaktan düzeltemedim; teknik ekip yönlendirildi."}</p>}
+      {after != null && <p className={cn("mt-3 text-sm font-semibold", after >= pkg * 0.8 ? "text-success" : "text-warning")}>{after >= pkg * 0.8 ? "Bağlantındaki sorunu uzaktan giderdik. Şu anda bağlantın normal görünüyor." : "Sorunun devam ettiğini görüyorum. Bu fiziksel bir müdahale gerektiriyor; teknik ekip sürecini senin için başlattım."}</p>}
     </Box>
     </div>
   );
