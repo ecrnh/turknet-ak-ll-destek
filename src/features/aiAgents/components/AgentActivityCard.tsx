@@ -1,68 +1,51 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, Loader2, MessageCircle } from "lucide-react";
+import { CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import { useAgentsStore } from "../store";
-import { useAppStore } from "@/features/core/appStore";
 import { useWorkflowStore } from "@/features/workflow/store";
 import { GigaAvatar, GigaName } from "@/features/giga/GigaAvatar";
-import { AGENT_DEFS, GIGA, SPEED_FIX_STEPS } from "@/data/mock";
+import { SPEED_FIX_STEPS } from "@/data/mock";
 import { fmtRelative } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
 
-/** GIGA on the home page: an invitation to ask, plus an in-progress fix when one is running. */
+/** A Hız Koruyucu fix is mentioned on the home card only while it is recent. */
+const RECENT_FIX_MS = 3 * 24 * 60 * 60 * 1000;
+
+/** GIGA on the home page: a compact presence card, plus a short note when Hız Koruyucu found and fixed something. Chat opens only from the centre GIGA button. */
 export function AgentActivityCard() {
   const run = useAgentsStore((s) => s.speedRun);
   const actions = useAgentsStore((s) => s.actions);
-  const enabled = useAgentsStore((s) => s.enabled);
   const backupOn = useWorkflowStore((s) => s.hybrid.status === "active");
-  const stats = useAgentsStore((s) => s.stats);
-  const openHelp = useAppStore((s) => s.openHelp);
-  const latest = actions.find((a) => !a.undone);
   const running = run.status === "running";
-  const on = Object.values(enabled).filter(Boolean).length;
+  const fix = actions.find((a) => a.agent === "speed" && !a.undone);
+  const recentFix = fix && Date.now() - fix.time < RECENT_FIX_MS ? fix : null;
 
   return (
-    <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
-      <Link to={running ? "/ajanlar/hiz" : backupOn ? "/hibrit" : "/ajanlar"} className="block">
-        <div className="flex items-center gap-3">
-          <GigaAvatar size={50} mood={running ? "working" : backupOn ? "listening" : "idle"} />
-          <div className="flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">
-              <GigaName />
-            </p>
-            <p className="font-semibold leading-snug">
-              {running ? "Hızını düzeltmeye çalışıyorum…" : backupOn ? "Yedek bağlantıdasın; ana bağlantın düzelince haber vereceğiz" : "Bir konuda yardıma ihtiyacın olursa buradayım"}
-            </p>
-          </div>
-          <ChevronRight className="size-5" />
+    <Link to={running ? "/ajanlar/hiz" : backupOn ? "/hibrit" : "/ajanlar"} className="block rounded-card bg-plum px-4 py-3 text-primary-foreground shadow-float">
+      <div className="flex items-center gap-3">
+        <GigaAvatar size={36} mood={running ? "working" : backupOn ? "listening" : "idle"} label={false} />
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-foreground/70">
+            <GigaName />
+          </p>
+          <p className="text-sm font-semibold leading-snug">
+            {running ? "Hızını düzeltmeye çalışıyorum…" : backupOn ? "Yedek bağlantıdasın; ana bağlantın düzelince haber vereceğiz" : "Yardıma ihtiyacın olduğunda buradayım!"}
+          </p>
         </div>
-        {running ? (
-          <div className="mt-4">
-            <p className="flex items-center gap-2 text-sm">
-              <Loader2 className="size-4 animate-spin" /> {SPEED_FIX_STEPS[Math.max(0, run.stepIndex)]}
-            </p>
-            <Progress value={((run.stepIndex + 1) / SPEED_FIX_STEPS.length) * 100} className="mt-3 h-2 bg-primary-foreground/20 [&>div]:bg-magenta" />
-          </div>
-        ) : latest ? (
-          <div className="mt-4 rounded-2xl bg-primary-foreground/10 p-3">
-            <p className="text-xs text-primary-foreground/70">
-              {AGENT_DEFS.find((d) => d.id === latest.agent)?.name} · {fmtRelative(latest.time)}
-            </p>
-            <p className="mt-0.5 text-sm font-semibold">{latest.title}</p>
-          </div>
-        ) : null}
-        <p className="mt-3 text-xs text-primary-foreground/75">
-          {on ? `${on} otomatik kontrol açık · ` : ""}Bu ay {stats.solved} sorunu birlikte çözdük
+        <ChevronRight className="size-5 shrink-0" />
+      </div>
+      {running ? (
+        <div className="mt-2.5">
+          <p className="flex items-center gap-2 text-xs">
+            <Loader2 className="size-3.5 animate-spin" /> {SPEED_FIX_STEPS[Math.max(0, run.stepIndex)]}
+          </p>
+          <Progress value={((run.stepIndex + 1) / SPEED_FIX_STEPS.length) * 100} className="mt-2 h-1.5 bg-primary-foreground/20 [&>div]:bg-magenta" />
+        </div>
+      ) : recentFix ? (
+        <p className="mt-2 flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5 text-xs">
+          <CheckCircle2 className="size-3.5 shrink-0 text-neon-lime" />
+          <span className="truncate">Hız Koruyucu düşüşü tespit edip düzeltti · {fmtRelative(recentFix.time)}</span>
         </p>
-      </Link>
-      <button
-        type="button"
-        onClick={() => openHelp()}
-        className="mt-4 flex min-h-11 w-full items-center gap-2 rounded-full bg-card px-4 text-left text-sm text-muted-foreground"
-      >
-        <MessageCircle className="size-4 text-magenta" />
-        <span className="flex-1">{GIGA.placeholder}</span>
-        <span className="text-xs font-semibold text-primary">Sor</span>
-      </button>
-    </div>
+      ) : null}
+    </Link>
   );
 }
