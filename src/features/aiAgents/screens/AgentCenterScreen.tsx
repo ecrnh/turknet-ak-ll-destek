@@ -292,7 +292,7 @@ export function AgentCenterScreen() {
                               .map((a) => (
                                 <button key={a.label} type="button" onClick={() => onAction(a)} className="flex min-h-11 w-full items-center justify-between gap-2 rounded-2xl border border-primary/20 bg-background px-3.5 py-2 text-left">
                                   <span className="text-sm font-semibold text-primary">{a.label}</span>
-                                  {a.kind === "go" ? <ChevronRight className="size-4 text-muted-foreground" /> : <ActionModeTag mode={a.kind} />}
+                                  {a.kind === "go" ? <ChevronRight className="size-4 text-muted-foreground" /> : <ActionModeTag mode={a.kind as "auto" | "approval" | "human"} />}
                                 </button>
                               ))}
                           </div>
