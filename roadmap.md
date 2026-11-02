@@ -53,3 +53,9 @@
 - [x] Sıradan özelliklerden GIGA öneki kaldırıldı (Fatura Kalkanı, Taşınma ve Nakil, İşlemlerim, Hız Koruyucu)
 - [x] Gözetim çağrıştıran metinler teknik kontrol diline çevrildi; GIGA sayfasında tek kapsam notu, sohbette gizlilik yanıtı
 - [x] Sıradan ekranlarda GIGA yüzü yerine sade bilgi notu; ad/gizlilik testleri
+
+## Tur 7 — GIGA Teknik dijital onarım önce
+- [x] Sorun türü sorusu (4 seçenek), oturum boyunca korunur
+- [x] Dijital onarım: 5 sıralı uzaktan kontrol (simülasyon); sorun yok → ön/arka modem incelemesi + elle ışık/kablo seçimi; sorun var → uzaktan düzeltme + doğrulama
+- [x] Her kararda "Canlı destekle görüşmek istiyorum." → tam teşhis özetiyle aktarım + sohbet
+- [x] Ana sayfa: karşılama kartı kaldırıldı, GIGA kutusu "Merhaba, hoş geldin Çağrı!" ile en üstte; sohbette "Ben yaparım" etiketi kaldırıldı
