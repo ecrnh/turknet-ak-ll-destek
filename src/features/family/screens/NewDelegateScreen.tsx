@@ -4,7 +4,7 @@ import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { Csat } from "@/components/tn/Csat";
-import { Banner, Chip, ToggleRow } from "@/components/tn/primitives";
+import { Banner, Chip, PlainNote, ToggleRow } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";

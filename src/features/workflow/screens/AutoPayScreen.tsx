@@ -3,7 +3,7 @@ import { BellRing, CheckCircle2, CreditCard, Landmark, ShieldCheck, TriangleAler
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
-import { ToggleRow } from "@/components/tn/primitives";
+import { PlainNote, ToggleRow } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";

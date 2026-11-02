@@ -5,7 +5,7 @@ import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { Button } from "@/components/ui/button";
 import { BILL_DISCOUNTS, BILLING_CHECKS, SUBSCRIPTION } from "@/data/mock";
-import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
+import { GigaNote } from "@/features/giga/GigaAvatar";
 import { fmtTL } from "@/lib/format";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";

@@ -3,7 +3,7 @@ import { History, ShieldCheck, ShieldOff, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
-import { Chip, EmptyState, ToggleRow } from "@/components/tn/primitives";
+import { Chip, EmptyState, PlainNote, ToggleRow } from "@/components/tn/primitives";
 import { ConfirmDialog } from "@/components/tn/Sheet";
 import { Button } from "@/components/ui/button";
 import { SCOPE_GROUPS, SCOPES, type ScopeKey } from "@/data/mock";
