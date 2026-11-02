@@ -41,6 +41,7 @@ beforeEach(() => {
 
 describe("Akıllı bildirim katmanı", () => {
   it("rutin gelişme push göndermez, önemli gelişme gönderir", () => {
+    useAppStore.getState().reset();
     const before = useAppStore.getState().notifications.length;
     seedPaidButDebt(false);
     const { wfId } = runBillingShield();
