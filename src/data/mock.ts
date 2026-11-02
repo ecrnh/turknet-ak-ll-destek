@@ -3,9 +3,9 @@
  */
 
 export const USER = {
-  firstName: "Çağrı",
-  name: "ÇAĞRI KOYUNCU",
-  initials: "ÇK",
+  firstName: "Ecren",
+  name: "ECREN KOYUNCU",
+  initials: "EK",
   subscriberNo: "4896005",
   location: "İstanbul/Ümraniye",
   phone: "0532 418 22 17",
