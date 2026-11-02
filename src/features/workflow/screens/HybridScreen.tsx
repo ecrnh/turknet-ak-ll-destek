@@ -40,7 +40,6 @@ export function HybridScreen() {
   const hours = ongoing ? outageHours(o, now) : 0;
   const offerOpen = ongoing && hybridOfferOpen(hours, o.etaH);
   const backupOn = h.status === "active" && !h.pausedAt;
-  const mainUp = c.fixed === "up";
   const used = h.activatedAt ? hybridUsageMb(h.activatedAt, h.pausedAt ?? h.endedAt ?? now) : 0;
   const left = Math.max(0, HYBRID_BACKUP_QUOTA_MB - used);
 
@@ -88,7 +87,6 @@ export function HybridScreen() {
     hasDevice,
   });
   const { tone } = v;
-  void mainUp;
 
   const rows: { icon: typeof Router; label: string; value: string; tone: "on" | "off" | "bad" }[] = [
     { icon: Wifi, label: "Ana internet", value: v.main, tone: v.main === "Bağlı" ? "on" : "bad" },
@@ -185,7 +183,7 @@ export function HybridScreen() {
               ["Cihaz", hasDevice ? "Uyumlu Hibrit Box · bağlı" : "Evde uyumlu cihaz yok"],
               ["SIM", hasDevice ? (backupOn ? "Aktif" : "Hazır") : "Yok"],
               ["Mobil bağlantı", backupOn ? "Bağlı · 4.5G · sinyal iyi" : "Beklemede"],
-              ["Bağlantı modu", backupOn ? "Mobil yedek" : "Ana hat (fiber)"],
+              ["Bağlantı modu", backupOn ? "Mobil yedek" : v.main === "Kesik" ? "Bağlantı yok" : "Ana hat (fiber)"],
               ["Açan", h.activatedBy === "auto" ? "Otomatik yedek geçişi" : h.activatedBy === "customer" ? "Sen (manuel)" : "—"],
             ].map(([k, v]) => (
               <div key={k} className="flex gap-2">
