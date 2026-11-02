@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { choiceOf } from "../engine";
 import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY } from "../rules";
 import { rateUsta } from "../services/aiUsta";
+import { measureNearModem } from "../services/proactive";
 import { resumeBillingReview } from "../services/billing";
 import { toggleBox } from "../services/connectivity";
 import { useWorkflowStore } from "../store";
@@ -362,7 +363,26 @@ export function SpeedPanel({ wf }: { wf: Workflow }) {
       </div>
     </div>
   );
+  const near = wf.data["nearSpeed"] != null ? Number(wf.data["nearSpeed"]) : null;
+  const done = wf.steps.filter((x) => x.status === "done" && ["remote", "retest", "field"].includes(x.key));
   return (
+    <div className="space-y-3">
+    {before != null && after == null && wf.status !== "completed" && (
+      <Box>
+        <GigaNote mood={near == null ? "listening" : "working"}>
+          {near == null
+            ? "İnternet hızında beklenenden düşük bir değer görüyorum. Modeminin yanına yaklaşarak tekrar ölçüm yapalım."
+            : near < pkg * 0.6
+              ? `Modeminin yanında da ${near} Mbps ölçtüm. Sorun Wi-Fi kapsaması değil; hattını uzaktan iyileştirmeyi deniyorum.`
+              : `Modeminin yanında ${near} Mbps ölçtüm. Sorun büyük olasılıkla Wi-Fi kapsamasıyla ilgili.`}
+        </GigaNote>
+        {near == null && (
+          <button type="button" onClick={() => measureNearModem(wf.id)} className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+            <Gauge className="size-4" /> Yeniden ölç
+          </button>
+        )}
+      </Box>
+    )}
     <Box>
       <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-primary">
         <Gauge className="size-5" /> Hızınız: önce ve sonra
@@ -385,7 +405,20 @@ export function SpeedPanel({ wf }: { wf: Workflow }) {
       <p className="mt-3 flex items-start gap-1.5 text-[11px] text-muted-foreground">
         <Info className="mt-0.5 size-3.5 shrink-0" /> Hızınız hattınızın fiziksel kapasitesinin üzerine çıkarılamaz. Uzaktan düzelmezse teknik ekip yönlendirilir.
       </p>
+      {near != null && <p className="mt-2 text-xs text-muted-foreground">Modem yanında ölçüm: {near} Mbps (demo)</p>}
+      {done.length > 0 && (
+        <>
+          <p className="mb-1.5 mt-4 text-xs font-semibold text-foreground">Yapılan işlemler</p>
+          <ul className="space-y-1 text-xs text-muted-foreground">
+            {done.map((x) => (
+              <li key={x.key}>✓ {x.note ?? x.label}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {after != null && <p className={cn("mt-3 text-sm font-semibold", after >= pkg * 0.8 ? "text-success" : "text-warning")}>{after >= pkg * 0.8 ? "Hızın normale döndü." : "Uzaktan düzeltemedim; teknik ekip yönlendirildi."}</p>}
     </Box>
+    </div>
   );
 }
 
