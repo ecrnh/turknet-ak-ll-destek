@@ -4,6 +4,7 @@
  * shows the real state (never a success GIGA only claimed).
  */
 import type { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { useAppStore } from "@/features/core/appStore";
 import { log } from "@/features/workflow/engine";
 import type { Intent } from "@/features/workflow/rules";
@@ -30,7 +31,9 @@ export function startIntent(intent: Intent, said: string, navigate: Navigate) {
       return navigate({ to: "/tasinma" });
     case "billing": {
       const r = runBillingShield();
-      return r.wfId ? navigate({ to: "/surec/$id", params: { id: r.wfId } }) : navigate({ to: "/fatura-kalkani" });
+      if (r.wfId) return navigate({ to: "/surec/$id", params: { id: r.wfId } });
+      toast.success("GIGA faturanı kontrol etti", { description: "Faturan ve ödemelerin uyumlu görünüyor." });
+      return navigate({ to: "/fatura-kalkani", search: { kontrol: 1 } });
     }
     case "ai_usta":
       // A known outage is already being tracked: no modem steps for the customer.

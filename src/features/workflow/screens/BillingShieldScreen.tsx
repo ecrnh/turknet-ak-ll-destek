@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -16,11 +16,12 @@ export function BillingShieldScreen() {
   const bills = useWorkflowStore((s) => s.bills);
   const payments = useWorkflowStore((s) => s.payments);
   const wfs = useWorkflowStore((s) => s.workflows).filter((w) => w.type === "billing_check");
+  const byGiga = useSearch({ from: "/fatura-kalkani" }).kontrol === 1;
   const [ran, setRan] = useState(false);
   const bill = bills[0]!;
   const findings = compareBilling(bill, payments);
   const active = wfs.find(isActive);
-  const checked = ran || wfs.length > 0;
+  const checked = ran || byGiga || wfs.length > 0;
 
   const run = () => {
     const r = runBillingShield();
