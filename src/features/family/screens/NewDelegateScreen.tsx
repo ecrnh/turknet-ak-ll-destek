@@ -122,7 +122,7 @@ export function NewDelegateScreen() {
               <p className="text-sm font-semibold text-primary">Bu kişinin hesabınızda hangi işlemleri yapabilmesini istiyorsunuz?</p>
               <div className="divide-y divide-border">
                 {SCOPES.map((s) => (
-                  <ToggleRow key={s.key} id={`scope-${s.key}`} title={s.label} desc={s.desc} checked={scopes[s.key]} onChange={(v) => setScopes((p) => ({ ...p, [s.key]: v }))} />
+                  <ToggleRow key={s.key} id={`scope-${s.key}`} title={s.label} desc={`${s.desc} · ${s.items.join(", ")}`} checked={scopes[s.key]} onChange={(v) => setScopes((p) => ({ ...p, [s.key]: v }))} />
                 ))}
               </div>
               {(scopes.payment || scopes.cancel) && (
