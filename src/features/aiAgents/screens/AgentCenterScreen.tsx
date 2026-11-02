@@ -211,8 +211,13 @@ export function AgentCenterScreen() {
   }, [helpOpen]);
 
   useEffect(() => {
-    const el = document.getElementById("tn-scroll");
-    if (msgs.length) el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    if (!msgs.length) return;
+    // Wait a frame so the new bubble (and any live process card) has its height.
+    const t = window.setTimeout(() => {
+      const el = document.getElementById("tn-scroll");
+      el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }, 120);
+    return () => window.clearTimeout(t);
   }, [msgs, typing]);
 
   const onAction = (a: GigaAction) => {
