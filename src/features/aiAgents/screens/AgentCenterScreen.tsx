@@ -97,7 +97,7 @@ function ChatProcess({ wfId }: { wfId: string }) {
             {current.status === "in_progress" ? <Loader2 className="mt-px size-3.5 shrink-0 animate-spin text-magenta" /> : <Clock3 className="mt-px size-3.5 shrink-0 text-muted-foreground" />} {current.label}
           </p>
         )}
-        <p className="mt-1.5 text-xs text-muted-foreground">{wf.status === "completed" ? wf.outcome?.summary ?? "Bu işlem tamamlandı." : nextForChat(toGigaWf(wf))}</p>
+        {(!usta || wf.decision || wf.handoff || wf.status === "completed") && <p className="mt-1.5 text-xs text-muted-foreground">{wf.status === "completed" ? wf.outcome?.summary ?? "Bu işlem tamamlandı." : nextForChat(toGigaWf(wf))}</p>}
         <Link to="/surec/$id" params={{ id: wf.id }} className="mt-2 inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-magenta">
           Detayları gör <ChevronRight className="size-4" />
         </Link>
