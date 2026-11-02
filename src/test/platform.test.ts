@@ -77,11 +77,15 @@ describe("AI Usta sesli triyaj", () => {
   it("SMS açılınca çağrıdaki bağlam devralınır, sorun tekrar sorulmaz", () => {
     const id = startUstaCall();
     drain();
+    expect(getWf(id)!.decision?.key).toBe("usta_menu");
+    decide(id, "down");
+    drain();
     expect(getWf(id)!.decision?.key).toBe("usta_ivr");
     decide(id, "sms");
     expect(W.getState().sms).toHaveLength(1);
-    expect(openUstaSms(id)).toBe(true);
-    expect(openUstaSms(id)).toBe(false);
+    expect(openUstaSms(id)).toBe(`/ai-usta/${id}`);
+    expect(openUstaSms(id)).toBeNull();
+    expect(getWf(id)!.data["issue"]).toBe("down");
     expect(stepStatus(id, "context")).toBe("done");
     expect(stepStatus(id, "report")).toBe("done");
     drain();
