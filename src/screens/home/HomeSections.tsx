@@ -23,8 +23,9 @@ export function HomeWelcome() {
     <div className="rounded-card bg-card px-5 py-4 shadow-card">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground">Merhaba, hoş geldin.</p>
-          <p className="text-2xl font-semibold text-primary">{acting ? acting.short : USER.firstName}</p>
+          <p className="text-sm text-muted-foreground">
+            Merhaba, hoş geldin <span className="font-semibold text-primary">{acting ? acting.short : USER.firstName}</span>!
+          </p>
         </div>
         <span className="rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-bold text-success">Abonelik aktif</span>
       </div>
