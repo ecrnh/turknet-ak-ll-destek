@@ -106,7 +106,7 @@ describe("Bağlamı koruyan canlı destek", () => {
     expect(getWf(id)!.handoff).not.toBeNull();
     expect(openLiveChat(id)).toBe(true);
     const chat = W.getState().chats.find((c) => c.workflowId === id)!;
-    expect(chat.messages.some((m) => m.from === "agent" && m.text.includes("tekrar yapmana gerek yok"))).toBe(true);
+    expect(chat.messages.some((m) => m.from === "agent" && m.text.includes("baştan yapmana gerek yok"))).toBe(true);
     expect(acceptFieldVisit(id)).toBe(true);
     expect(acceptFieldVisit(id)).toBe(false);
     expect(W.getState().workOrders.filter((o) => o.workflowId === id && o.kind === "field_repair")).toHaveLength(1);
