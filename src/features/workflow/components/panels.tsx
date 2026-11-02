@@ -418,7 +418,7 @@ export function SpeedPanel({ wf }: { wf: Workflow }) {
           </ul>
         </>
       )}
-      {after != null && <p className={cn("mt-3 text-sm font-semibold", after >= pkg * 0.8 ? "text-success" : "text-warning")}>{after >= pkg * 0.8 ? "Bağlantındaki sorunu uzaktan giderdik. Şu anda bağlantın normal görünüyor." : "Sorunun devam ettiğini görüyorum. Bu fiziksel bir müdahale gerektiriyor; teknik ekip sürecini senin için başlattım."}</p>}
+      {after != null && <p className={cn("mt-3 text-sm font-semibold", after >= pkg * 0.8 ? "text-success" : "text-warning")}>{after >= pkg * 0.8 ? "Bağlantındaki sorunu uzaktan giderdik. Şu anda bağlantın normal görünüyor." : "Sorunun devam ettiğini görüyorum. Bu fiziksel bir müdahale gerektiriyor; gerekli teknik süreci senin için başlatıyorum."}</p>}
     </Box>
     </div>
   );
