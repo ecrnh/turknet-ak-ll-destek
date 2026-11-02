@@ -452,3 +452,31 @@ export const INTENT_KEYWORDS: { intent: "billing" | "ai_usta" | "relocation" | "
   { intent: "ai_usta", words: ["çalışmıyor", "kesildi", "kesinti", "ışık", "modem", "internet yok", "bağlantı yok", "kopuyor", "bağlanamıyorum", "gitti"] },
   { intent: "track", words: ["takip", "durum", "talebim", "işlemim", "ne oldu", "nerede", "devam eden"] },
 ];
+
+/* ---------------- GIGA · TürkNet'in akıllı dijital yardımcısı ---------------- */
+export const GIGA = {
+  name: "GIGA",
+  tagline: "TürkNet'in akıllı dijital yardımcısı",
+  welcome: [
+    "Merhaba! Ben GIGA 👋",
+    "İnternetin, faturaların veya işlemlerinle ilgili ne olursa olsun yardımcı olmak için buradayım.",
+    "Bugün senin için neyi halledelim?",
+  ],
+  placeholder: "GIGA'ya yaz…",
+  humanNote: "İstediğin an bir uzmana bağlanabilirsin; konuşmamızı ona iletirim.",
+  /** One assistant, four capabilities. `prompt` is what tapping the capability says to GIGA. */
+  capabilities: [
+    { id: "teknik", name: "GIGA Teknik", desc: "Bağlantı ve modem sorunlarını birlikte çözeriz", icon: "usta", to: "/ai-usta", prompt: "İnternetim çalışmıyor" },
+    { id: "fatura", name: "GIGA Fatura", desc: "Faturanı açıklar, olağan dışı tutarları yakalar", icon: "shield", to: "/fatura-kalkani", prompt: "Faturamda tutarsızlık var" },
+    { id: "tasinma", name: "GIGA Taşınma", desc: "Yeni adresinde altyapıdan kuruluma kadar yönetir", icon: "route", to: "/tasinma", prompt: "Taşınacağım" },
+    { id: "takip", name: "GIGA Takip", desc: "Devam eden işlemlerini senin için izler", icon: "track", to: "/takip", prompt: "İşlemim ne durumda?" },
+  ],
+  /** How an action is labelled so the customer always knows who does what. */
+  modes: {
+    auto: "GIGA yapar",
+    approval: "Onayın gerekir",
+    human: "Uzmana bağlanır",
+  },
+  can: ["Bağlantını ve modem durumunu kontrol etmek", "İzin verdiğin uzaktan düzeltmeleri yapıp tekrar ölçmek", "Faturanı ödeme kayıtlarınla karşılaştırmak", "Taşınma ve randevu aşamalarını takip etmek"],
+  needsApproval: ["Fatura incelemesi başlatmak, iade veya borç düzeltmesi", "Nakil başvurusu ve randevu oluşturmak", "Hibrit İnternet ve TürkNet Box'ı etkinleştirmek", "Otomatik ödeme talimatı vermek"],
+} as const;
