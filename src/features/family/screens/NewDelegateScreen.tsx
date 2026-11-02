@@ -10,13 +10,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { RELATIONS, SCOPES, type ScopeKey } from "@/data/mock";
+import { defaultScopes, RELATIONS, SCOPE_GROUPS, SCOPES, USER, type ScopeKey } from "@/data/mock";
+import { GigaNote } from "@/features/giga/GigaAvatar";
 import { useAppStore } from "@/features/core/appStore";
 import { useFamilyStore, type Duration } from "../store";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
-const STEP_TITLES = ["Kişi bilgileri", "Yetki kapsamı", "Onay", "SMS doğrulama"];
+const STEP_TITLES = ["Kişi bilgileri", "Yetkiler", "Onay", "Kimlik doğrulama"];
 
 export function NewDelegateScreen() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export function NewDelegateScreen() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [relation, setRelation] = useState<string>("Anne");
-  const [scopes, setScopes] = useState<Record<ScopeKey, boolean>>(() => Object.fromEntries(SCOPES.map((s) => [s.key, s.default])) as Record<ScopeKey, boolean>);
+  const [scopes, setScopes] = useState<Record<ScopeKey, boolean>>(defaultScopes);
   const [duration, setDuration] = useState<Duration>("unlimited");
   const [kvkk, setKvkk] = useState(false);
   const [otp, setOtp] = useState("");
@@ -44,7 +45,7 @@ export function NewDelegateScreen() {
       if (otp.length < 6) return setError("6 haneli kodu eksiksiz gir.");
       addDelegate({ name: name.trim(), phone, relation, scopes, duration });
       addHistory("Aile yetkisi verildi", `${name} (${relation})`);
-      notify({ kind: "family", title: "Yetkilendirme tamamlandı", body: `${name} artık hesabında seçtiğin işlemleri yapabilir.`, to: "/aile" }, false);
+      notify({ kind: "family", title: "Yetkilendirme tamamlandı", body: `${name} daveti kabul ettiğinde seçtiğin işlemleri yönetebilecek.`, to: "/aile", from: "giga" }, false);
       flow.complete({ relation, duration });
     }
     setStep((s) => s + 1);
@@ -57,12 +58,15 @@ export function NewDelegateScreen() {
         <div className="space-y-4 px-4">
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="rounded-card bg-card p-6 text-center shadow-card">
             <CheckCircle2 className="mx-auto size-16 text-success" />
-            <p className="mt-3 text-xl font-semibold text-primary">{name} yetkilendirildi</p>
-            <p className="mt-1 text-sm text-muted-foreground">Yetkiyi istediğin an tek dokunuşla iptal edebilirsin.</p>
+            <p className="mt-3 text-xl font-semibold text-primary">Yetkilendirme tamamlandı.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Artık seçtiğin işlemleri {name} de yönetebilir. Davet {phone} numarasına SMS ile gönderildi (demo); kabul ettiğinde yetkiler aktifleşir.</p>
             <Button size="lg" className="mt-5 w-full" onClick={() => navigate({ to: "/aile" })}>
               Yetkili Kişilere Dön
             </Button>
           </motion.div>
+          <GigaNote>
+            {name} {SCOPES.filter((x) => scopes[x.key] && !x.ownerApproval).map((x) => x.label.toLocaleLowerCase("tr-TR")).join(", ") || "hiçbir işlem"} yapabilecek. Ödeme, iptal ve paket değişikliği gibi işlemler yine her seferinde senin onayını gerektirir; abonelik sahipliği devredilemez.
+          </GigaNote>
           <Csat feature="family_authorization" />
         </div>
       </div>
@@ -106,17 +110,20 @@ export function NewDelegateScreen() {
           )}
           {step === 1 && (
             <>
-              <p className="text-sm text-muted-foreground">Bu kişi hesabında hangi işlemleri yapabilsin?</p>
-              <div className="divide-y divide-border">
-                {SCOPES.map((s) => (
-                  <ToggleRow key={s.key} id={`scope-${s.key}`} title={s.label} desc={s.desc} checked={scopes[s.key]} onChange={(v) => setScopes((p) => ({ ...p, [s.key]: v }))} />
-                ))}
-              </div>
-              {(scopes.payment || scopes.cancel) && (
-                <Banner tone="warning" title="Hassas yetki açtın">
-                  Fatura ödeme ve iptal yetkileri finansal sonuç doğurur.
-                </Banner>
-              )}
+              <p className="font-semibold text-primary">Bu kişinin hesabında hangi işlemleri yapabilmesini istiyorsun?</p>
+              {SCOPE_GROUPS.map((g) => (
+                <div key={g.id}>
+                  <p className="pt-2 text-xs font-bold uppercase tracking-wide text-magenta">{g.title}</p>
+                  <div className="divide-y divide-border">
+                    {SCOPES.filter((s) => s.group === g.id).map((s) => (
+                      <ToggleRow key={s.key} id={`scope-${s.key}`} title={s.ownerApproval ? `${s.label} · ek onayınla` : s.label} desc={s.desc} checked={scopes[s.key]} onChange={(v) => setScopes((p) => ({ ...p, [s.key]: v }))} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <Banner tone={scopes.payment || scopes.cancel || scopes.plan ? "warning" : "info"} title="Güvenliğin için">
+                Ödeme, iptal, iade ve abonelik değişiklikleri her seferinde senin ek onayını gerektirir. Aile üyesi abonelik sahipliğini değiştiremez, şifre veya kart bilgisi göremez.
+              </Banner>
               <div>
                 <p className="mb-2 text-sm font-medium">Süre</p>
                 <div className="flex gap-2">
@@ -156,8 +163,8 @@ export function NewDelegateScreen() {
           )}
           {step === 3 && (
             <div className="text-center">
-              <p className="font-semibold text-primary">SMS ile doğrula</p>
-              <p className="mt-1 text-sm text-muted-foreground">{phone} numarasına gönderilen 6 haneli kodu gir. (Demo: herhangi bir kod)</p>
+              <p className="font-semibold text-primary">Kimliğini doğrula</p>
+              <p className="mt-1 text-sm text-muted-foreground">Yetkiyi abonelik sahibi olarak verdiğini doğrulamak için {USER.phone} numarana gönderilen 6 haneli kodu gir. Şifre veya kimlik numarası istemiyoruz. (Demo: herhangi bir kod)</p>
               <div className="mt-5 flex justify-center">
                 <InputOTP maxLength={6} value={otp} onChange={setOtp} aria-label="Doğrulama kodu">
                   <InputOTPGroup>
@@ -182,7 +189,7 @@ export function NewDelegateScreen() {
             </Button>
           )}
           <Button size="lg" className="flex-1" onClick={next}>
-            {step === 3 ? "Doğrula ve Yetkilendir" : "Devam"}
+            {step === 3 ? "Yetkilendirmeyi tamamla" : "Devam"}
           </Button>
         </div>
       </div>
