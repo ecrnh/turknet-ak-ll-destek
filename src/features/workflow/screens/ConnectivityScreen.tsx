@@ -49,7 +49,7 @@ export function ConnectivityScreen() {
           </button>
           <Link to="/ai-usta" className="flex min-h-[96px] flex-col justify-between rounded-card bg-card p-4 shadow-card">
             <ScanEye className="size-6 text-magenta" />
-            <span className="font-semibold leading-tight text-primary">Sorunu AI Usta ile Çöz</span>
+            <span className="font-semibold leading-tight text-primary">Sorunu GIGA Teknik ile Çöz</span>
           </Link>
         </div>
 

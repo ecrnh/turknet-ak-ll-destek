@@ -4,7 +4,7 @@ import { uid } from "@/lib/format";
 import { USER } from "@/data/mock";
 
 export type NetStatus = "online" | "slow" | "down" | "mobile";
-export type Channel = "Görüntülü" | "QR" | "Ajan" | "Chat" | "Dijital Onarım" | "Otonom";
+export type Channel = "Görüntülü" | "QR" | "GIGA" | "Chat" | "Dijital Onarım" | "Otonom";
 export type NotifKind = "agent" | "support" | "family" | "campaign" | "bill";
 
 export interface AppNotification {
@@ -112,17 +112,17 @@ const T = (iso: string) => new Date(iso).getTime();
 
 const seedNotifications = (): AppNotification[] => [
   { id: "n1", kind: "campaign", title: "12 Ay Peşin Ödeme Fırsatı", body: "Aylık ₺749,90'dan fiyatını sabitle, ₺2.400 tasarruf et.", time: T("2026-10-21T09:10:00+03:00"), read: false, to: "/islem/fiyat-sabitle" },
-  { id: "n2", kind: "agent", title: "Modem Sağlık İzleyici", body: "Modem sıcaklığın normal. Son 7 günde kopma yok.", time: T("2026-10-21T08:00:00+03:00"), read: false, to: "/ajanlar" },
+  { id: "n2", kind: "agent", title: "GIGA · Modem sağlığı", body: "Modem sıcaklığın normal. Son 7 günde kopma yok.", time: T("2026-10-21T08:00:00+03:00"), read: false, to: "/ajanlar" },
   { id: "n3", kind: "family", title: "Aile yetkisi aktif", body: "Ayşe Koyuncu hesabında işlem yapma yetkin 14 Eylül'den beri aktif.", time: T("2026-10-20T19:22:00+03:00"), read: false, to: "/aile" },
   { id: "n4", kind: "bill", title: "Ekim faturan hazır", body: "Ödenmemiş faturan yok. Teşekkürler!", time: T("2026-10-20T10:00:00+03:00"), read: false, to: "/faturalar" },
   { id: "n5", kind: "support", title: "Destek kaydın tamamlandı", body: "Dijital Onarım ile hat profilin yenilendi.", time: T("2026-10-02T15:40:00+03:00"), read: false, to: "/destek-kayitlari" },
   { id: "n6", kind: "campaign", title: "1.000 Mbps Fiber adresinde!", body: "Hızını tek dokunuşla yükselt.", time: T("2026-10-01T12:00:00+03:00"), read: false, to: "/islem/hiz-yukseltme" },
-  { id: "n7", kind: "agent", title: "Fatura Asistanı", body: "Eylül faturan otomatik ödendi: ₺749,90", time: T("2026-09-05T09:00:00+03:00"), read: false, to: "/faturalar/gecmis" },
+  { id: "n7", kind: "agent", title: "GIGA Fatura", body: "Eylül faturan otomatik ödendi: ₺749,90", time: T("2026-09-05T09:00:00+03:00"), read: false, to: "/faturalar/gecmis" },
   { id: "n8", kind: "campaign", title: "Arkadaşını Getir", body: "Sayende 1 kişi Turknet'li oldu. 1 ay ücretsiz internet kazandın.", time: T("2026-09-03T18:00:00+03:00"), read: false, to: "/islem/arkadasini-getir" },
   { id: "n9", kind: "support", title: "Yeni: QR ile Destek", body: "Modemindeki QR'ı okut, arızanı form doldurmadan bildir.", time: T("2026-09-02T10:00:00+03:00"), read: false, to: "/qr" },
   { id: "n10", kind: "support", title: "Yeni: Görüntülü Destek", body: "Uzmanımız kameradan modemini görsün, birlikte çözelim.", time: T("2026-09-01T10:00:00+03:00"), read: false, to: "/goruntulu-destek" },
   { id: "n11", kind: "support", title: "Yeni: Ücretsiz Hibrit İnternet", body: "Kesinti 24 saati aşarsa aboneliğinize dahil yedek bağlantınızı uygulamadan etkinleştirebilirsiniz.", time: T("2026-08-30T10:00:00+03:00"), read: false, to: "/hibrit" },
-  { id: "n12", kind: "agent", title: "AI Ajanların hazır", body: "Hız Koruyucu ve Kesinti Takibi ajanların aktif.", time: T("2026-08-29T10:00:00+03:00"), read: false, to: "/ajanlar" },
+  { id: "n12", kind: "agent", title: "Merhaba, ben GIGA!", body: "Hız Koruyucu ve Kesinti Takibi görevlerim aktif; hattını senin için izliyorum.", time: T("2026-08-29T10:00:00+03:00"), read: false, to: "/ajanlar" },
 ];
 
 const seedRecords = (): SupportRecord[] => [
@@ -140,7 +140,7 @@ const seedRecords = (): SupportRecord[] => [
     id: "r-seed-2",
     channel: "Chat",
     title: "Modem ışığı kırmızı yanıyor",
-    summary: "Asistandan canlı chat'e aktarıldı, saha ekibi yönlendirildi.",
+    summary: "Dijital asistandan canlı chat'e aktarıldı, saha ekibi yönlendirildi.",
     status: "Tamamlandı",
     time: T("2026-09-12T11:05:00+03:00"),
     details: ["Asistan → canlı chat aktarımı", "Bekleme: 14 dk", "Saha ziyareti: 13 Eyl"],

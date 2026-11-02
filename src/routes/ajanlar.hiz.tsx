@@ -3,6 +3,6 @@ import { SpeedAgentScreen } from "@/features/aiAgents/screens/SpeedAgentScreen";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/ajanlar/hiz")({
-  head: () => pageHead("Hız Koruyucu Ajan", "Hız düşüşünü tespit edip otomatik düzelten ajan."),
+  head: () => pageHead("GIGA Hız Koruyucu", "GIGA hız düşüşünü tespit edip izin verdiğin uzaktan düzeltmeyi yapar."),
   component: SpeedAgentScreen,
 });

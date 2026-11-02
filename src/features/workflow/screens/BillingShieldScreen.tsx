@@ -31,14 +31,14 @@ export function BillingShieldScreen() {
 
   return (
     <div>
-      <PageHeader title="Fatura Kalkanı" />
+      <PageHeader title="GIGA Fatura" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">
             <ShieldCheck className="size-6" />
           </span>
           <p className="mt-3 text-lg font-semibold leading-snug">Faturanızı ve ödemelerinizi biz karşılaştıralım; olası bir farklılığı siz fark etmeden yakalayalım.</p>
-          <p className="mt-2 text-xs text-primary-foreground/80">Fatura Kalkanı kayıtları kendisi değiştirmez. İade veya borç düzeltme yalnızca sizin onayınızla ve yetkili ekip üzerinden yapılır.</p>
+          <p className="mt-2 text-xs text-primary-foreground/80">GIGA Fatura, Fatura Kalkanı ile kayıtları karşılaştırır ama kendisi değiştirmez. İade veya borç düzeltme yalnızca sizin onayınızla ve yetkili ekip üzerinden yapılır.</p>
         </div>
 
         {active && (

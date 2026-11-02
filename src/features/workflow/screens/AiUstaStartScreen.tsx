@@ -14,7 +14,7 @@ export function AiUstaStartScreen() {
 
   return (
     <div>
-      <PageHeader title="AI Usta" />
+      <PageHeader title="GIGA Teknik" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
           <div className="flex items-center gap-4">

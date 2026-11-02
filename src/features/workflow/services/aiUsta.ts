@@ -29,7 +29,7 @@ export function startAiUsta(): string {
   setConnectivity({ fixed: "down" }, "Modem internet oturumu yok");
   const { wf, created } = createWorkflow({
     type: "ai_usta",
-    title: "AI Usta · İnternetim çalışmıyor",
+    title: "GIGA Teknik · İnternetim çalışmıyor",
     dedupeKey: `usta:${SUBSCRIPTION.id}`,
     steps: [{ key: "report", label: "Sorun bildirimi" }, ...USTA_STEPS],
     data: { channel: "app" },
@@ -46,13 +46,13 @@ export function startUstaCall(): string {
   setConnectivity({ fixed: "down" }, "Modem internet oturumu yok");
   const { wf, created } = createWorkflow({
     type: "ai_usta",
-    title: "AI Usta · Çağrı merkezinden",
+    title: "GIGA Teknik · Çağrı merkezinden",
     dedupeKey: `usta:${SUBSCRIPTION.id}`,
     steps: [
       { key: "call", label: "Çağrı merkezi sizi tanıdı" },
       { key: "report", label: "Sorununuzu sesli anlattınız" },
-      { key: "ivr_check", label: "Sesli asistan ilk kontrolleri yaptı" },
-      { key: "sms", label: "AI Usta bağlantısı SMS ile gönderildi" },
+      { key: "ivr_check", label: "GIGA telefonda ilk kontrolleri yaptı" },
+      { key: "sms", label: "GIGA Teknik bağlantısı SMS ile gönderildi" },
       ...USTA_STEPS,
     ],
     data: { channel: "ivr", phone: CUSTOMER.phone },
@@ -73,7 +73,7 @@ export function ivrCheck(id: string) {
     id,
     {
       key: "usta_ivr",
-      prompt: "Modeminizi görüntülü kontrol etmek için AI Usta bağlantısını SMS ile gönderelim mi?",
+      prompt: "Modeminizi görüntülü kontrol etmek için GIGA Teknik bağlantısını SMS ile gönderelim mi?",
       detail: "Sesli yanıt: “SMS için 1'e, müşteri temsilcisi için 2'ye basın.”",
       options: [
         { id: "sms", label: "1 · SMS gönder", primary: true },
@@ -97,7 +97,7 @@ registerDecision("usta_ivr", (id, opt) => {
     sms: [...s.sms.filter((m) => m.workflowId !== id), { id: `SMS-${uid().slice(0, 5).toUpperCase()}`, workflowId: id, body: "TürkNet: Modeminizi AI Usta ile birlikte kontrol edelim. Sorununuzu tekrar anlatmanıza gerek yok.", link, at: Date.now(), opened: false }],
   }));
   step(id, "sms", "waiting", "SMS gönderildi, açılması bekleniyor (demo · gerçek SMS gönderilmedi)");
-  log(id, "system", "external", `SMS gönderildi: ${link} (simülasyon)`, "Uygulama yüklüyse bağlantı doğrudan AI Usta'yı açar, değilse indirme sayfasına gider");
+  log(id, "system", "external", `SMS gönderildi: ${link} (simülasyon)`, "Uygulama yüklüyse bağlantı doğrudan GIGA Teknik'i açar, değilse indirme sayfasına gider");
 });
 
 /** Customer taps "AI Usta'yı Aç" in the SMS. Context from the call carries over. */
@@ -237,7 +237,7 @@ registerDecision("usta_confirm", (id, opt) => {
   notify(id, "Sorununuz çözüldü", "Teknisyen beklemeden birlikte çözdük. İnternetiniz kullanıma hazır.");
   complete(id, {
     resolved: true,
-    summary: "AI Usta ile sorun çözüldü, siz doğruladınız",
+    summary: "GIGA Teknik ile sorun çözüldü, siz doğruladınız",
     results: [`Uygulanan adım: ${AI_USTA_STEPS[0]!.title}`, "Bağlantı 96 Mbps ile döndü (demo)", "Teknisyen ziyareti gerekmedi", `Süre: ${wf ? Math.max(1, Math.round((Date.now() - wf.createdAt) / 60000)) : 1} dk`],
   });
 });

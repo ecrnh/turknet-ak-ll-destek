@@ -37,7 +37,7 @@ const FUNNELS = [
   { f: "Görüntülü Destek", key: "video", steps: [100, 38, 31] },
   { f: "QR ile Destek", key: "qr", steps: [100, 52, 46] },
   { f: "Hibrit İnternet", key: "hybrid_internet", steps: [100, 74, 68] },
-  { f: "AI Ajanlar", key: "ai", steps: [100, 88, 84] },
+  { f: "GIGA", key: "ai", steps: [100, 88, 84] },
 ];
 
 const DROPOFF = [
@@ -50,7 +50,7 @@ const AB = [
   { f: "QR ile Destek", metric: "Kayıt açma süresi", control: "Asistan + form", variant: "QR tek dokunuş", effect: "-%60", dur: "4 hafta", n: "2 × 12.000 abone", good: true },
   { f: "Görüntülü Destek", metric: "Saha ziyareti oranı", control: "Chat → saha randevusu", variant: "Görüntülü uzman", effect: "-%25", dur: "6 hafta", n: "2 × 8.500 teknik kayıt", good: true },
   { f: "Hibrit İnternet", metric: "24 saat+ kesintide destek çağrısı", control: "Sadece SMS bilgilendirme", variant: "Proaktif kart + ücretsiz yedek bağlantı", effect: "-%35", dur: "Kesinti bazlı, 3 olay", n: "Etkilenen bölge aboneleri", good: true },
-  { f: "AI Ajanlar", metric: "Asistandan canlı chat'e geçiş", control: "Reaktif asistan", variant: "Proaktif Hız Koruyucu", effect: "-%18", dur: "4 hafta", n: "2 × 20.000 abone", good: true },
+  { f: "GIGA", metric: "GIGA'dan canlı chat'e geçiş", control: "Reaktif asistan", variant: "Proaktif Hız Koruyucu", effect: "-%18", dur: "4 hafta", n: "2 × 20.000 abone", good: true },
   { f: "Aile Yetkilendirme", metric: "65+ yaş self-servis çözüm", control: "Yetki yok", variant: "Yakın yönetimi", effect: "+%22", dur: "8 hafta", n: "2 × 3.000 hane", good: true },
 ];
 
@@ -105,7 +105,7 @@ export function ImpactDashboard() {
           <Kpi icon={Smartphone} label="Mobil uygulama MAU" base={`${fmtNum(mau)} (iOS 310K · Android 108K)`} target="480K" note="+%15 · yeni self-servis akışları ile asistan yerine uygulama" />
           <Kpi icon={Wrench} label="Self-servis çözüm oranı" base={`Ağu %${selfAug} → Eyl %${selfSep}`} target="%80" note="Dijital onarım / (dijital onarım + asistandan kayıt)" />
           <Kpi icon={MessageSquare} label="Canlı chat'e düşen oran" base={`Eyl ${fmtNum(SEP.toLiveChat)} / ${fmtNum(SEP.fromAssistant)} = %${liveChatSep}`} target="%40" down note={`Ağustos %${liveChatAug} idi. Her 1 puan ≈ 1.000 chat/ay`} />
-          <Kpi icon={Truck} label="Saha ekibi gönderilmeden çözülen" base="Baz ~8.200 / ay" target="12.400 / ay" note={`Görüntülü destek + QR + ajanlar. Prototipte bu oturumda: ${saved + records.filter((r) => r.fieldVisitAvoided).length}`} />
+          <Kpi icon={Truck} label="Saha ekibi gönderilmeden çözülen" base="Baz ~8.200 / ay" target="12.400 / ay" note={`Görüntülü destek + QR + GIGA. Prototipte bu oturumda: ${saved + records.filter((r) => r.fieldVisitAvoided).length}`} />
           <Kpi icon={Timer} label="Ortalama çözüm süresi" base="26 saat (saha randevulu)" target="4 saat" down note="QR talep otomatik dolum + görüntülü uzaktan çözüm" />
           <Kpi icon={Star} label="CSAT / NPS" base="CSAT 3,9 · NPS +18" target="4,4 · +32" note={`Prototipte toplanan: CSAT ${avgCsat} (${ratings.length} yanıt)${nps != null ? ` · NPS ${nps}` : ""}`} />
         </section>

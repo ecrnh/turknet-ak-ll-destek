@@ -37,10 +37,10 @@ export function RelocationStartScreen() {
 
   return (
     <div>
-      <PageHeader title="İnternetinizi Taşıyın" />
+      <PageHeader title="GIGA Taşınma" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Otonom Taşınma</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">GIGA Taşınma · İnternetinizi taşıyın</p>
           <p className="mt-1 text-lg font-semibold leading-snug">Yeni adresinizi söyleyin; altyapı kontrolü, randevu ve eski hattınızın kapatılmasını sizin için yönetelim.</p>
         </div>
 

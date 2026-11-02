@@ -91,7 +91,7 @@ export function TrackHubScreen() {
               </Link>
               <Link to="/ai-usta" className="flex flex-col items-center gap-1.5 rounded-2xl bg-icon-box p-3">
                 <ScanEye className="size-5" />
-                AI Usta
+                GIGA Teknik
               </Link>
               <Link to="/fatura-kalkani" className="flex flex-col items-center gap-1.5 rounded-2xl bg-icon-box p-3">
                 <ShieldCheck className="size-5" />

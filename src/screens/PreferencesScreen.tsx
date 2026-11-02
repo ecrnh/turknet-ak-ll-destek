@@ -22,16 +22,16 @@ export function PreferencesScreen() {
         </section>
 
         <section className="rounded-card bg-card px-5 py-2 shadow-card">
-          <p className="pt-3 text-xs font-bold uppercase tracking-wide text-magenta">AI Ajan İzinleri</p>
-          <ToggleRow id="speed-agent" title="Hız Koruyucu Ajan" desc="Hız düşünce otomatik düzelt" checked={enabled.speed} onChange={(v) => toggle("speed", v)} />
+          <p className="pt-3 text-xs font-bold uppercase tracking-wide text-magenta">GIGA İzinleri</p>
+          <ToggleRow id="speed-agent" title="Hız Koruyucu" desc="Hız düşünce GIGA otomatik düzeltsin (geri alınabilir)" checked={enabled.speed} onChange={(v) => toggle("speed", v)} />
           <Link to="/ajanlar" className="flex min-h-12 items-center justify-between py-3 text-sm font-semibold text-primary">
-            Tüm ajanları yönet <ChevronRight className="size-4" />
+            GIGA görevlerini yönet <ChevronRight className="size-4" />
           </Link>
         </section>
 
         <section className="rounded-card bg-card px-5 py-2 shadow-card">
           <p className="pt-3 text-xs font-bold uppercase tracking-wide text-magenta">Bildirimler</p>
-          <ToggleRow id="push" title="Anlık bildirimler" desc="Ajan aksiyonları, kesinti ve işlem bildirimleri" checked={prefs.push} onChange={(v) => setPref("push", v)} />
+          <ToggleRow id="push" title="Anlık bildirimler" desc="GIGA aksiyonları, kesinti ve işlem bildirimleri" checked={prefs.push} onChange={(v) => setPref("push", v)} />
         </section>
       </div>
     </div>

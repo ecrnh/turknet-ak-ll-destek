@@ -68,7 +68,7 @@ export function DigitalRepairScreen() {
             <ScanEye className="size-5" strokeWidth={1.75} />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-semibold text-primary">AI Usta ile adım adım çöz</span>
+            <span className="block text-sm font-semibold text-primary">GIGA Teknik ile adım adım çöz</span>
             <span className="text-xs text-muted-foreground">Modem ışıklarını göster, güvenli adımlarla birlikte kontrol edelim</span>
           </span>
           <ChevronRight className="size-5 text-muted-foreground" />

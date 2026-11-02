@@ -20,7 +20,7 @@ export function clearScenarioTimers() {
   timers = [];
 }
 
-/** Hız Koruyucu Ajan: detect → analyse → fix → verify. Step index streams to UI. */
+/** GIGA Hız Koruyucu: detect → analyse → fix → verify. Step index streams to UI. */
 export function runSpeedAgent() {
   const a = agents();
   if (a.speedRun.status === "running") return;
@@ -35,15 +35,15 @@ export function runSpeedAgent() {
     agents().addAction({ agent: "speed", title: "Hızını 20 Mbps'ten 98 Mbps'e yükselttim", detail: "Wi-Fi kanal 6 → 11 · hat profili yenilendi · uzaktan yeniden başlatma" });
     agents().addStats(1, 25, 1);
     app().addRecord({
-      channel: "Ajan",
+      channel: "GIGA",
       title: "Hız düşüşü otomatik düzeltildi",
-      summary: "Hız Koruyucu Ajan hızını 20 → 98 Mbps'e çıkardı.",
+      summary: "GIGA Hız Koruyucu hızını 20 → 98 Mbps'e çıkardı.",
       status: "Çözüldü",
       details: SPEED_FIX_STEPS,
       to: "/ajanlar/hiz",
       fieldVisitAvoided: true,
     });
-    app().addHistory("Hız Koruyucu Ajan", "Hız 20 → 98 Mbps'e yükseltildi");
+    app().addHistory("GIGA Hız Koruyucu", "Hız 20 → 98 Mbps'e yükseltildi");
     app().notify({ kind: "agent", title: "Hızını 20 Mbps'ten 98 Mbps'e yükselttim", body: "Wi-Fi kanalını değiştirdim ve hat profilini yeniledim. Dokun, detayları gör.", to: "/ajanlar/hiz" });
     track("flow_completed", "ai_speed_agent");
   });
@@ -57,7 +57,7 @@ export function simulateSpeedDrop() {
     app().notify({ kind: "agent", title: "Hız düşüşü fark ettim", body: "Paketin 100 Mbps, ölçülen 20 Mbps. Hemen düzeltiyorum…", to: "/ajanlar/hiz" });
     later(1500, runSpeedAgent);
   } else {
-    app().notify({ kind: "agent", title: "Hızın düştü (20 Mbps)", body: "Hız Koruyucu Ajan kapalı. Açarsan otomatik düzeltirim.", to: "/ajanlar" });
+    app().notify({ kind: "agent", title: "Hızın düştü (20 Mbps)", body: "GIGA Hız Koruyucu kapalı. Açarsan otomatik düzeltirim.", to: "/ajanlar" });
   }
 }
 

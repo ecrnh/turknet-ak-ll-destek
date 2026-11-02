@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const FILTERS: { id: NotifKind | "all"; label: string }[] = [
   { id: "all", label: "Tümü" },
-  { id: "agent", label: "Ajanlar" },
+  { id: "agent", label: "GIGA" },
   { id: "support", label: "Destek" },
   { id: "family", label: "Aile" },
 ];

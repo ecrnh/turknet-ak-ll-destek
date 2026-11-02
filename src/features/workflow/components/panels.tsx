@@ -233,7 +233,7 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
       <div className="flex items-center gap-4">
         <img src={modemImg} alt="Modem görseli" width={120} height={120} className="h-24 w-24 object-contain" loading="lazy" />
         <div className="flex-1">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">AI Usta · ışık kontrolü</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">GIGA Teknik · ışık kontrolü</p>
           {leds.length ? (
             <ul className="mt-1.5 space-y-1 text-xs">
               {leds.map((l) => (
@@ -259,7 +259,7 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
             </p>
           ) : (
             <>
-              <p className="text-sm font-semibold text-foreground">AI Usta ile çözüm deneyiminiz nasıldı?</p>
+              <p className="text-sm font-semibold text-foreground">GIGA Teknik ile çözüm deneyiminiz nasıldı?</p>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {([3, 2, 1] as const).map((n) => (
                   <button key={n} type="button" onClick={() => rateUsta(wf.id, n)} className="min-h-11 rounded-xl bg-card text-sm font-semibold text-primary">

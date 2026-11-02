@@ -3,6 +3,6 @@ import { AgentCenterScreen } from "@/features/aiAgents/screens/AgentCenterScreen
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/ajanlar/")({
-  head: () => pageHead("AI Ajanlarım", "Proaktif AI ajanların, son aksiyonları ve bu ayki özet."),
+  head: () => pageHead("GIGA", "TürkNet'in akıllı dijital yardımcısı GIGA: yetenekleri, otomatik görevleri ve son aksiyonları."),
   component: AgentCenterScreen,
 });

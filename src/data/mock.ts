@@ -80,10 +80,10 @@ export const HERO_SLIDES = [
   {
     id: "agents",
     kind: "feature" as const,
-    eyebrow: "AI AJANLAR",
+    eyebrow: "GIGA",
     title: "Sen Fark Etmeden Çözüyoruz",
-    text: "Hız Koruyucu ve Kesinti Takibi ajanların 7/24 hattını izliyor.",
-    cta: "Ajanlarımı Gör",
+    text: "GIGA hattını 7/24 izliyor; hız düşerse ya da kesinti olursa ilk o fark eder.",
+    cta: "GIGA ile Tanış",
     to: "/ajanlar",
     icon: "bot",
   },
@@ -132,14 +132,14 @@ export const INTERNET_OPS: OpItem[] = [
 ];
 
 export const SUPPORT_OPS: OpItem[] = [
-  { slug: "takip", title: "Benim İçin Takip Et", icon: "track", to: "/takip", isNew: true },
-  { slug: "ai-usta", title: "AI Usta", icon: "usta", to: "/ai-usta", isNew: true },
-  { slug: "fatura-kalkani", title: "Fatura Kalkanı", icon: "shield", to: "/fatura-kalkani", isNew: true },
+  { slug: "takip", title: "GIGA Takip", icon: "track", to: "/takip", isNew: true },
+  { slug: "ai-usta", title: "GIGA Teknik", icon: "usta", to: "/ai-usta", isNew: true },
+  { slug: "fatura-kalkani", title: "GIGA Fatura", icon: "shield", to: "/fatura-kalkani", isNew: true },
   { slug: "baglanti", title: "Bağlantım", icon: "network", to: "/baglanti", isNew: true },
   { slug: "video", title: "Görüntülü Destek", icon: "video", to: "/goruntulu-destek", isNew: true },
   { slug: "qr", title: "QR ile Destek", icon: "qr", to: "/qr", isNew: true },
   { slug: "hibrit", title: "Hibrit İnternet", icon: "router", to: "/hibrit", isNew: true },
-  { slug: "agents", title: "AI Ajanlar", icon: "bot", to: "/ajanlar", isNew: true },
+  { slug: "agents", title: "GIGA", icon: "bot", to: "/ajanlar", isNew: true },
 ];
 
 export const OPS_LIST = [
@@ -233,10 +233,10 @@ export const SEARCH_INDEX: { title: string; to: string; keywords: string; isNew?
   { title: "Statik IP", to: "/islem/statik-ip", keywords: "statik ip", section: "İnternet" },
   { title: "Peşin Ödeme Kampanyası", to: "/islem/fiyat-sabitle", keywords: "peşin kampanya sabit fiyat 12 ay", section: "Kampanya" },
   { title: "Arkadaşını Getir Birlikte Kazanın", to: "/islem/arkadasini-getir", keywords: "arkadaş davet referans", section: "Kampanya" },
-  { title: "İnternetini Yeni Adresine Taşı", to: "/tasinma", keywords: "taşı taşınma nakil adres", isNew: true, section: "Yeni" },
-  { title: "Benim İçin Takip Et", to: "/takip", keywords: "takip süreç talep durum otonom", isNew: true, section: "Yeni" },
-  { title: "AI Usta", to: "/ai-usta", keywords: "ai usta modem ışık çalışmıyor görsel fotoğraf", isNew: true, section: "Yeni" },
-  { title: "Fatura Kalkanı", to: "/fatura-kalkani", keywords: "fatura borç ödeme mükerrer iade kalkan", isNew: true, section: "Yeni" },
+  { title: "GIGA Taşınma · İnternetini Yeni Adresine Taşı", to: "/tasinma", keywords: "giga taşı taşınma nakil adres", isNew: true, section: "Yeni" },
+  { title: "GIGA Takip · Benim İçin Takip Et", to: "/takip", keywords: "giga takip süreç talep durum otonom", isNew: true, section: "Yeni" },
+  { title: "GIGA Teknik", to: "/ai-usta", keywords: "giga teknik ai usta yapay zeka modem ışık çalışmıyor görsel fotoğraf", isNew: true, section: "Yeni" },
+  { title: "GIGA Fatura · Fatura Kalkanı", to: "/fatura-kalkani", keywords: "giga fatura borç ödeme mükerrer iade kalkan", isNew: true, section: "Yeni" },
   { title: "Hibrit İnternet · ücretsiz yedek bağlantı", to: "/hibrit", keywords: "hibrit yedek bağlantı kesinti 24 saat ücretsiz internet yok", isNew: true, section: "Yeni" },
   { title: "Bağlantım", to: "/baglanti", keywords: "bağlantı durum sağlık geçici mobil internet box", isNew: true, section: "Yeni" },
   { title: "Yardım & Destek", to: "/yardim", keywords: "yardım destek", section: "Yardım" },
@@ -247,8 +247,8 @@ export const SEARCH_INDEX: { title: string; to: string; keywords: string; isNew?
   { title: "Aile Yetkilendirme", to: "/aile", keywords: "aile yetki anne baba ebeveyn yetkili kişi", isNew: true, section: "Yeni" },
   { title: "QR ile Destek Talebi", to: "/qr", keywords: "qr kod temassız etiket tara", isNew: true, section: "Yeni" },
   { title: "QR Tara", to: "/qr/tara", keywords: "qr tara okut", isNew: true, section: "Yeni" },
-  { title: "AI Ajanlar", to: "/ajanlar", keywords: "ai yapay zeka ajan asistan otomatik", isNew: true, section: "Yeni" },
-  { title: "Hız Koruyucu Ajan", to: "/ajanlar/hiz", keywords: "hız düşük yavaş ajan", isNew: true, section: "Yeni" },
+  { title: "GIGA · akıllı dijital yardımcın", to: "/ajanlar", keywords: "giga ai yapay zeka ajan asistan otomatik yardımcı", isNew: true, section: "Yeni" },
+  { title: "GIGA Hız Koruyucu", to: "/ajanlar/hiz", keywords: "giga hız düşük yavaş ajan", isNew: true, section: "Yeni" },
   { title: "Bildirimler", to: "/bildirimler", keywords: "bildirim", section: "Hesap" },
   { title: "Tercihlerim / Büyük Yazı", to: "/tercihler", keywords: "tercih büyük yazı basit mod erişilebilirlik", section: "Hesap" },
   { title: "İşlem Geçmişi", to: "/islem-gecmisi", keywords: "işlem geçmiş", section: "Hesap" },
@@ -316,7 +316,7 @@ export const AGENT_DEFS = [
   { id: "speed", name: "Hız Koruyucu", desc: "Hızın paketinin altına düşerse kök nedeni bulur ve düzeltir.", icon: "gauge", to: "/ajanlar/hiz" },
   { id: "backup", name: "Kesinti Takibi", desc: "Kesintiyi senin için izler; 24 saati aşarsa ücretsiz Hibrit İnternet'i hatırlatır.", icon: "route", to: "/hibrit" },
   { id: "modem", name: "Modem Sağlık İzleyici", desc: "Optik güç, sıcaklık ve kopmaları izler, sorun büyümeden uyarır.", icon: "router", to: "/ajanlar" },
-  { id: "bill", name: "Fatura Asistanı", desc: "Son ödeme gününü hatırlatır, olağan dışı tutarları açıklar.", icon: "receipt", to: "/faturalar" },
+  { id: "bill", name: "Fatura Hatırlatıcı", desc: "Son ödeme gününü hatırlatır, olağan dışı tutarları açıklar.", icon: "receipt", to: "/fatura-kalkani" },
 ] as const;
 
 export type AgentId = (typeof AGENT_DEFS)[number]["id"];

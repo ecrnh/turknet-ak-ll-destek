@@ -85,7 +85,7 @@ export function AppShell() {
         <TurknetLogo className="text-6xl" />
         <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-magenta">Product Bootcamp · Final Case</p>
         <h1 className="mt-2 text-3xl font-semibold leading-tight text-primary">Otonom Müşteri Deneyimi Platformu</h1>
-        <p className="mt-3 text-sm text-muted-foreground">“Sen talebini söyle. TurkNet süreci senin için yönetsin.” Taşınma, geçici internet, Fatura Kalkanı, AI Usta, proaktif arıza ve Benim İçin Takip Et.</p>
+        <p className="mt-3 text-sm text-muted-foreground">“Sen talebini söyle. TurkNet süreci senin için yönetsin.” Taşınma, geçici internet, GIGA Fatura, GIGA Teknik, proaktif arıza ve Benim İçin Takip Et.</p>
         <Link to="/dashboard" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-float">
           <BarChart3 className="size-4" /> Etki Panosu
         </Link>
