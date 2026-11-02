@@ -26,6 +26,8 @@ const USTA_STEPS = [
 
 /** In-app start: "İnternetim çalışmıyor" or "Modemimde sorun var". */
 export function startAiUsta(issue: "no_internet" | "modem" = "no_internet"): string {
+  // The customer started this themselves: automatic checks run without presenter "Sonraki".
+  W.setState({ autoFollowUp: true });
   setConnectivity({ fixed: "down" }, "Modem internet oturumu yok");
   const said = issue === "modem" ? "Modemimde sorun var" : "İnternetim çalışmıyor";
   const { wf, created } = createWorkflow({
@@ -36,10 +38,33 @@ export function startAiUsta(issue: "no_internet" | "modem" = "no_internet"): str
     data: { channel: "app", issue: said },
     why: `Müşteri “${said}” dedi`,
   });
-  if (!created) return wf.id;
+  if (!created) {
+    resumeUsta(wf.id);
+    return wf.id;
+  }
   step(wf.id, "report", "done", `“${said}”`);
   chain("usta.context", wf.id, 1200);
   return wf.id;
+}
+
+/**
+ * Re-queues the next automatic check of an in-app session that is stuck because its
+ * delayed op was lost (e.g. started while a presenter scenario had paused auto follow-up).
+ * Idempotent: does nothing while a decision is open or an op is already queued.
+ */
+export function resumeUsta(id: string) {
+  const wf = getWf(id);
+  if (!wf || wf.type !== "ai_usta" || wf.status === "completed" || wf.handoff || wf.decision) return;
+  if (W.getState().ops.some((o) => o.wfId === id)) return;
+  if (stepStatus(id, "report") !== "done") return;
+  if (stepStatus(id, "context") === "pending" && wf.data["channel"] === "app") schedule("usta.context", id, 800);
+  else if (stepStatus(id, "context") === "done" && stepStatus(id, "photo") === "pending") schedule("usta.photo", id, 800);
+  else if (stepStatus(id, "analysis") === "in_progress") schedule("usta.analyzed", id, 800);
+  else if (stepStatus(id, "analysis") === "done" && stepStatus(id, "step1") === "pending") schedule("usta.step1", id, 800);
+  else if (stepStatus(id, "step1") === "done" && stepStatus(id, "step2") === "pending") schedule("usta.step2", id, 800);
+  else if (stepStatus(id, "reconnect") === "in_progress") schedule("usta.reconnected", id, 800);
+  else if (stepStatus(id, "recheck") === "in_progress") schedule("usta.recheck", id, 800);
+  else if (stepStatus(id, "recheck") === "done" && stepStatus(id, "confirm") === "pending") schedule("usta.confirm", id, 800);
 }
 
 /* ---------------- GIGA sesli destek (IVR) → SMS → GIGA Teknik ---------------- */
