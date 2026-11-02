@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Gauge, Phone, Router, ScanEye, WifiOff } from "lucide-react";
+import { ChevronRight, Gauge, Router, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
 import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
@@ -22,15 +22,6 @@ export function AiUstaStartScreen() {
     }
     go(startAiUsta(issue));
   };
-  const call = () => {
-    if (active && active.data["channel"] !== "ivr") {
-      toast("Devam eden bir GIGA Teknik oturumun var", { description: "Kaldığın yerden devam edelim; tekrar anlatmana gerek yok." });
-      go(active.id);
-      return;
-    }
-    startUstaCall();
-  };
-
   const Entry = ({ icon: Icon, title, desc, onClick }: { icon: typeof WifiOff; title: string; desc: string; onClick: () => void }) => (
     <button type="button" onClick={onClick} className="flex w-full items-center gap-4 rounded-card bg-card p-4 text-left shadow-card">
       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-icon-box text-primary">
