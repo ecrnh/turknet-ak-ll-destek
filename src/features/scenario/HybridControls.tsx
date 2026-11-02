@@ -117,6 +117,11 @@ export function HybridControls() {
         <Seg label="Yedek cihaz + SIM" value={config.hybridDevice ? "yes" : "no"} options={[["yes", "Var"], ["no", "Yok"]]} onChange={(v) => setConfig({ hybridDevice: v === "yes" })} />
         <Seg label="Mobil kapsama" value={config.hybridCoverage ? "yes" : "no"} options={[["yes", "Uygun"], ["no", "Uygun değil"]]} onChange={(v) => setConfig({ hybridCoverage: v === "yes" })} />
         <Seg label="Sonraki aktivasyon" value={config.hybridActivation} options={[["success", "Başarılı"], ["fail", "Başarısız"]]} onChange={(v) => setConfig({ hybridActivation: v })} />
+        <p className="pt-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Diğer demo dünyası ayarları</p>
+        <Seg label="Taşınmada geçici internet" value={config.ownsBox ? "yes" : "no"} options={[["yes", "Evde Box var"], ["no", "Cihaz gönderilir"]]} onChange={(v) => setConfig({ ownsBox: v === "yes" })} />
+        <Seg label="Randevu ekip eşleştirme" value={config.teamMatch} options={[["first", "İlk ekip kabul"], ["second", "İkinci ekip"]]} onChange={(v) => setConfig({ teamMatch: v })} />
+        <Seg label="SMS alan telefonda uygulama" value={config.appInstalled ? "yes" : "no"} options={[["yes", "Yüklü"], ["no", "Yüklü değil"]]} onChange={(v) => setConfig({ appInstalled: v === "yes" })} />
+        <Seg label="GIGA Teknik adımları" value={config.aiFix} options={[["fixed", "Çözülür"], ["not_fixed", "Çözülmez"]]} onChange={(v) => setConfig({ aiFix: v })} />
         <p className="text-[10px] text-muted-foreground">Cihaz ve kapsama ayarı, müşterinin bir sonraki uygunluk kontrolünde kullanılır (telefonda “Tekrar Kontrol Et”).</p>
       </div>
 
