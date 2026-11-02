@@ -237,7 +237,7 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
     <div className="space-y-3">
     {fromCall && wf.status !== "completed" && !wf.handoff && (
       <GigaNote mood="listening">
-        Tekrar hoş geldin! Telefon görüşmemizde {String(wf.data["issue"] ?? "internetinin çalışmadığını").toLocaleLowerCase("tr-TR")} diye belirtmiştin. Kontrollerimize kaldığımız yerden devam edelim.
+        Tekrar hoş geldin! Telefon görüşmemizde “{String(wf.data["issue"] ?? "İnternet hiç çalışmıyor")}” demiştin. Kontrollerimize kaldığımız yerden devam edelim.
       </GigaNote>
     )}
     {st("analysis") === "done" && light && st("recheck") !== "done" && !wf.handoff && <GigaNote>{light.say}</GigaNote>}
