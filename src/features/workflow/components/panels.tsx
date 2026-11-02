@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
-import { BILLING_CHECKS, CURRENT_ADDRESS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
+import { motion } from "framer-motion";
+import { BILLING_CHECKS, CURRENT_ADDRESS, INTERNET_LIGHT_STATES, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
+import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
 import { fmtRelative, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { choiceOf } from "../engine";
@@ -228,7 +230,38 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
       return { name, ok: ok === "1", state };
     });
   const rating = wf.data["rating"];
+  const st = (k: string) => wf.steps.find((x) => x.key === k)?.status;
+  const light = INTERNET_LIGHT_STATES.find((x) => x.id === wf.data["light"]);
+  const fromCall = wf.data["channel"] === "ivr" && st("sms") === "done";
   return (
+    <div className="space-y-3">
+    {fromCall && wf.status !== "completed" && !wf.handoff && (
+      <GigaNote mood="listening">
+        Tekrar hoş geldin! Telefon görüşmemizde {String(wf.data["issue"] ?? "internetinin çalışmadığını").toLocaleLowerCase("tr-TR")} diye belirtmiştin. Kontrollerimize kaldığımız yerden devam edelim.
+      </GigaNote>
+    )}
+    {st("analysis") === "done" && light && st("recheck") !== "done" && !wf.handoff && <GigaNote>{light.say}</GigaNote>}
+    {st("reconnect") === "in_progress" && (
+      <Box>
+        <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+          <GigaAvatar size={28} mood="working" label={false} /> Bağlantının yeniden kurulmasını bekliyoruz
+        </p>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+          <motion.div className="h-full rounded-full bg-magenta" initial={{ width: "5%" }} animate={{ width: "100%" }} transition={{ duration: 2.4, ease: "easeInOut" }} />
+        </div>
+      </Box>
+    )}
+    {st("recheck") === "in_progress" && (
+      <GigaNote mood="thinking">Şimdi bağlantını tekrar kontrol ediyorum.</GigaNote>
+    )}
+    {wf.status === "completed" && wf.outcome?.resolved && (
+      <div className="rounded-card bg-success-soft p-5 text-center">
+        <GigaAvatar size={56} mood="done" className="mx-auto" />
+        <p className="mt-2 text-lg font-semibold text-foreground">Harika! Bağlantın yeniden aktif görünüyor.</p>
+        <p className="text-sm text-muted-foreground">İnternetini tekrar kullanabilirsin. Destek kaydı açmadık.</p>
+        <Link to="/" className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">Ana sayfaya dön</Link>
+      </div>
+    )}
     <Box>
       <div className="flex items-center gap-4">
         <img src={modemImg} alt="Modem görseli" width={120} height={120} className="h-24 w-24 object-contain" loading="lazy" />
@@ -245,7 +278,7 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
               ))}
             </ul>
           ) : (
-            <p className="mt-1 text-sm text-muted-foreground">Modem ışıklarını görmek için fotoğraf bekliyoruz.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Modem ışıklarını görmek için kamera görüntüsünü bekliyorum.</p>
           )}
         </div>
       </div>
@@ -275,6 +308,7 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
         </div>
       )}
     </Box>
+    </div>
   );
 }
 
