@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, Loader2, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
-import { BILLING_CHECKS, CURRENT_ADDRESS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
+import { BILLING_CHECKS, CURRENT_ADDRESS, LED_STATE_LABEL, MODEM_LEDS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
 import { fmtRelative, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { choiceOf } from "../engine";
 import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY } from "../rules";
-import { rateUsta } from "../services/aiUsta";
+import { decodeLeds, rateUsta } from "../services/aiUsta";
 import { resumeBillingReview } from "../services/billing";
 import { toggleBox } from "../services/connectivity";
 import { useWorkflowStore } from "../store";
@@ -248,13 +248,8 @@ export function BillingPanel({ wf }: { wf: Workflow }) {
 }
 
 export function AiUstaPanel({ wf }: { wf: Workflow }) {
-  const leds = String(wf.data["leds"] ?? "")
-    .split("|")
-    .filter(Boolean)
-    .map((x) => {
-      const [name, ok, state] = x.split(":");
-      return { name, ok: ok === "1", state };
-    });
+  const decoded = decodeLeds(wf.data["leds"]);
+  const leds = decoded ? MODEM_LEDS.map((m) => ({ name: m.name, ok: decoded[m.key] === "green" || (m.key === "wifi" && decoded.wifi === "blink"), state: LED_STATE_LABEL[decoded[m.key]] })) : [];
   const rating = wf.data["rating"];
   return (
     <Box>
@@ -267,7 +262,7 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
               {leds.map((l) => (
                 <li key={l.name} className="flex items-center gap-2">
                   <span className={cn("h-2.5 w-2.5 rounded-full", l.ok ? "bg-success" : "bg-destructive")} />
-                  <span className="w-16 font-semibold text-foreground">{l.name}</span>
+                  <span className="w-20 font-semibold text-foreground">{l.name}</span>
                   <span className="text-muted-foreground">{l.state}</span>
                 </li>
               ))}
