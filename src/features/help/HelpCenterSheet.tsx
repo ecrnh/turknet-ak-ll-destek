@@ -79,7 +79,6 @@ export function HelpCenterSheet() {
   const prefill = useAppStore((s) => s.helpPrefill);
   const close = useAppStore((s) => s.closeHelp);
   const net = useAppStore((s) => s.net);
-  const addRecord = useAppStore((s) => s.addRecord);
   const workflows = useWorkflowStore((s) => s.workflows);
   const acting = useActingAccount();
   const navigate = useNavigate();
@@ -87,7 +86,6 @@ export function HelpCenterSheet() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [topics, setTopics] = useState(false);
-  const recorded = useRef(false);
   const scroller = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const idRef = useRef(0);
@@ -124,10 +122,6 @@ export function HelpCenterSheet() {
         if (useAppStore.getState().net.status !== "slow") useAppStore.getState().setNet({ status: "slow", speed: 20 });
         runSpeedAgent();
       }
-      if (!recorded.current && r.topic !== "human") {
-        recorded.current = true;
-        addRecord({ channel: "GIGA", title: `GIGA: "${t.slice(0, 40)}"`, summary: "GIGA talebi ilgili self-servis akışa yönlendirdi.", status: "Tamamlandı" });
-      }
       inputRef.current?.focus();
     }, 900);
   };
@@ -156,7 +150,6 @@ export function HelpCenterSheet() {
     close();
     setTimeout(() => {
       setMsgs([]);
-      recorded.current = false;
     }, 300);
   };
 

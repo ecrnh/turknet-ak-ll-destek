@@ -18,6 +18,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DestekKayitlariRouteImport } from './routes/destek-kayitlari'
 import { Route as DijitalOnarimRouteImport } from './routes/dijital-onarim'
 import { Route as FaturaKalkaniRouteImport } from './routes/fatura-kalkani'
+import { Route as HalletRouteImport } from './routes/hallet'
 import { Route as HesabimRouteImport } from './routes/hesabim'
 import { Route as HibritRouteImport } from './routes/hibrit'
 import { Route as HizTestiRouteImport } from './routes/hiz-testi'
@@ -88,6 +89,11 @@ const DijitalOnarimRoute = DijitalOnarimRouteImport.update({
 const FaturaKalkaniRoute = FaturaKalkaniRouteImport.update({
   id: '/fatura-kalkani',
   path: '/fatura-kalkani',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HalletRoute = HalletRouteImport.update({
+  id: '/hallet',
+  path: '/hallet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HesabimRoute = HesabimRouteImport.update({
@@ -231,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/destek-kayitlari': typeof DestekKayitlariRoute
   '/dijital-onarim': typeof DijitalOnarimRoute
   '/fatura-kalkani': typeof FaturaKalkaniRoute
+  '/hallet': typeof HalletRoute
   '/hesabim': typeof HesabimRoute
   '/hibrit': typeof HibritRoute
   '/hiz-testi': typeof HizTestiRoute
@@ -268,6 +275,7 @@ export interface FileRoutesByTo {
   '/destek-kayitlari': typeof DestekKayitlariRoute
   '/dijital-onarim': typeof DijitalOnarimRoute
   '/fatura-kalkani': typeof FaturaKalkaniRoute
+  '/hallet': typeof HalletRoute
   '/hesabim': typeof HesabimRoute
   '/hibrit': typeof HibritRoute
   '/hiz-testi': typeof HizTestiRoute
@@ -306,6 +314,7 @@ export interface FileRoutesById {
   '/destek-kayitlari': typeof DestekKayitlariRoute
   '/dijital-onarim': typeof DijitalOnarimRoute
   '/fatura-kalkani': typeof FaturaKalkaniRoute
+  '/hallet': typeof HalletRoute
   '/hesabim': typeof HesabimRoute
   '/hibrit': typeof HibritRoute
   '/hiz-testi': typeof HizTestiRoute
@@ -345,6 +354,7 @@ export interface FileRouteTypes {
     | '/destek-kayitlari'
     | '/dijital-onarim'
     | '/fatura-kalkani'
+    | '/hallet'
     | '/hesabim'
     | '/hibrit'
     | '/hiz-testi'
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/destek-kayitlari'
     | '/dijital-onarim'
     | '/fatura-kalkani'
+    | '/hallet'
     | '/hesabim'
     | '/hibrit'
     | '/hiz-testi'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/destek-kayitlari'
     | '/dijital-onarim'
     | '/fatura-kalkani'
+    | '/hallet'
     | '/hesabim'
     | '/hibrit'
     | '/hiz-testi'
@@ -457,6 +469,7 @@ export interface RootRouteChildren {
   DestekKayitlariRoute: typeof DestekKayitlariRoute
   DijitalOnarimRoute: typeof DijitalOnarimRoute
   FaturaKalkaniRoute: typeof FaturaKalkaniRoute
+  HalletRoute: typeof HalletRoute
   HesabimRoute: typeof HesabimRoute
   HibritRoute: typeof HibritRoute
   HizTestiRoute: typeof HizTestiRoute
@@ -548,6 +561,13 @@ declare module '@tanstack/react-router' {
       path: '/fatura-kalkani'
       fullPath: '/fatura-kalkani'
       preLoaderRoute: typeof FaturaKalkaniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hallet': {
+      id: '/hallet'
+      path: '/hallet'
+      fullPath: '/hallet'
+      preLoaderRoute: typeof HalletRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hesabim': {
@@ -745,6 +765,7 @@ const rootRouteChildren: RootRouteChildren = {
   DestekKayitlariRoute: DestekKayitlariRoute,
   DijitalOnarimRoute: DijitalOnarimRoute,
   FaturaKalkaniRoute: FaturaKalkaniRoute,
+  HalletRoute: HalletRoute,
   HesabimRoute: HesabimRoute,
   HibritRoute: HibritRoute,
   HizTestiRoute: HizTestiRoute,

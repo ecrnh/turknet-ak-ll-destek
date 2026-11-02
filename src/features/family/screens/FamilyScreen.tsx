@@ -72,7 +72,7 @@ export function FamilyScreen() {
 
   return (
     <div>
-      <PageHeader title="Aile Yetkilendirme" />
+      <PageHeader title="Aile ve Yetkilendirme" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-referral p-5 shadow-card">
           <Users className="size-7 text-magenta" />
