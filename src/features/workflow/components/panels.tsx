@@ -80,7 +80,7 @@ const MATCH_STAGES = [
 /** Field-team matching (demo): the customer never calls teams one by one. */
 function TeamMatch({ wf }: { wf: Workflow }) {
   const m = String(wf.data["match"]);
-  const idx = m === "accepted" ? 3 : m === "requested" ? 2 : m === "declined" ? 0 : 0;
+  const idx = m === "accepted" ? 4 : m === "requested" ? 2 : 0;
   return (
     <div className="mt-4 rounded-2xl bg-muted p-3">
       <p className="text-xs font-semibold text-foreground">Ekip eşleştirme · {String(wf.data["slotLabel"] ?? "")}</p>
