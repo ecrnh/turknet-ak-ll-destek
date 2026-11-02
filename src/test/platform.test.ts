@@ -88,10 +88,10 @@ describe("AI Usta sesli triyaj", () => {
     expect(W.getState().sms).toHaveLength(1);
     expect(openUstaSms(id)).toBe(true);
     expect(openUstaSms(id)).toBe(false);
-    expect(stepStatus(id, "context")).toBe("done");
     expect(stepStatus(id, "report")).toBe("done");
-    drain();
-    expect(getWf(id)!.decision?.key).toBe("usta_photo");
+    for (let i = 0; i < 4; i++) drain();
+    expect(stepStatus(id, "repair")).toBe("done");
+    expect(getWf(id)!.decision?.key).toBe("usta_more");
   });
 });
 
