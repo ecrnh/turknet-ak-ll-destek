@@ -1,10 +1,11 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Camera, Headset, ListChecks, ScanEye, WifiOff } from "lucide-react";
-import modemImg from "@/assets/modem.png";
+import { useNavigate } from "@tanstack/react-router";
+import { Camera, Headset, ListChecks, ScanEye } from "lucide-react";
 import { PageHeader } from "@/components/layout/headers";
 import { Button } from "@/components/ui/button";
+import { MODEM_LED_DEMO } from "@/data/mock";
 import { startAiUsta, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
+import { ModemFront } from "../components/Modem";
 import { DemoNote, StatusPill } from "../components/ui";
 
 export function AiUstaStartScreen() {
@@ -15,22 +16,50 @@ export function AiUstaStartScreen() {
   return (
     <div>
       <PageHeader title="AI Usta" />
-      <div className="space-y-4 px-4">
+      <div className="space-y-4 px-4 pb-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
-          <div className="flex items-center gap-4">
-            <img src={modemImg} alt="Modem" width={96} height={96} className="h-20 w-20 object-contain" />
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Görsel teknik destek</p>
-              <p className="text-lg font-semibold leading-snug">Modeminizi gösterin, adım adım birlikte çözelim.</p>
-            </div>
-          </div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Görsel teknik destek</p>
+          <h2 className="mt-1 text-2xl font-bold">AI Usta yanınızda.</h2>
+          <p className="mt-1 text-sm text-primary-foreground/85">Modeminizi gösterin, birlikte kontrol edelim.</p>
+          <ModemFront leds={MODEM_LED_DEMO} className="mt-4" />
         </div>
+
+        {regional && (
+          <div className="rounded-2xl border border-warning/30 bg-warning-soft p-3.5 text-sm">
+            <p className="font-semibold">Bölgenizde bilinen bir arıza var</p>
+            <p className="text-muted-foreground">Sorun sizden kaynaklı görünmüyor; modeminizde bir şey yapmanıza gerek yok. Gelişmeleri sizin için takip ediyoruz.</p>
+          </div>
+        )}
+
+        {active ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-card bg-card p-4 shadow-card">
+              <span className="font-semibold text-primary">Devam eden oturumunuz var</span>
+              <StatusPill status={active.status} />
+            </div>
+            <Button size="xl" className="w-full" onClick={() => navigate({ to: "/ai-usta/$id", params: { id: active.id } })}>
+              Kaldığım Yerden Devam Et
+            </Button>
+          </div>
+        ) : (
+          <Button
+            size="xl"
+            className="w-full"
+            disabled={!!regional}
+            onClick={() => {
+              const id = startAiUsta({ issue: "down" });
+              navigate({ to: "/ai-usta/$id", params: { id } });
+            }}
+          >
+            <Camera /> Kamerayı aç
+          </Button>
+        )}
 
         <div className="grid grid-cols-3 gap-2">
           {[
-            [Camera, "Görsel yönlendirme"],
-            [ListChecks, "Adım adım doğrulama"],
-            [Headset, "Bağlamlı aktarım"],
+            [ScanEye, "Işıkları birlikte okuruz"],
+            [ListChecks, "Tek seferde bir güvenli adım"],
+            [Headset, "Gerekirse bağlamla canlı destek"],
           ].map(([I, l]) => {
             const Icon = I as typeof Camera;
             return (
@@ -41,45 +70,8 @@ export function AiUstaStartScreen() {
             );
           })}
         </div>
-
-        {regional && (
-          <div className="rounded-2xl border border-warning/30 bg-warning-soft p-3.5 text-sm">
-            <p className="font-semibold">Bölgenizde olası bir arıza var</p>
-            <p className="text-muted-foreground">Sorun sizden kaynaklı görünmüyor; modeminizde bir şey yapmanıza gerek yok.</p>
-          </div>
-        )}
-
-        {active ? (
-          <Link to="/surec/$id" params={{ id: active.id }} className="flex items-center justify-between rounded-card bg-card p-4 shadow-card">
-            <span className="font-semibold text-primary">Devam eden AI Usta oturumunuz</span>
-            <StatusPill status={active.status} />
-          </Link>
-        ) : (
-          <Button
-            size="xl"
-            className="w-full"
-            onClick={() => {
-              const id = startAiUsta();
-              navigate({ to: "/surec/$id", params: { id } });
-            }}
-          >
-            <WifiOff /> İnternetim Çalışmıyor
-          </Button>
-        )}
-
-        <div className="rounded-card bg-card p-5 text-sm text-muted-foreground shadow-card">
-          <p className="flex items-center gap-2 font-semibold text-primary">
-            <ScanEye className="size-5" /> Nasıl çalışır?
-          </p>
-          <ol className="mt-2 list-decimal space-y-1 pl-5">
-            <li>Bağlantınızı ve açık arıza kayıtlarını kontrol ederim.</li>
-            <li>Modem ışıklarınızın fotoğrafını isterim.</li>
-            <li>Size tek seferde bir güvenli adım gösteririm, sonucu birlikte doğrularız.</li>
-            <li>Çözülmezse yaptığımız her şeyi uzmana iletirim; sorunu baştan anlatmazsınız.</li>
-          </ol>
-        </div>
-        <p className="px-1 text-xs text-muted-foreground">Çağrı merkezini aradıysanız, size gönderilen SMS'teki bağlantı sizi doğrudan buraya getirir; sorununuzu tekrar anlatmanıza gerek kalmaz.</p>
-        <DemoNote className="pb-2">Görsel analiz bu prototipte simülasyondur; gerçek bir görüntü modeli kullanılmaz.</DemoNote>
+        <p className="px-1 text-xs text-muted-foreground">Kamera izni vermezseniz örnek bir modem görüntüsüyle devam edebilirsiniz. Çağrı merkezini aradıysanız, SMS'teki bağlantı sizi doğrudan buraya getirir.</p>
+        <DemoNote>Görsel analiz bu prototipte simülasyondur; gerçek bir görüntü modeli kullanılmaz.</DemoNote>
       </div>
     </div>
   );
