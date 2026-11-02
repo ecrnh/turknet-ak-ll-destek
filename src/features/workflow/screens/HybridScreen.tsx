@@ -122,7 +122,7 @@ export function HybridScreen() {
                 <dt className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <r.icon className="size-3.5" /> {r.label}
                 </dt>
-                <dd className={cn("mt-0.5 text-sm font-semibold", r.tone === "on" ? "text-foreground" : r.tone === "bad" ? "text-destructive" : "text-muted-foreground")}>{r.value}</dd>
+                <dd className={cn("mt-0.5 break-words text-[13px] font-semibold", r.tone === "on" ? "text-foreground" : r.tone === "bad" ? "text-destructive" : "text-muted-foreground")}>{r.value}</dd>
               </div>
             ))}
           </dl>
