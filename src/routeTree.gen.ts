@@ -45,6 +45,7 @@ import { Route as QrIndexRouteImport } from './routes/qr.index'
 import { Route as QrAnalizRouteImport } from './routes/qr.analiz'
 import { Route as QrTaraRouteImport } from './routes/qr.tara'
 import { Route as SurecIdRouteImport } from './routes/surec.$id'
+import { Route as AileUyeIdRouteImport } from './routes/aile.uye.$id'
 import { Route as QrTalepIdRouteImport } from './routes/qr.talep.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -227,6 +228,11 @@ const SurecIdRoute = SurecIdRouteImport.update({
   path: '/surec/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AileUyeIdRoute = AileUyeIdRouteImport.update({
+  id: '/aile/uye/$id',
+  path: '/aile/uye/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QrTalepIdRoute = QrTalepIdRouteImport.update({
   id: '/qr/talep/$id',
   path: '/qr/talep/$id',
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/faturalar/': typeof FaturalarIndexRoute
   '/goruntulu-destek/': typeof GoruntuluDestekIndexRoute
   '/qr/': typeof QrIndexRoute
+  '/aile/uye/$id': typeof AileUyeIdRoute
   '/qr/talep/$id': typeof QrTalepIdRoute
 }
 export interface FileRoutesByTo {
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/faturalar': typeof FaturalarIndexRoute
   '/goruntulu-destek': typeof GoruntuluDestekIndexRoute
   '/qr': typeof QrIndexRoute
+  '/aile/uye/$id': typeof AileUyeIdRoute
   '/qr/talep/$id': typeof QrTalepIdRoute
 }
 export interface FileRoutesById {
@@ -349,6 +357,7 @@ export interface FileRoutesById {
   '/faturalar/': typeof FaturalarIndexRoute
   '/goruntulu-destek/': typeof GoruntuluDestekIndexRoute
   '/qr/': typeof QrIndexRoute
+  '/aile/uye/$id': typeof AileUyeIdRoute
   '/qr/talep/$id': typeof QrTalepIdRoute
 }
 export interface FileRouteTypes {
@@ -390,6 +399,7 @@ export interface FileRouteTypes {
     | '/faturalar/'
     | '/goruntulu-destek/'
     | '/qr/'
+    | '/aile/uye/$id'
     | '/qr/talep/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/faturalar'
     | '/goruntulu-destek'
     | '/qr'
+    | '/aile/uye/$id'
     | '/qr/talep/$id'
   id:
     | '__root__'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/faturalar/'
     | '/goruntulu-destek/'
     | '/qr/'
+    | '/aile/uye/$id'
     | '/qr/talep/$id'
   fileRoutesById: FileRoutesById
 }
@@ -508,6 +520,7 @@ export interface RootRouteChildren {
   FaturalarIndexRoute: typeof FaturalarIndexRoute
   GoruntuluDestekIndexRoute: typeof GoruntuluDestekIndexRoute
   QrIndexRoute: typeof QrIndexRoute
+  AileUyeIdRoute: typeof AileUyeIdRoute
   QrTalepIdRoute: typeof QrTalepIdRoute
 }
 
@@ -765,6 +778,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SurecIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aile/uye/$id': {
+      id: '/aile/uye/$id'
+      path: '/aile/uye/$id'
+      fullPath: '/aile/uye/$id'
+      preLoaderRoute: typeof AileUyeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/qr/talep/$id': {
       id: '/qr/talep/$id'
       path: '/qr/talep/$id'
@@ -812,6 +832,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaturalarIndexRoute: FaturalarIndexRoute,
   GoruntuluDestekIndexRoute: GoruntuluDestekIndexRoute,
   QrIndexRoute: QrIndexRoute,
+  AileUyeIdRoute: AileUyeIdRoute,
   QrTalepIdRoute: QrTalepIdRoute,
 }
 export const routeTree = rootRouteImport
