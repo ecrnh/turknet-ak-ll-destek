@@ -37,11 +37,11 @@ describe("GIGA · kim ne yapar", () => {
     expect(r.actions?.[0]?.to).toBe("/surec/FTR-1");
   });
 
-  it("anlamadığında netleştirme seçenekleri ve uzman seçeneği sunar", () => {
+  it("anlamadığında önce netleştirme seçenekleri sunar, uzman seçeneğini öne çıkarmaz", () => {
     const r = gigaReply("merhaba", base);
     expect(r.topic).toBe("clarify");
     expect(r.actions?.filter((a) => a.kind === "ask").length).toBeGreaterThan(0);
-    expect(r.actions?.some((a) => a.kind === "human")).toBe(true);
+    expect(r.actions?.some((a) => a.kind === "human")).toBe(false);
   });
 
   it("fatura ödeme sorusu fatura incelemesi başlatmaz", () => {

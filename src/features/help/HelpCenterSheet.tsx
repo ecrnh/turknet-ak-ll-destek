@@ -325,12 +325,6 @@ export function HelpCenterSheet() {
           )}
         </AnimatePresence>
 
-        <div className="mb-2 flex items-center justify-between gap-2 px-1">
-          <p className="text-[11px] leading-snug text-muted-foreground">{GIGA.humanNote}</p>
-          <button type="button" onClick={toHuman} className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full bg-muted px-3 text-xs font-semibold text-primary">
-            <Headset className="size-3.5" /> Uzmana bağlan
-          </button>
-        </div>
         <form
           onSubmit={(e) => {
             e.preventDefault();

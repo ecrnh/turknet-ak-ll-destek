@@ -161,7 +161,7 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
       return {
         topic: "ai_usta",
         text: "Bağlantını kontrol edebilirim. Gerekirse modem ışıklarının fotoğrafını isteyip seninle adım adım ilerleriz; çözülmezse yaptıklarımızı uzmana aktarırım.",
-        actions: [{ label: "GIGA Teknik'i Başlat", kind: "auto", intent: "ai_usta" }, HUMAN],
+        actions: [{ label: "GIGA Teknik'i Başlat", kind: "auto", intent: "ai_usta" }],
       };
     default:
       break;
@@ -201,6 +201,6 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
   return {
     topic: "clarify",
     text: "Tam anlayamadım. Konu hangisine yakın?",
-    actions: [...CLARIFY_PROMPTS.map((p) => ({ label: p, kind: "ask" as const, prompt: p })), HUMAN],
+    actions: [...CLARIFY_PROMPTS.map((p) => ({ label: p, kind: "ask" as const, prompt: p }))],
   };
 }
