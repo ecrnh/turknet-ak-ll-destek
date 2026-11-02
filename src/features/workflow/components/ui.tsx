@@ -105,9 +105,11 @@ export function TechDetails({ title = "Teknik detayları gör", children, classN
 }
 
 export function DecisionCard({ wf }: { wf: Workflow }) {
+  const navigate = useNavigate();
   const d = wf.decision;
     if (!d) return null;
   if (d.key === "usta_photo") return <ModemCameraCard wf={wf} />;
+  if (d.key === "usta_inspect") return <ModemInspectCard wf={wf} />;
   const options = d.options;
   return (
     <div className="rounded-card border-2 border-magenta/30 bg-card p-5 shadow-card" role="group" aria-label="Karar bekleniyor">
@@ -119,7 +121,11 @@ export function DecisionCard({ wf }: { wf: Workflow }) {
           <button
             key={o.id}
             type="button"
-            onClick={() => decide(wf.id, o.id, "customer")}
+            onClick={() => {
+              decide(wf.id, o.id, "customer");
+              // "Canlı destekle görüşmek istiyorum" opens the live chat that the handover created.
+              if (o.id === "live" && wf.type === "ai_usta") navigate({ to: "/canli-destek/$id", params: { id: wf.id } });
+            }}
             className={cn(
               "w-full rounded-2xl border p-3.5 text-left transition-transform active:scale-[0.99]",
               o.primary ? "border-primary bg-primary text-primary-foreground shadow-float" : "border-primary/20 bg-card text-primary hover:bg-accent",
