@@ -566,3 +566,4 @@ export const GIGA = {
   can: ["Bağlantını ve modem durumunu kontrol etmek", "İzin verdiğin uzaktan düzeltmeleri yapıp tekrar ölçmek", "Faturanı ödeme kayıtlarınla karşılaştırmak", "Taşınma ve randevu aşamalarını takip etmek"],
   needsApproval: ["Fatura incelemesi başlatmak, iade veya borç düzeltmesi", "Nakil başvurusu ve randevu oluşturmak", "Hibrit İnternet ve TürkNet Box'ı etkinleştirmek", "Otomatik ödeme talimatı vermek"],
 } as const;
+export const HYBRID_BACKUP_QUOTA_MB = 50 * 1024; // demo allowance of the backup SIM
