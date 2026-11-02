@@ -157,7 +157,7 @@ export function AutoPayScreen() {
                 </p>
                 {c.status === "held_for_approval" && (
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    <Button onClick={approveCollection}>Onaylıyorum, tahsil edilsin</Button>
+                    <Button onClick={approveCollection}>Onaylıyorum</Button>
                     <Button variant="outline" onClick={skipCollection}>Bu ay kendim öderim</Button>
                   </div>
                 )}
