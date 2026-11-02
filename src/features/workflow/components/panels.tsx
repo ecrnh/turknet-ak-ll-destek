@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { PlainNote } from "@/components/tn/primitives";
 import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
 import { motion } from "framer-motion";
@@ -94,9 +95,9 @@ function TeamMatch({ wf }: { wf: Workflow }) {
         ))}
       </ol>
       {(m === "declined" || (wf.data["declinedTeam"] && m !== "accepted")) && (
-        <GigaNote mood="working" className="mt-3">Bu saat için ekip uygunluğu değişti. Senin için başka bir ekip arıyorum; tekrar araman gerekmiyor.</GigaNote>
+        <PlainNote className="mt-3">Bu saat için ekip uygunluğu değişti. Başka bir ekip arıyoruz; tekrar araman gerekmiyor.</PlainNote>
       )}
-      {m === "accepted" && <GigaNote mood="done" className="mt-3">Randevun onaylandı! {String(wf.data["team"] ?? "")} {String(wf.data["slotLabel"] ?? "")} aralığında gelecek.</GigaNote>}
+      {m === "accepted" && <PlainNote icon={CheckCircle2} className="mt-3">Randevun onaylandı! {String(wf.data["team"] ?? "")} {String(wf.data["slotLabel"] ?? "")} aralığında gelecek.</PlainNote>}
       <p className="mt-2 text-[10px] text-muted-foreground">Ekip uygunluğu demo verisidir; gerçek teknisyen sistemi bağlı değildir.</p>
     </div>
   );
@@ -377,7 +378,7 @@ export function SpeedPanel({ wf }: { wf: Workflow }) {
         <GigaNote mood={near == null ? "listening" : "working"}>
           {near == null
             ? wf.type === "proactive_fault"
-              ? "Bağlantında kısa süreli kopmalar fark ettim. Senin için kontrol ediyorum. İstersen modeminin yanına yaklaşıp bir ölçüm yap; Wi-Fi ile hat sorununu ayırmama yardım eder."
+              ? "Bağlantında kısa süreli kopmalar görünüyor. Gerekli teknik kontrolleri yapıyorum. İstersen modeminin yanına yaklaşıp bir ölçüm yap; Wi-Fi ile hat sorununu ayırmama yardım eder."
               : "İnternet hızında beklenenden düşük bir değer görüyorum. Modeminin yanına yaklaşarak tekrar ölçüm yapalım."
             : near < pkg * 0.6
               ? `Modeminin yanında da ${near} Mbps ölçtüm. Sorun Wi-Fi kapsaması değil; hattını uzaktan iyileştirmeyi deniyorum.`
@@ -465,7 +466,7 @@ export function HealthCard({ className }: { className?: string }) {
           <p className="font-semibold text-foreground">{SUBSCRIPTION.speed} Mbps</p>
         </div>
       </div>
-      <p className="mt-3 text-[11px] text-muted-foreground">Son kontrol {fmtRelative(c.lastCheckAt)} · izleme verisi demo</p>
+      <p className="mt-3 text-[11px] text-muted-foreground">Son kontrol {fmtRelative(c.lastCheckAt)} · teknik ölçüm verisi demo</p>
     </Box>
   );
 }
@@ -518,7 +519,7 @@ export function ConnectivityPanel({ compact }: { compact?: boolean }) {
           ))}
         </ol>
       )}
-      <p className="mt-3 text-[11px] text-muted-foreground">Son kontrol {fmtRelative(c.lastCheckAt)} · izleme verisi demo</p>
+      <p className="mt-3 text-[11px] text-muted-foreground">Son kontrol {fmtRelative(c.lastCheckAt)} · teknik ölçüm verisi demo</p>
     </Box>
   );
 }

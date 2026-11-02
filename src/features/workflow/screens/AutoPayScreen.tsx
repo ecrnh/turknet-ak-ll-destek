@@ -3,13 +3,12 @@ import { BellRing, CheckCircle2, CreditCard, Landmark, ShieldCheck, TriangleAler
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
-import { ToggleRow } from "@/components/tn/primitives";
+import { PlainNote, ToggleRow } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SAVED_CARD } from "@/data/mock";
-import { GigaNote } from "@/features/giga/GigaAvatar";
 import { useFlow } from "@/lib/analytics";
 import { fmtDateTime, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -93,7 +92,7 @@ export function AutoPayScreen() {
     <div>
       <PageHeader title="Akıllı Otomatik Ödeme" />
       <div className="space-y-4 px-4">
-        <GigaNote>Ödeme tarihini takip etmek zorunda kalma. Otomatik ödeme talimatını birlikte ayarlayabiliriz; her tahsilattan önce sana haber veririm.</GigaNote>
+        <PlainNote>Ödeme tarihini takip etmek zorunda kalma. Otomatik ödeme talimatını birlikte ayarlayabiliriz; her tahsilattan önce sana haber veririz.</PlainNote>
 
         {ap.status === "off" ? (
           <div className="space-y-4 rounded-card bg-card p-5 shadow-card">

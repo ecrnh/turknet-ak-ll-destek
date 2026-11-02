@@ -48,3 +48,8 @@
 - [x] Bildirim birleştirme + kampanya tercih; GIGA sohbeti her soruda kayıt açmıyor
 - [x] Senaryo D (4 sonuç) ve yeni G (ekip eşleştirme); testler
 - Not: alt menü mevcut yapıda bırakıldı (Ana Sayfa · İşlemler · GIGA · Faturalarım · Hesabım)
+
+## Tur 6 — GIGA seçici kullanım ve güven dili
+- [x] Sıradan özelliklerden GIGA öneki kaldırıldı (Fatura Kalkanı, Taşınma ve Nakil, İşlemlerim, Hız Koruyucu)
+- [x] Gözetim çağrıştıran metinler teknik kontrol diline çevrildi; GIGA sayfasında tek kapsam notu, sohbette gizlilik yanıtı
+- [x] Sıradan ekranlarda GIGA yüzü yerine sade bilgi notu; ad/gizlilik testleri

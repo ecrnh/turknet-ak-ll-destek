@@ -1,11 +1,12 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { PlainNote } from "@/components/tn/primitives";
 import { motion } from "framer-motion";
 import { CalendarClock, CheckCircle2, ChevronRight, CreditCard, Loader2, ReceiptText, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { Button } from "@/components/ui/button";
 import { BILL_DISCOUNTS, BILLING_CHECKS, SUBSCRIPTION } from "@/data/mock";
-import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
+import { GigaNote } from "@/features/giga/GigaAvatar";
 import { fmtTL } from "@/lib/format";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ import { DemoNote, StatusPill } from "../components/ui";
 
 const COMPARE = ["Fatura tutarı", "Ödeme geçmişi", "Kampanya ve indirimler", "Abonelik değişiklikleri", "Dondurma ve iptal kayıtları"];
 
-/** Fatura Kalkanı (GIGA Fatura): invoice card → GIGA comparison → no issue / possible difference → consent. */
+/** Fatura Kalkanı: invoice card → comparison → no issue / possible difference → consent. GIGA only explains a found difference. */
 export function BillingShieldScreen() {
   useFlow("billing_shield");
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export function BillingShieldScreen() {
 
   return (
     <div>
-      <PageHeader title="GIGA Fatura" />
+      <PageHeader title="Fatura Kalkanı" />
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">
@@ -87,7 +88,7 @@ export function BillingShieldScreen() {
 
         {phase === "checking" && (
           <div className="rounded-card bg-card p-5 shadow-card" aria-live="polite">
-            <GigaNote mood="thinking">Faturanı ve önceki işlemlerini karşılaştırıyorum. Biraz bekleyebilirsin.</GigaNote>
+            <PlainNote icon={Loader2}>Faturanı ve önceki ödemelerini karşılaştırıyoruz. Biraz bekleyebilirsin.</PlainNote>
             <ul className="mt-4 space-y-2 text-sm">
               {COMPARE.map((c, i) => (
                 <motion.li key={c} initial={{ opacity: 0.4 }} animate={{ opacity: i <= step ? 1 : 0.4 }} className="flex items-center gap-2">
@@ -127,7 +128,7 @@ export function BillingShieldScreen() {
             ) : (
               <>
                 <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                  <GigaAvatar size={30} mood="working" label={false} /> İnceleme sürecini başlattık.
+                  <CheckCircle2 className="size-6 text-success" strokeWidth={1.5} aria-hidden /> İnceleme sürecini başlattık.
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">Sonucu buradan takip edebilirsin.</p>
               </>

@@ -16,12 +16,12 @@ import { startSpeedCheck } from "@/features/workflow/services/proactive";
 type Navigate = ReturnType<typeof useNavigate>;
 
 export const INTENT_LABEL: Record<Intent, string> = {
-  relocation: "GIGA Taşınma",
-  billing: "GIGA Fatura",
+  relocation: "Taşınma ve Nakil",
+  billing: "Fatura Kalkanı",
   ai_usta: "GIGA Teknik",
   temp_internet: "Bağlantım · Hibrit İnternet",
   speed: "Hız kontrolü",
-  track: "GIGA Takip",
+  track: "İşlemlerim",
 };
 
 export function startIntent(intent: Intent, said: string, navigate: Navigate) {

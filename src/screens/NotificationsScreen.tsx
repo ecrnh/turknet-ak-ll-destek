@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const FILTERS: { id: NotifKind | "all"; label: string }[] = [
   { id: "all", label: "Tümü" },
-  { id: "agent", label: "GIGA" },
+  { id: "agent", label: "Kontroller" },
   { id: "support", label: "Destek" },
   { id: "family", label: "Aile" },
 ];
@@ -54,7 +54,7 @@ export function NotificationsScreen() {
               }}
               className={cn("flex w-full items-start gap-3 rounded-card bg-card p-4 text-left shadow-card", !n.read && "ring-1 ring-magenta/30")}
             >
-              {n.kind === "agent" || n.from === "giga" ? (
+              {n.kind === "agent" ? (
                 <GigaAvatar size={44} label={false} />
               ) : (
                 <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", n.kind === "campaign" ? "bg-magenta text-magenta-foreground" : "bg-icon-box text-primary")}>

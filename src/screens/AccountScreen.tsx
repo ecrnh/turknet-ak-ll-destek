@@ -60,7 +60,7 @@ export function AccountScreen() {
 
         <ListCard>
           <ListRow title="Aile ve Yetkilendirme" to="/aile" badge={<NewBadge />} desc="Yakınların adına işlem yap, yetki ver" />
-          <ListRow title="Tercihlerim" to="/tercihler" desc="Büyük yazı, basit mod, GIGA izinleri" />
+          <ListRow title="Tercihlerim" to="/tercihler" desc="Büyük yazı, basit mod, otomatik kontrol izinleri" />
           <ListRow title="Şifre Değiştir" to="/islem/sifre-degistir" />
           <ListRow title="Belgelerim" to="/islem/belgelerim" />
           <ListRow title="Benim İçin Takip Et" to="/takip" badge={<NewBadge />} desc="Tüm taleplerin, kararların ve iş emirlerin" />

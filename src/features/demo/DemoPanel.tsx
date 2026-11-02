@@ -62,7 +62,7 @@ export function DemoPanel({ onHide }: { onHide?: () => void }) {
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">GIGA senaryoları</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Otomatik kontrol senaryoları</p>
         <Btn icon={Gauge} label="Hız düşüşü simüle et" onClick={() => { simulateSpeedDrop(); navigate({ to: "/" }); }} />
       </div>
 

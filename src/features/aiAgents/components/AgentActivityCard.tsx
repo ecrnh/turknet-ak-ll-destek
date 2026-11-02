@@ -8,7 +8,7 @@ import { AGENT_DEFS, GIGA, SPEED_FIX_STEPS } from "@/data/mock";
 import { fmtRelative } from "@/lib/format";
 import { Progress } from "@/components/ui/progress";
 
-/** GIGA's live card on the home page: what GIGA is doing right now, plus a way to talk to it. */
+/** GIGA on the home page: an invitation to ask, plus an in-progress fix when one is running. */
 export function AgentActivityCard() {
   const run = useAgentsStore((s) => s.speedRun);
   const actions = useAgentsStore((s) => s.actions);
@@ -27,10 +27,10 @@ export function AgentActivityCard() {
           <GigaAvatar size={50} mood={running ? "working" : backupOn ? "listening" : "idle"} />
           <div className="flex-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">
-              <GigaName /> · canlı
+              <GigaName />
             </p>
             <p className="font-semibold leading-snug">
-              {running ? "Hızını düzeltmeye çalışıyorum…" : backupOn ? "Hibrit İnternet'teyiz; ana hattını izliyorum" : on ? `Hattını izliyorum · ${on} görev açık` : "Otomatik görevlerim kapalı"}
+              {running ? "Hızını düzeltmeye çalışıyorum…" : backupOn ? "Yedek bağlantıdasın; ana bağlantın düzelince haber vereceğiz" : "Bir konuda yardıma ihtiyacın olursa buradayım"}
             </p>
           </div>
           <ChevronRight className="size-5" />
@@ -51,7 +51,7 @@ export function AgentActivityCard() {
           </div>
         ) : null}
         <p className="mt-3 text-xs text-primary-foreground/75">
-          Bu ay senin için {stats.solved} işlem yaptım · {stats.callsPrevented} destek çağrısını önledim
+          {on ? `${on} otomatik kontrol açık · ` : ""}Bu ay {stats.solved} sorunu birlikte çözdük
         </p>
       </Link>
       <button

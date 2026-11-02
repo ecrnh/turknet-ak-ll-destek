@@ -22,18 +22,18 @@ export function PreferencesScreen() {
         </section>
 
         <section className="rounded-card bg-card px-5 py-2 shadow-card">
-          <p className="pt-3 text-xs font-bold uppercase tracking-wide text-magenta">GIGA İzinleri</p>
-          <ToggleRow id="speed-agent" title="Hız Koruyucu" desc="Hız düşünce GIGA otomatik düzeltsin (geri alınabilir)" checked={enabled.speed} onChange={(v) => toggle("speed", v)} />
+          <p className="pt-3 text-xs font-bold uppercase tracking-wide text-magenta">Otomatik Kontrol İzinleri</p>
+          <ToggleRow id="speed-agent" title="Hız Koruyucu" desc="Hız belirgin düştüğünde güvenli uzaktan düzeltme yapılsın (geri alınabilir)" checked={enabled.speed} onChange={(v) => toggle("speed", v)} />
           <Link to="/ajanlar" className="flex min-h-12 items-center justify-between py-3 text-sm font-semibold text-primary">
-            GIGA görevlerini yönet <ChevronRight className="size-4" />
+            Otomatik kontrolleri yönet <ChevronRight className="size-4" />
           </Link>
         </section>
 
         <section className="rounded-card bg-card px-5 py-2 shadow-card">
           <p className="pt-3 text-xs font-bold uppercase tracking-wide text-magenta">Bildirimler</p>
-          <ToggleRow id="push" title="Anlık bildirimler" desc="GIGA aksiyonları, kesinti ve işlem bildirimleri" checked={prefs.push} onChange={(v) => setPref("push", v)} />
+          <ToggleRow id="push" title="Anlık bildirimler" desc="Kesinti, işlem ve onay gerektiren bildirimler" checked={prefs.push} onChange={(v) => setPref("push", v)} />
           <ToggleRow id="campaign-push" title="Kampanya bildirimleri" desc="Kapalıyken kampanyalar yalnızca bildirim listesinde görünür" checked={prefs.campaignPush} onChange={(v) => setPref("campaignPush", v)} disabled={!prefs.push} />
-          <p className="pb-3 text-xs text-muted-foreground">GIGA her iç kontrol için bildirim göndermez; yalnızca önemli bir gelişme olduğunda veya onayın gerektiğinde haber verir. Aynı işlemle ilgili güncellemeler tek bildirimde birleşir.</p>
+          <p className="pb-3 text-xs text-muted-foreground">Her teknik kontrol için bildirim göndermeyiz; yalnızca önemli bir gelişme olduğunda veya onayın gerektiğinde haber veririz. Aynı işlemle ilgili güncellemeler tek bildirimde birleşir.</p>
         </section>
       </div>
     </div>

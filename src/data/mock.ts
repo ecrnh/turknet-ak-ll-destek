@@ -38,7 +38,7 @@ export type ScopeGroup = "view" | "tech" | "appointment" | "finance";
 /** Family permissions. Finance items marked `ownerApproval` still need the owner's approval every time. */
 export const SCOPES: { key: ScopeKey; group: ScopeGroup; label: string; desc: string; default: boolean; ownerApproval?: boolean }[] = [
   { key: "view", group: "view", label: "İşlemleri görüntüleme", desc: "Mevcut abonelik, aktif talepler, randevu detayları ve süreç takibi", default: true },
-  { key: "ticket", group: "tech", label: "GIGA ile sorun giderme", desc: "GIGA Teknik'i başlatır, bağlantı durumunu görür, teknik yardım ister", default: true },
+  { key: "ticket", group: "tech", label: "Teknik destek ve sorun giderme", desc: "Sorun gidermeyi başlatır, bağlantı durumunu görür, teknik yardım ister", default: true },
   { key: "video", group: "tech", label: "Görüntülü destek başlat", desc: "Uzmanla görüntülü görüşme yapabilir", default: true },
   { key: "appointment", group: "appointment", label: "Randevu yönetimi", desc: "Randevuları görür, uygun saat seçer, değişiklik ister", default: false },
   { key: "bills", group: "finance", label: "Faturaları görüntüle", desc: "Yalnızca açıkça izin verirsen faturaları görür", default: false },
@@ -94,8 +94,8 @@ export const HERO_SLIDES = [
     id: "agents",
     kind: "feature" as const,
     eyebrow: "GIGA",
-    title: "Sen Fark Etmeden Çözüyoruz",
-    text: "GIGA hattını 7/24 izliyor; hız düşerse ya da kesinti olursa ilk o fark eder.",
+    title: "Sorun mu Var? Birlikte Çözelim",
+    text: "Bağlantınla ilgili bir sorun yaşarsan GIGA ile birkaç basit kontrolle çoğu sorunu dakikalar içinde çözebilirsin.",
     cta: "GIGA ile Tanış",
     to: "/ajanlar",
     icon: "bot",
@@ -145,9 +145,9 @@ export const INTERNET_OPS: OpItem[] = [
 ];
 
 export const SUPPORT_OPS: OpItem[] = [
-  { slug: "takip", title: "GIGA Takip", icon: "track", to: "/takip", isNew: true },
+  { slug: "takip", title: "Benim İçin Takip Et", icon: "track", to: "/takip", isNew: true },
   { slug: "ai-usta", title: "GIGA Teknik", icon: "usta", to: "/ai-usta", isNew: true },
-  { slug: "fatura-kalkani", title: "GIGA Fatura", icon: "shield", to: "/fatura-kalkani", isNew: true },
+  { slug: "fatura-kalkani", title: "Fatura Kalkanı", icon: "shield", to: "/fatura-kalkani", isNew: true },
   { slug: "baglanti", title: "Bağlantım", icon: "network", to: "/baglanti", isNew: true },
   { slug: "video", title: "Görüntülü Destek", icon: "video", to: "/goruntulu-destek", isNew: true },
   { slug: "qr", title: "QR ile Destek", icon: "qr", to: "/qr", isNew: true },
@@ -246,10 +246,10 @@ export const SEARCH_INDEX: { title: string; to: string; keywords: string; isNew?
   { title: "Statik IP", to: "/islem/statik-ip", keywords: "statik ip", section: "İnternet" },
   { title: "Peşin Ödeme Kampanyası", to: "/islem/fiyat-sabitle", keywords: "peşin kampanya sabit fiyat 12 ay", section: "Kampanya" },
   { title: "Arkadaşını Getir Birlikte Kazanın", to: "/islem/arkadasini-getir", keywords: "arkadaş davet referans", section: "Kampanya" },
-  { title: "GIGA Taşınma · İnternetini Yeni Adresine Taşı", to: "/tasinma", keywords: "giga taşı taşınma nakil adres", isNew: true, section: "Yeni" },
-  { title: "GIGA Takip · Benim İçin Takip Et", to: "/takip", keywords: "giga takip süreç talep durum otonom", isNew: true, section: "Yeni" },
+  { title: "Taşınma ve Nakil · İnternetini Yeni Adresine Taşı", to: "/tasinma", keywords: "giga taşı taşınma nakil adres", isNew: true, section: "Yeni" },
+  { title: "İşlemlerim · Benim İçin Takip Et", to: "/takip", keywords: "giga takip süreç talep durum otonom", isNew: true, section: "Yeni" },
   { title: "GIGA Teknik", to: "/ai-usta", keywords: "giga teknik ai usta yapay zeka modem ışık çalışmıyor görsel fotoğraf", isNew: true, section: "Yeni" },
-  { title: "GIGA Fatura · Fatura Kalkanı", to: "/fatura-kalkani", keywords: "giga fatura borç ödeme mükerrer iade kalkan", isNew: true, section: "Yeni" },
+  { title: "Fatura Kalkanı", to: "/fatura-kalkani", keywords: "giga fatura borç ödeme mükerrer iade kalkan", isNew: true, section: "Yeni" },
   { title: "Hibrit İnternet · ücretsiz yedek bağlantı", to: "/hibrit", keywords: "hibrit yedek bağlantı kesinti 24 saat ücretsiz internet yok", isNew: true, section: "Yeni" },
   { title: "Bağlantım", to: "/baglanti", keywords: "bağlantı durum sağlık geçici mobil internet box", isNew: true, section: "Yeni" },
   { title: "Yardım & Destek", to: "/yardim", keywords: "yardım destek", section: "Yardım" },
@@ -261,7 +261,7 @@ export const SEARCH_INDEX: { title: string; to: string; keywords: string; isNew?
   { title: "QR ile Destek Talebi", to: "/qr", keywords: "qr kod temassız etiket tara", isNew: true, section: "Yeni" },
   { title: "QR Tara", to: "/qr/tara", keywords: "qr tara okut", isNew: true, section: "Yeni" },
   { title: "GIGA · akıllı dijital yardımcın", to: "/ajanlar", keywords: "giga ai yapay zeka ajan asistan otomatik yardımcı", isNew: true, section: "Yeni" },
-  { title: "GIGA Hız Koruyucu", to: "/ajanlar/hiz", keywords: "giga hız düşük yavaş ajan", isNew: true, section: "Yeni" },
+  { title: "Hız Koruyucu", to: "/ajanlar/hiz", keywords: "giga hız düşük yavaş ajan", isNew: true, section: "Yeni" },
   { title: "Bildirimler", to: "/bildirimler", keywords: "bildirim", section: "Hesap" },
   { title: "Tercihlerim / Büyük Yazı", to: "/tercihler", keywords: "tercih büyük yazı basit mod erişilebilirlik", section: "Hesap" },
   { title: "İşlem Geçmişi", to: "/islem-gecmisi", keywords: "işlem geçmiş", section: "Hesap" },
@@ -326,9 +326,9 @@ export const CASE_BASELINE = {
 };
 
 export const AGENT_DEFS = [
-  { id: "speed", name: "Hız Koruyucu", desc: "Hızın paketinin altına düşerse kök nedeni bulur ve düzeltir.", icon: "gauge", to: "/ajanlar/hiz" },
-  { id: "backup", name: "Kesinti Takibi", desc: "Kesintiyi senin için izler; 24 saati aşarsa ücretsiz Hibrit İnternet'i hatırlatır.", icon: "route", to: "/hibrit" },
-  { id: "modem", name: "Modem Sağlık İzleyici", desc: "Optik güç, sıcaklık ve kopmaları izler, sorun büyümeden uyarır.", icon: "router", to: "/ajanlar" },
+  { id: "speed", name: "Hız Koruyucu", desc: "Hızında belirgin bir düşüş olursa izin verdiğin güvenli uzaktan düzeltmeleri dener.", icon: "gauge", to: "/ajanlar/hiz" },
+  { id: "backup", name: "Kesinti Takibi", desc: "Kesintinin güncel durumunu gösterir; 24 saati aşarsa ücretsiz Hibrit İnternet'i hatırlatır.", icon: "route", to: "/hibrit" },
+  { id: "modem", name: "Modem Sağlık Kontrolü", desc: "Modem ve bağlantı durumuyla ilgili teknik kontrolleri yapar; bir sorun görünürse haber verir.", icon: "router", to: "/ajanlar" },
   { id: "bill", name: "Fatura Hatırlatıcı", desc: "Son ödeme gününü hatırlatır, olağan dışı tutarları açıklar.", icon: "receipt", to: "/fatura-kalkani" },
 ] as const;
 
@@ -516,14 +516,14 @@ export const GIGA = {
   humanNote: "İstediğin an bir uzmana bağlanabilirsin; konuşmamızı ona iletirim.",
   /** One assistant, four capabilities. `prompt` is what tapping the capability says to GIGA. */
   capabilities: [
-    { id: "teknik", name: "GIGA Teknik", desc: "Bağlantı ve modem sorunlarını birlikte çözeriz", icon: "usta", to: "/ai-usta", prompt: "İnternetim çalışmıyor" },
-    { id: "fatura", name: "GIGA Fatura", desc: "Faturanı açıklar, olağan dışı tutarları yakalar", icon: "shield", to: "/fatura-kalkani", prompt: "Faturamda tutarsızlık var" },
-    { id: "tasinma", name: "GIGA Taşınma", desc: "Yeni adresinde altyapıdan kuruluma kadar yönetir", icon: "route", to: "/tasinma", prompt: "Taşınacağım" },
-    { id: "takip", name: "GIGA Takip", desc: "Devam eden işlemlerini senin için izler", icon: "track", to: "/takip", prompt: "İşlemim ne durumda?" },
+    { id: "teknik", name: "Bağlantı sorunu", desc: "Bağlantı ve modem sorunlarını birlikte çözelim", icon: "usta", to: "/ai-usta", prompt: "İnternetim çalışmıyor" },
+    { id: "fatura", name: "Fatura Kalkanı", desc: "Faturanı açıklarım, farklı görünen tutarları birlikte inceleriz", icon: "shield", to: "/fatura-kalkani", prompt: "Faturamda tutarsızlık var" },
+    { id: "tasinma", name: "Taşınma ve Nakil", desc: "Yeni adresini kontrol edip süreci başlatalım", icon: "route", to: "/tasinma", prompt: "Taşınacağım" },
+    { id: "takip", name: "İşlemlerim", desc: "Devam eden işlemlerinin güncel durumu", icon: "track", to: "/takip", prompt: "İşlemim ne durumda?" },
   ],
   /** How an action is labelled so the customer always knows who does what. */
   modes: {
-    auto: "GIGA yapar",
+    auto: "Ben yaparım",
     approval: "Onayın gerekir",
     human: "Uzmana bağlanır",
   },

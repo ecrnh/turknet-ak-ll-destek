@@ -340,7 +340,7 @@ export const SCENARIOS: DemoScenario[] = [
     steps: [
       { id: "call", label: "Müşteri TürkNet'i arar, GIGA numarasından tanır", why: "Abonelik numaradan bulunur; şifre veya kimlik bilgisi sorulmaz", actor: "customer", status: wfStep(main, "call"), run: () => setId("main", startUstaCall()) },
       { id: "menu", label: "Sesli menü: 1 — İnternetim hiç çalışmıyor", why: "Sorun kategorisi telefonda seçilir; uygulamada tekrar sorulmaz", actor: "customer", status: decisionState(main, "usta_ivr_menu"), decisionKey: "usta_ivr_menu" },
-      { id: "ivr_check", label: "GIGA bölgesel kesintiyi kontrol eder", why: "Bölgesel arıza varsa müşteriye adım yaptırılmaz", actor: "system", status: wfStep(main, "ivr_check"), run: (c) => c.main && ivrCheck(c.main.id) },
+      { id: "ivr_check", label: "Bölgesel kesinti kontrol edilir", why: "Bölgesel arıza varsa müşteriye adım yaptırılmaz", actor: "system", status: wfStep(main, "ivr_check"), run: (c) => c.main && ivrCheck(c.main.id) },
       { id: "ivr_choice", label: "SMS ile devam mı, temsilci mi?", why: "Kanal değişimi müşterinin seçimidir; uygulama zorunlu değildir", actor: "customer", status: decisionState(main, "usta_ivr"), decisionKey: "usta_ivr" },
       { id: "sms_open", label: "SMS bağlantısı açılır (uygulama yoksa önce kurulum)", why: "Çağrıdaki bağlam aktarılır; müşteri sorunu yeniden anlatmaz (simüle SMS)", actor: "customer", status: wfStep(main, "sms"), run: (c) => c.main && openUstaSms(c.main.id), screen: detail, only: ["fixed", "not_fixed", "no_app"] },
       { id: "photo_req", label: "GIGA Teknik kamerayı açmayı önerir", why: "Işık durumları teknik soru sormadan sorunu daraltır", actor: "agent", status: offered(main, "usta_photo"), run: (c) => c.main && requestPhoto(c.main.id), only: ["fixed", "not_fixed", "no_app"] },
@@ -351,7 +351,7 @@ export const SCENARIOS: DemoScenario[] = [
       { id: "step2", label: "Adım 2: modemi kapatıp 20 sn bekle", why: "Sıradaki güvenli kontrol", actor: "agent", status: offered(main, "usta_step2"), run: (c) => c.main && giveStep(c.main.id, 2), only: ["fixed", "not_fixed", "no_app"] },
       { id: "step2_done", label: "Müşteri “Tamam, açtım” der", why: "Modem yeniden başlatıldı", actor: "customer", status: decisionState(main, "usta_step2"), decisionKey: "usta_step2", only: ["fixed", "not_fixed", "no_app"] },
       { id: "reconnect", label: "Bağlantının yeniden kurulması beklenir", why: "Modemin açılması zaman alır", actor: "system", status: wfStep(main, "reconnect"), only: ["fixed", "not_fixed", "no_app"] },
-      { id: "recheck", label: "GIGA bağlantıyı tekrar kontrol eder", why: "Çözüm ölçümle doğrulanır", actor: "system", status: wfStep(main, "recheck"), only: ["fixed", "not_fixed", "no_app"] },
+      { id: "recheck", label: "Bağlantı tekrar kontrol edilir", why: "Çözüm ölçümle doğrulanır", actor: "system", status: wfStep(main, "recheck"), only: ["fixed", "not_fixed", "no_app"] },
       { id: "confirm", label: "Müşteri çözümü doğrular", why: "Çözüm müşteri onayı olmadan kapatılmaz", actor: "customer", status: decisionState(main, "usta_confirm"), decisionKey: "usta_confirm", run: (c) => c.main && askConfirm(c.main.id), only: ["fixed", "no_app"] },
       { id: "reward", label: "Sorun çözüldü, destek kaydı açılmadı", why: "Self-servis çözümde kayıt oluşturulmaz", actor: "system", status: (c) => (c.main?.status === "completed" ? "done" : "pending"), screen: detail, only: ["fixed", "no_app"] },
       { id: "handoff", label: "Canlı desteğe bağlamıyla aktarım", why: "Müşteri aynı sorunu baştan anlatmaz; tüm kontroller temsilciye gider", actor: "system", status: (c) => (c.main?.handoff ? "done" : "pending"), screen: (c) => (c.main ? `/canli-destek/${c.main.id}` : null), only: ["not_fixed", "agent"] },
@@ -367,7 +367,7 @@ export const SCENARIOS: DemoScenario[] = [
       { id: "field", label: "Saha iş emri gerekir", desc: "Uzaktan çözüm yetmez; teknisyen yönlendirilir.", config: { proactive: "field" }, choices: {} },
     ],
     steps: [
-      { id: "baseline", label: "Bağlantı normal (izleme aktif)", why: "Normal değerler referans alınır: optik -19 dBm, 0 kopma", actor: "system", status: (c) => (c.s.flags["baseline"] ? "done" : "pending"), run: () => { setConnectivity({ fixed: "up", metric: { optic: -19.2, drops: 0 } }, "İzleme: bağlantı normal"); flag("baseline"); }, screen: () => "/baglanti" },
+      { id: "baseline", label: "Bağlantı normal (teknik kontroller aktif)", why: "Normal değerler referans alınır: optik -19 dBm, 0 kopma", actor: "system", status: (c) => (c.s.flags["baseline"] ? "done" : "pending"), run: () => { setConnectivity({ fixed: "up", metric: { optic: -19.2, drops: 0 } }, "İzleme: bağlantı normal"); flag("baseline"); }, screen: () => "/baglanti" },
       { id: "anomaly", label: "Anormal bağlantı sinyali tetiklenir", why: "Demo: izleme verisine eşik dışı değer enjekte edilir", actor: "presenter", status: (c) => (c.s.flags["anomaly"] ? "done" : "pending"), run: () => { injectAnomaly(); flag("anomaly"); } },
       { id: "detect", label: "Sistem olası arızayı algılar", why: "Müşteri şikâyet etmeden süreç başlar", actor: "system", status: wfStep(main, "signal"), run: () => setId("main", detectAnomaly()) },
       { id: "scope", label: "Kapsam: tek hat mı, bölgesel mi?", why: "Belirsiz durumda kesin teşhis iddiası yapılmaz", actor: "system", status: wfStep(main, "scope"), run: (c) => c.main && assessScope(c.main.id) },
@@ -407,11 +407,11 @@ export const SCENARIOS: DemoScenario[] = [
   {
     id: "G",
     title: "Taşınma ve ekip eşleştirme",
-    summary: "Yeni adres uygun. Müşteri tarih ve saat aralığı seçer; GIGA uygun saha ekibini bulur, randevu isteği gönderir ve onayı takip eder. İlk ekip kabul edemezse başka ekip aranır; müşteri kimseyi aramaz.",
-    features: ["GIGA Taşınma", "Ekip eşleştirme", "GIGA Takip"],
+    summary: "Yeni adres uygun. Müşteri tarih ve saat aralığı seçer; sistem uygun saha ekibini bulur, randevu isteği gönderir ve onayı takip eder. İlk ekip kabul edemezse başka ekip aranır; müşteri kimseyi aramaz.",
+    features: ["Taşınma ve Nakil", "Ekip eşleştirme", "İşlemlerim"],
     outcomes: [
       { id: "first", label: "İlk ekip kabul eder", desc: "Seçilen saat için ilk uygun ekip randevuyu onaylar.", config: { addressCheck: "eligible", teamMatch: "first" }, choices: { relocation_slot: "slot-1" } },
-      { id: "second", label: "İlk ekip kabul edemez → başka ekip", desc: "Ekip uygunluğu değişir; GIGA başka bir ekip bulur ve randevu onaylanır.", config: { addressCheck: "eligible", teamMatch: "second" }, choices: { relocation_slot: "slot-1" } },
+      { id: "second", label: "İlk ekip kabul edemez → başka ekip", desc: "Ekip uygunluğu değişir; başka bir ekip bulunur ve randevu onaylanır.", config: { addressCheck: "eligible", teamMatch: "second" }, choices: { relocation_slot: "slot-1" } },
     ],
     steps: [
       relocationOpen,

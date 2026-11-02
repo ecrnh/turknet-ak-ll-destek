@@ -3,7 +3,7 @@ import { LiveSupportScreen } from "@/features/workflow/screens/LiveSupportScreen
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/canli-destek/$id")({
-  head: () => pageHead("Canlı Destek", "GIGA'nın ilettiği bağlamla temsilciyle görüş; sorununu baştan anlatma."),
+  head: () => pageHead("Canlı Destek", "Yaptığın kontroller temsilciye iletilir; sorununu baştan anlatmana gerek kalmaz."),
   component: LivePage,
 });
 

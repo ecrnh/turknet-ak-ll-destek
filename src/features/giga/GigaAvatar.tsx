@@ -139,13 +139,12 @@ export function ActionModeTag({ mode, className }: { mode: GigaActionMode; class
   );
 }
 
-/** GIGA speaking inside a screen: one short, first-person line next to its face. */
+/** GIGA speaking inside an AI-powered experience (chat, troubleshooting, diagnosis). The face is enough; the name is not repeated. */
 export function GigaNote({ children, mood = "idle", onDark, className }: { children: React.ReactNode; mood?: GigaMood; onDark?: boolean; className?: string }) {
   return (
     <div className={cn("flex items-start gap-2.5", className)} role="note">
       <GigaAvatar size={34} mood={mood} label={false} className="mt-0.5" />
       <div className={cn("flex-1 rounded-2xl rounded-tl-md px-3.5 py-2.5 text-sm leading-relaxed", onDark ? "bg-primary-foreground/12 text-primary-foreground" : "bg-card text-foreground shadow-card")}>
-        <span className={cn("mb-0.5 block text-[10px] font-extrabold tracking-[0.08em]", onDark ? "text-primary-foreground/70" : "text-magenta")}>GIGA</span>
         {children}
       </div>
     </div>

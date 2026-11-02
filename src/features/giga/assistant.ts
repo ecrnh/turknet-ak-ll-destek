@@ -24,7 +24,7 @@ export interface GigaReply {
   actions?: GigaAction[];
   /** Streams the speed-guard steps inside the chat. */
   agent?: "speed";
-  topic: Intent | "human" | "payment" | "modem" | "wifi" | "family" | "subscription" | "upgrade" | "clarify";
+  topic: Intent | "human" | "privacy" | "payment" | "modem" | "wifi" | "family" | "subscription" | "upgrade" | "clarify";
 }
 
 export interface GigaContext {
@@ -34,6 +34,10 @@ export interface GigaContext {
   /** A known outage is being tracked. */
   outage: boolean;
 }
+
+/** Scope of connection checks, in plain words. Never implies access to browsing, messages or unrelated activity. */
+export const PRIVACY_REPLY =
+  "Bağlantı sorunlarını tespit edebilmek için yalnızca modem durumu, bağlantı kalitesi ve bölgesel kesinti bilgileri gibi teknik verileri kontrol ediyoruz. Ziyaret ettiğin siteleri, mesajlarını veya kişisel içeriklerini görmüyoruz.";
 
 const has = (t: string, ...words: string[]) => words.some((w) => t.includes(w));
 
@@ -46,7 +50,7 @@ function outageReply(net: NetStatus): GigaReply {
     topic: "ai_usta",
     text:
       net === "mobile"
-        ? "Ana bağlantındaki kesinti sürüyor; şu an Hibrit İnternet yedek bağlantın üzerinden bağlısın. Ana bağlantı düzelince geri dönüşü senin için takip ediyorum."
+        ? "Ana bağlantındaki kesinti sürüyor; şu an Hibrit İnternet yedek bağlantın üzerinden bağlısın. Ana bağlantın düzelince geri dönüş otomatik yapılır, sana da haber veririz."
         : "Bağlantında bir kesinti var ve teknik ekibimiz çözüm üzerinde çalışıyor. Modeminde bir şey yapmana gerek yok. Kesinti 24 saati aşarsa ücretsiz Hibrit İnternet'i senin onayınla etkinleştirebiliriz.",
     actions: [{ label: "Kesinti durumunu gör", kind: "go", to: "/hibrit" }],
   };
@@ -60,6 +64,15 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
       topic: "human",
       text: "Tabii. Seni uzmanımıza bağlıyorum; bu konuşmayı da ona iletiyorum, sorunu baştan anlatmana gerek kalmayacak.",
       actions: [HUMAN],
+    };
+  }
+
+  // What do the technical checks cover? Answer with the exact scope, once, when asked.
+  if (has(t, "izliyor", "izleme", "gizlilik", "kişisel veri", "verilerim", "kvkk", "neyi kontrol", "ne kontrol", "hangi bilgi", "mesajlarım", "geçmişimi", "gezinme")) {
+    return {
+      topic: "privacy",
+      text: PRIVACY_REPLY,
+      actions: [{ label: "Otomatik kontrolleri yönet", kind: "go", to: "/ajanlar" }],
     };
   }
 
@@ -80,19 +93,19 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
   switch (intent) {
     case "track": {
       if (!ctx.active.length) {
-        return { topic: "track", text: "Şu an devam eden bir işlemin yok. Yeni bir talebin varsa yazman yeterli; adımlarını senin için takip ederim.", actions: [{ label: "İşlemlerim", kind: "go", to: "/takip" }] };
+        return { topic: "track", text: "Şu an devam eden bir işlemin yok. Yeni bir talebin varsa yazman yeterli; adımlarını İşlemlerim'den görebilirsin.", actions: [{ label: "İşlemlerim", kind: "go", to: "/takip" }] };
       }
       const [top] = ctx.active;
       return {
         topic: "track",
-        text: `Şu an senin için ${ctx.active.length} işlemi takip ediyorum. En son: “${top!.title}” · ${STATUS_LABEL[top!.status]}. Kaldığın yerden devam edebilirsin; bilgilerini tekrar sormam.`,
+        text: `Devam eden ${ctx.active.length} işlemin var. En son: “${top!.title}” · ${STATUS_LABEL[top!.status]}. Kaldığın yerden devam edebilirsin; bilgilerini tekrar sormam.`,
         actions: [...ctx.active.slice(0, 2).map((w) => ({ label: w.title, kind: "go" as const, to: `/surec/${w.id}` })), { label: "Tüm işlemlerim", kind: "go", to: "/takip" }],
       };
     }
     case "relocation": {
       const open = ctx.active.find((w) => w.type === "relocation");
       if (open) {
-        return { topic: "relocation", text: `Taşınma işlemini zaten takip ediyorum (${STATUS_LABEL[open.status]}). Aynı talep için yeni kayıt açmıyorum.`, actions: [{ label: "Taşınmamı gör", kind: "go", to: `/surec/${open.id}` }] };
+        return { topic: "relocation", text: `Zaten devam eden bir taşınma işlemin var (${STATUS_LABEL[open.status]}). Aynı talep için yeni kayıt açmıyorum.`, actions: [{ label: "Taşınmamı gör", kind: "go", to: `/surec/${open.id}` }] };
       }
       return {
         topic: "relocation",

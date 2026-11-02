@@ -47,7 +47,7 @@ export function PushBanner() {
                 if (push.to) navigate({ to: push.to as "/" });
               }}
             >
-              {push.from === "giga" || push.kind === "agent" ? (
+              {push.kind === "agent" ? (
                 <GigaAvatar size={40} mood="listening" label={false} />
               ) : (
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -55,7 +55,7 @@ export function PushBanner() {
                 </span>
               )}
               <span className="flex-1">
-                <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{push.from === "giga" ? "GIGA Takip · TürkNet · şimdi" : push.kind === "agent" ? "GIGA · TürkNet · şimdi" : "Turknet · şimdi"}</span>
+                <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{push.kind === "agent" ? "GIGA · TürkNet · şimdi" : "TürkNet · şimdi"}</span>
                 <span className="block text-sm font-semibold text-foreground">{push.title}</span>
                 <span className="line-clamp-2 block text-xs text-muted-foreground">{push.body}</span>
               </span>

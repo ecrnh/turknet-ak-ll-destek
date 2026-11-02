@@ -37,7 +37,7 @@ function AgentSteps() {
   return (
     <div className="mt-2 space-y-2 rounded-2xl border border-magenta/20 bg-card p-3">
       <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-magenta">
-        <GigaAvatar size={20} mood={done ? "done" : "working"} label={false} /> GIGA · Hız Koruyucu {done ? "" : "· çalışıyor"}
+        <GigaAvatar size={20} mood={done ? "done" : "working"} label={false} /> Hız Koruyucu {done ? "" : "· çalışıyor"}
       </p>
       {SPEED_FIX_STEPS.map((s, i) =>
         i <= run.stepIndex ? (
@@ -299,7 +299,7 @@ export function HelpCenterSheet() {
               {typing && (
                 <div className="flex items-center gap-2" aria-label="GIGA düşünüyor">
                   <GigaAvatar size={32} mood="thinking" label={false} />
-                  <span className="text-xs font-semibold text-muted-foreground">GIGA düşünüyor…</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Yazıyor…</span>
                 </div>
               )}
             </div>

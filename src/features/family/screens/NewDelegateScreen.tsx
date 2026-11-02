@@ -4,14 +4,13 @@ import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { Csat } from "@/components/tn/Csat";
-import { Banner, Chip, ToggleRow } from "@/components/tn/primitives";
+import { Banner, Chip, PlainNote, ToggleRow } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { defaultScopes, RELATIONS, SCOPE_GROUPS, SCOPES, USER, type ScopeKey } from "@/data/mock";
-import { GigaNote } from "@/features/giga/GigaAvatar";
 import { useAppStore } from "@/features/core/appStore";
 import { useFamilyStore, type Duration } from "../store";
 import { useFlow } from "@/lib/analytics";
@@ -45,7 +44,7 @@ export function NewDelegateScreen() {
       if (otp.length < 6) return setError("6 haneli kodu eksiksiz gir.");
       addDelegate({ name: name.trim(), phone, relation, scopes, duration });
       addHistory("Aile yetkisi verildi", `${name} (${relation})`);
-      notify({ kind: "family", title: "Yetkilendirme tamamlandı", body: `${name} daveti kabul ettiğinde seçtiğin işlemleri yönetebilecek.`, to: "/aile", from: "giga" }, false);
+      notify({ kind: "family", title: "Yetkilendirme tamamlandı", body: `${name} daveti kabul ettiğinde seçtiğin işlemleri yönetebilecek.`, to: "/aile" }, false);
       flow.complete({ relation, duration });
     }
     setStep((s) => s + 1);
@@ -64,9 +63,9 @@ export function NewDelegateScreen() {
               Yetkili Kişilere Dön
             </Button>
           </motion.div>
-          <GigaNote>
+          <PlainNote>
             {name} {SCOPES.filter((x) => scopes[x.key] && !x.ownerApproval).map((x) => x.label.toLocaleLowerCase("tr-TR")).join(", ") || "hiçbir işlem"} yapabilecek. Ödeme, iptal ve paket değişikliği gibi işlemler yine her seferinde senin onayını gerektirir; abonelik sahipliği devredilemez.
-          </GigaNote>
+          </PlainNote>
           <Csat feature="family_authorization" />
         </div>
       </div>

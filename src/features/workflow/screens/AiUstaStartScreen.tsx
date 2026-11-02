@@ -80,7 +80,7 @@ export function AiUstaStartScreen() {
 
         <div className="rounded-card bg-card p-5 shadow-card">
           <p className="font-semibold text-primary">Telefonla destek almak istiyorum</p>
-          <p className="mt-1 text-sm text-muted-foreground">GIGA telefonda da yanında. İstersen sana SMS ile bir bağlantı gönderirim; uygulamada kaldığımız yerden devam ederiz.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Telefonda da yardımcı olabilirim. İstersen sana SMS ile bir bağlantı gönderirim; uygulamada kaldığımız yerden devam ederiz.</p>
           <button type="button" onClick={call} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-success text-sm font-semibold text-success-foreground">
             <Phone className="size-4" /> TürkNet'i ara
           </button>

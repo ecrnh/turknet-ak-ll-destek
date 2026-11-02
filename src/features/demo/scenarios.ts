@@ -37,13 +37,13 @@ export function runSpeedAgent() {
     app().addRecord({
       channel: "GIGA",
       title: "Hız düşüşü otomatik düzeltildi",
-      summary: "GIGA Hız Koruyucu hızını 20 → 98 Mbps'e çıkardı.",
+      summary: "Hız Koruyucu hızını 20 → 98 Mbps'e çıkardı.",
       status: "Çözüldü",
       details: SPEED_FIX_STEPS,
       to: "/ajanlar/hiz",
       fieldVisitAvoided: true,
     });
-    app().addHistory("GIGA Hız Koruyucu", "Hız 20 → 98 Mbps'e yükseltildi");
+    app().addHistory("Hız Koruyucu", "Hız 20 → 98 Mbps'e yükseltildi");
     app().notify({ kind: "agent", title: "Hızını 20 Mbps'ten 98 Mbps'e yükselttim", body: "Wi-Fi kanalını değiştirdim ve hat profilini yeniledim. Dokun, detayları gör.", to: "/ajanlar/hiz" });
     track("flow_completed", "ai_speed_agent");
   });
@@ -57,7 +57,7 @@ export function simulateSpeedDrop() {
     app().notify({ kind: "agent", title: "Hız düşüşü fark ettim", body: "Paketin 100 Mbps, ölçülen 20 Mbps. Hemen düzeltiyorum…", to: "/ajanlar/hiz" });
     later(1500, runSpeedAgent);
   } else {
-    app().notify({ kind: "agent", title: "Hızın düştü (20 Mbps)", body: "GIGA Hız Koruyucu kapalı. Açarsan otomatik düzeltirim.", to: "/ajanlar" });
+    app().notify({ kind: "agent", title: "Hızın düştü (20 Mbps)", body: "Hız Koruyucu kapalı. Açarsan hız belirgin düştüğünde güvenli uzaktan düzeltme yapabilirim.", to: "/ajanlar" });
   }
 }
 
