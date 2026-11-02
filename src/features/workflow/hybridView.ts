@@ -154,3 +154,23 @@ export function hybridView(i: HybridViewInput): HybridView {
     openHint: `Mobil yedek, kesinti ${LIMIT} saati aştığında açılabilir.`,
   };
 }
+
+/**
+ * Estimated hours until the outage is fixed. Uses the known estimate when there is one;
+ * otherwise a demo estimate that always leaves a few hours ahead (never "0 saat").
+ * Returns null once a known estimate has passed (the estimate is being updated).
+ */
+export function outageRemainingH(hours: number, etaH: number | null | undefined, regional: boolean): number | null {
+  if (etaH != null) {
+    const left = etaH - hours;
+    return left > 0 ? Math.max(1, Math.ceil(left)) : null;
+  }
+  const total = Math.max(regional ? 12 : 6, Math.ceil(hours) + 4);
+  return Math.max(1, Math.ceil(total - hours));
+}
+
+/** Customer wording of the remaining time, e.g. "Yaklaşık 4 saat içinde". */
+export function fmtRemaining(left: number | null): string {
+  if (left == null) return "Tahmini süre güncelleniyor";
+  return left >= 24 ? `Yaklaşık ${Math.round(left / 24) === 1 ? "1 gün" : `${Math.round(left / 24)} gün`} içinde` : `Yaklaşık ${left} saat içinde`;
+}
