@@ -171,10 +171,7 @@ export function HybridScreen() {
 
         <section className="rounded-card bg-card px-5 py-1 shadow-card">
           <ToggleRow id="hybrid-auto" title="Otomatik yedek geçişi" desc="Kesinti 24 saati aşarsa mobil yedek bağlantın otomatik açılsın." checked={h.autoFailover} onChange={(val) => setAutoFailover(val)} />
-          <div className="flex items-start justify-between gap-3 border-t border-border py-3 text-xs">
-            <p className="text-muted-foreground">Ana internetin yeniden bağlandığında sistem otomatik olarak sabit bağlantına döner.</p>
-            <span className={cn("shrink-0 rounded-full px-2 py-0.5 font-semibold", h.autoFailover ? "bg-success-soft text-success" : "bg-muted text-muted-foreground")}>{h.autoFailover ? "Etkin" : "Kapalı"}</span>
-          </div>
+          <p className="border-t border-border py-3 text-xs text-muted-foreground">Ana internetin yeniden bağlandığında sistem otomatik olarak sabit bağlantına döner.</p>
         </section>
 
         <TechDetails>
