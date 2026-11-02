@@ -147,18 +147,18 @@ registerOp("hybrid.checked", (id) => {
     notify(id, "Yedek bağlantı şu an kullanılamıyor", "Bulunduğunuz konumda yedek bağlantı için yeterli mobil kapsama bulunamadı. Arıza takibiniz devam ediyor.", "quiet");
   } else {
     step(id, "hybrid", "waiting", "Cihaz, SIM ve kapsama uygun · onayınız bekleniyor");
-    if (W.getState().hybrid.autoFailover) activateHybrid();
+    if (W.getState().hybrid.autoFailover) activateHybrid("auto");
   }
 });
 
 /** Customer consent: "Ücretsiz Olarak Etkinleştir" (also used for "Tekrar Dene"). */
-export function activateHybrid(): boolean {
+export function activateHybrid(by: "auto" | "customer" = "customer"): boolean {
   const s = W.getState();
   const o = openOutage();
   if (!o || !canActivateHybrid({ elapsedH: outageHours(o), etaH: o.etaH, fixed: s.connectivity.fixed, status: s.hybrid.status })) return false;
   const attempt = s.hybrid.attempts + 1;
-  patchHybrid({ status: "activating", attempts: attempt });
-  log(o.wfId, "customer", "decision", attempt === 1 ? "Müşteri onayı: Ücretsiz Olarak Etkinleştir" : `Müşteri tekrar denedi (${attempt}. deneme)`, "Hibrit İnternet yalnızca müşterinin onayıyla etkinleşir");
+  patchHybrid({ status: "activating", attempts: attempt, activatedBy: by });
+  log(o.wfId, "customer", "decision", by === "auto" ? "Otomatik yedek geçişi: müşterinin önceden verdiği izinle Hibrit Box açılıyor" : attempt === 1 ? "Müşteri onayı: Hibrit Box'ı Aç" : `Müşteri tekrar denedi (${attempt}. deneme)`, "Hibrit İnternet yalnızca müşterinin onayıyla etkinleşir");
   step(o.wfId, "hybrid", "in_progress", `Yedek bağlantı etkinleştiriliyor (${attempt}. deneme)`);
   schedule("hybrid.activated", o.wfId, 1500);
   return true;
@@ -305,7 +305,7 @@ export function setAutoFailover(on: boolean) {
   log(W.getState().outage?.wfId ?? null, "customer", "info", on ? "Otomatik yedek bağlantı geçişine izin verildi" : "Otomatik yedek bağlantı geçişi kapatıldı", "Geçiş yine yalnızca 24 saati aşan kesintide ve uygunluk kontrolünden sonra yapılır");
   const o = openOutage();
   if (on && o && W.getState().hybrid.status === "offered") checkHybrid();
-  else if (on && o && W.getState().hybrid.status === "ready") activateHybrid();
+  else if (on && o && W.getState().hybrid.status === "ready") activateHybrid("auto");
 }
 
 /** Customer closes the "internet is back" card. */

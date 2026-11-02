@@ -345,4 +345,6 @@ export interface HybridService {
   pausedAt: number | null;
   /** Customer pre-approved: switch to the backup automatically once the 24-hour rule opens it. */
   autoFailover: boolean;
+  /** Who switched the backup on: the pre-approved automatic switch or the customer by hand. */
+  activatedBy?: "auto" | "customer" | null | undefined;
 }
