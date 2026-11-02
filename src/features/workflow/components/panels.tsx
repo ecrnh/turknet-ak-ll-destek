@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { PlainNote } from "@/components/tn/primitives";
 import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
@@ -9,7 +10,7 @@ import { fmtRelative, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { choiceOf } from "../engine";
 import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY } from "../rules";
-import { rateUsta } from "../services/aiUsta";
+import { rateUsta, resumeUsta } from "../services/aiUsta";
 import { measureNearModem } from "../services/proactive";
 import { resumeBillingReview } from "../services/billing";
 import { toggleBox } from "../services/connectivity";
@@ -268,6 +269,8 @@ export function UstaWelcome({ wf }: { wf: Workflow }) {
 }
 
 export function AiUstaPanel({ wf }: { wf: Workflow }) {
+  // Picks up a session whose next automatic check never got queued.
+  useEffect(() => resumeUsta(wf.id), [wf.id, wf.status]);
   const leds = String(wf.data["leds"] ?? "")
     .split("|")
     .filter(Boolean)
