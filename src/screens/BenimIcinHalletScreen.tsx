@@ -50,7 +50,7 @@ export function BenimIcinHalletScreen() {
           ))}
         </div>
 
-        <GigaNote>Ne yapmak istediğini bana yazabilirsin. İşleri ben başlatırım; senin onayın gereken yerlerde önce sana sorarım.</GigaNote>
+        <GigaNote>İhtiyacını söyle, mümkün olan işlemleri senin için kolaylaştıralım. Onayın gereken her adımda önce sana sorarım.</GigaNote>
         <button type="button" onClick={() => openHelp()} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-primary/20 bg-card text-sm font-semibold text-primary">
           <MessageCircle className="size-4" /> GIGA'ya yaz
         </button>

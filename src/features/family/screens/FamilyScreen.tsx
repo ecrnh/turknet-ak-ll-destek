@@ -7,7 +7,6 @@ import { Chip, EmptyState, ToggleRow } from "@/components/tn/primitives";
 import { ConfirmDialog } from "@/components/tn/Sheet";
 import { Button } from "@/components/ui/button";
 import { SCOPE_GROUPS, SCOPES, type ScopeKey } from "@/data/mock";
-import { GigaNote } from "@/features/giga/GigaAvatar";
 import { useFamilyStore, type Delegate } from "../store";
 import { ProfileSwitcher } from "@/screens/AccountScreen";
 import { fmtDate, fmtDateTime } from "@/lib/format";
@@ -81,13 +80,13 @@ export function FamilyScreen() {
         </div>
 
         {lastEvent && (lastEvent.kind === "edit" || lastEvent.kind === "invite" || lastEvent.kind === "revoke") && (
-          <GigaNote>
+          <PlainNote>
             {lastEvent.kind === "revoke"
               ? `${lastEvent.text}. Bu kişi artık hesabında işlem yapamaz.`
               : lastEvent.kind === "invite"
-                ? "Daveti gönderdim. Kişi kabul edene kadar hiçbir işlem yapamaz; ödeme ve iptal gibi işlemler her zaman senin onayını gerektirir."
-                : "Yetkileri güncelledim. Hassas işlemler yine senin ek onayınla yapılır."}
-          </GigaNote>
+                ? "Davet gönderildi. Kişi kabul edene kadar hiçbir işlem yapamaz; ödeme ve iptal gibi işlemler her zaman senin onayını gerektirir."
+                : "Yetkiler güncellendi. Hassas işlemler yine senin ek onayınla yapılır."}
+          </PlainNote>
         )}
 
         <div className="flex gap-2">

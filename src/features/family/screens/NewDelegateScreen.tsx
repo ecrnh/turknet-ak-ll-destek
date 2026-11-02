@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { defaultScopes, RELATIONS, SCOPE_GROUPS, SCOPES, USER, type ScopeKey } from "@/data/mock";
-import { GigaNote } from "@/features/giga/GigaAvatar";
 import { useAppStore } from "@/features/core/appStore";
 import { useFamilyStore, type Duration } from "../store";
 import { useFlow } from "@/lib/analytics";
@@ -64,9 +63,9 @@ export function NewDelegateScreen() {
               Yetkili Kişilere Dön
             </Button>
           </motion.div>
-          <GigaNote>
+          <PlainNote>
             {name} {SCOPES.filter((x) => scopes[x.key] && !x.ownerApproval).map((x) => x.label.toLocaleLowerCase("tr-TR")).join(", ") || "hiçbir işlem"} yapabilecek. Ödeme, iptal ve paket değişikliği gibi işlemler yine her seferinde senin onayını gerektirir; abonelik sahipliği devredilemez.
-          </GigaNote>
+          </PlainNote>
           <Csat feature="family_authorization" />
         </div>
       </div>

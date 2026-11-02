@@ -12,7 +12,6 @@ import { activateHybrid, checkHybrid, declineHybrid, outageHours, requestHybridD
 import { useWorkflowStore } from "../store";
 import { ChecksList, ConnectionDiagram, DeviceTracker, FreeBadge, LinkStatus, OutageMeta } from "../components/hybrid";
 import { HybridBoxCard } from "../components/hybridBox";
-import { GigaNote } from "@/features/giga/GigaAvatar";
 import { DemoNote, TechDetails } from "../components/ui";
 
 const Card = ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={cn("rounded-card bg-card p-5 shadow-card", className)}>{children}</div>;
@@ -63,17 +62,17 @@ export function HybridScreen() {
 
         <Card>
           <ConnectionDiagram />
-          <GigaNote mood={h.status === "active" && !h.pausedAt ? "working" : ongoing ? "listening" : "idle"} className="mt-4">
+          <PlainNote className="mt-4 shadow-none bg-muted">
             {!ongoing
               ? o?.restoredAt
                 ? "Ev internetin yeniden aktif. Artık ana bağlantını kullanıyorsun."
-                : "Şu anda ana internet bağlantını kullanıyorsun. Kesinti olursa ilk ben fark ederim."
+                : "Şu anda ana internet bağlantını kullanıyorsun. Kesinti olursa durumu sana bildireceğiz."
               : h.status === "active" && !h.pausedAt
-                ? "Yedek bağlantın aktif. İnterneti kullanmaya devam edebilirsin. Ana bağlantın düzelince geçişi ben yaparım."
+                ? "Yedek bağlantın aktif. İnterneti kullanmaya devam edebilirsin. Ana bağlantın düzelince geçiş otomatik yapılır."
                 : after24
                   ? "Ev internetinde kesinti 24 saati aştı. Yedek bağlantını devreye alalım mı?"
                   : "Ev internetinde kesinti algıladık. Teknik ekip çalışıyor; kesinti 24 saati aşarsa yedek bağlantını açabileceğiz."}
-          </GigaNote>
+          </PlainNote>
         </Card>
 
         <HybridBoxCard />

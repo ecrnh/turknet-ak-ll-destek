@@ -87,7 +87,7 @@ export function BillingShieldScreen() {
 
         {phase === "checking" && (
           <div className="rounded-card bg-card p-5 shadow-card" aria-live="polite">
-            <GigaNote mood="thinking">Faturanı ve önceki işlemlerini karşılaştırıyorum. Biraz bekleyebilirsin.</GigaNote>
+            <PlainNote icon={Loader2}>Faturanı ve önceki ödemelerini karşılaştırıyoruz. Biraz bekleyebilirsin.</PlainNote>
             <ul className="mt-4 space-y-2 text-sm">
               {COMPARE.map((c, i) => (
                 <motion.li key={c} initial={{ opacity: 0.4 }} animate={{ opacity: i <= step ? 1 : 0.4 }} className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export function BillingShieldScreen() {
             ) : (
               <>
                 <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                  <GigaAvatar size={30} mood="working" label={false} /> İnceleme sürecini başlattık.
+                  <CheckCircle2 className="size-6 text-success" strokeWidth={1.5} aria-hidden /> İnceleme sürecini başlattık.
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">Sonucu buradan takip edebilirsin.</p>
               </>

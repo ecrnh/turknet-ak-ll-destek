@@ -7,7 +7,6 @@ import { isActive } from "../rules";
 import { AuditList, DemoNote, TechDetails, WorkflowCard } from "../components/ui";
 import { ConnectivityPanel } from "../components/panels";
 import { IntentBox } from "../components/IntentBox";
-import { GigaAvatar } from "@/features/giga/GigaAvatar";
 
 /** "Benim İçin Takip Et": every workflow, decision and dependency in one place. */
 export function TrackHubScreen() {
@@ -39,7 +38,7 @@ export function TrackHubScreen() {
       <div className="space-y-4 px-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
           <div className="flex items-center gap-3">
-            <GigaAvatar size={44} mood={decisions.length ? "listening" : active.length ? "working" : "idle"} />
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-foreground/15"><ListChecks className="size-6" strokeWidth={1.5} aria-hidden /></span>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">Benim İçin Takip Et</p>
               <p className="text-xl font-semibold leading-snug">İşlemlerinin güncel durumu</p>

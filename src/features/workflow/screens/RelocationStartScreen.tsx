@@ -1,14 +1,13 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowDown, CheckCircle2, Home, Info, MapPinned, Search, Smartphone, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowDown, CheckCircle2, Home, Info, Loader2, MapPinned, Search, Smartphone, Sparkles, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
-import { Banner, ToggleRow } from "@/components/tn/primitives";
+import { Banner, PlainNote, ToggleRow } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CURRENT_ADDRESS, DEMO_MOVE_DATE, DEMO_NEW_ADDRESS_PARTS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
-import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
 import { useScenarioStore } from "@/features/scenario/store";
 import { startRelocation, useWorkflowStore } from "@/features/workflow";
 import { useFlow } from "@/lib/analytics";
@@ -35,10 +34,10 @@ const FIELDS: { key: keyof Addr; label: string; placeholder: string }[] = [
 ];
 
 const RESULT_TEXT: Record<EligibilityResult, { title: string; giga: string; tone: "ok" | "wait" | "unknown" }> = {
-  eligible: { title: "Harika! Yeni adresinde TürkNet hizmeti sunulabiliyor.", giga: "Yeni adresinde fiber altyapı ve boş bağlantı noktası var. Süreci başlatırsan randevuya kadar her adımı senin için takip ederim.", tone: "ok" },
-  eligible_external: { title: "Harika! Yeni adresinde TürkNet hizmeti sunulabiliyor.", giga: "Bu adreste bağlantı için altyapı sağlayıcısından bir izin istememiz gerekiyor. Bunu ben takip ederim; senin bir şey yapman gerekmiyor.", tone: "ok" },
-  no_port: { title: "Yeni adresinde bağlantı için biraz beklememiz gerekebilir.", giga: "Binadaki bağlantı noktaları şu an dolu görünüyor. İlgili ekibe bilgi verip durumu takip ederim. Bu süreçte internetsiz kalmanı istemiyoruz.", tone: "wait" },
-  no_response: { title: "Şu an yeni adresin için yanıt alamadık.", giga: "Sonucu tahmin etmek istemiyorum. Süreci başlatırsan kontrolü tekrar dener ve sonucu sana bildiririm.", tone: "unknown" },
+  eligible: { title: "Harika! Yeni adresinde TürkNet hizmeti sunulabiliyor.", giga: "Yeni adresinde fiber altyapı ve boş bağlantı noktası var. Süreci başlatırsan randevuya kadar her adımı İşlemlerim'den görebilirsin.", tone: "ok" },
+  eligible_external: { title: "Harika! Yeni adresinde TürkNet hizmeti sunulabiliyor.", giga: "Bu adreste bağlantı için altyapı sağlayıcısından bir izin istememiz gerekiyor. Bu izni biz takip ederiz; senin bir şey yapman gerekmiyor.", tone: "ok" },
+  no_port: { title: "Yeni adresinde bağlantı için biraz beklememiz gerekebilir.", giga: "Binadaki bağlantı noktaları şu an dolu görünüyor. İlgili ekibe bilgi verip durumu sana bildireceğiz. Bu süreçte internetsiz kalmanı istemiyoruz.", tone: "wait" },
+  no_response: { title: "Şu an yeni adresin için yanıt alamadık.", giga: "Sonucu tahmin etmek istemiyoruz. Süreci başlatırsan kontrolü tekrar dener ve sonucu sana bildiririz.", tone: "unknown" },
 };
 
 /** Taşınma ve Nakil: intent → address → availability check → summary → start. No long support form. */
@@ -117,9 +116,9 @@ export function RelocationStartScreen() {
         {stage === "intent" && (
           <>
             <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
-              <GigaAvatar size={52} mood="listening" />
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-foreground/15"><Home className="size-6" strokeWidth={1.5} aria-hidden /></span>
               <p className="mt-3 text-xl font-semibold leading-snug">Yeni bir adrese mi taşınıyorsun?</p>
-              <p className="mt-1 text-sm text-primary-foreground/80">Yeni adresini birlikte kontrol edelim. Geri kalan süreci senin için takip edebilirim.</p>
+              <p className="mt-1 text-sm text-primary-foreground/80">Yeni adresini birlikte kontrol edelim. Süreci adım adım buradan takip edebilirsin.</p>
             </div>
             <button type="button" onClick={() => { setMode("move"); setStage("address"); }} className="flex w-full items-center gap-4 rounded-card bg-card p-4 text-left shadow-card">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-icon-box text-primary"><MapPinned className="size-6" strokeWidth={1.5} /></span>
@@ -176,7 +175,7 @@ export function RelocationStartScreen() {
 
         {stage === "checking" && (
           <div className="rounded-card bg-card p-6 text-center shadow-card" aria-live="polite">
-            <GigaAvatar size={64} mood="thinking" className="mx-auto" />
+            <Loader2 className="mx-auto size-12 animate-spin text-magenta" strokeWidth={1.5} aria-hidden />
             <p className="mt-3 text-lg font-semibold text-primary">Yeni adresini kontrol ediyoruz...</p>
             <ul className="mx-auto mt-3 max-w-[240px] space-y-1.5 text-left text-sm text-muted-foreground">
               {["Adres bilgisi eşleştiriliyor", "Fiber altyapı sorgulanıyor", "Bağlantı noktası kontrol ediliyor"].map((t, i) => (
@@ -197,7 +196,7 @@ export function RelocationStartScreen() {
               </p>
               <p className="mt-1 text-sm text-muted-foreground">{newAddressText}</p>
             </div>
-            <GigaNote>{r.giga}</GigaNote>
+            <PlainNote>{r.giga}</PlainNote>
             {result === "no_port" && (
               <div className="rounded-card bg-card p-5 shadow-card">
                 <p className="flex items-center gap-2 font-semibold text-primary">
@@ -281,11 +280,11 @@ export function RelocationStartScreen() {
         {stage === "started" && startedId && (
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="space-y-4">
             <div className="rounded-card bg-card p-6 text-center shadow-card">
-              <GigaAvatar size={64} mood="done" className="mx-auto" />
+              <CheckCircle2 className="mx-auto size-14 text-success" strokeWidth={1.5} aria-hidden />
               <p className="mt-3 text-xl font-semibold text-primary">Taşınma işlemini senin için başlattık.</p>
               <p className="mt-1 text-sm text-muted-foreground">Gelişmeleri İşlemlerim'den takip edebilirsin.</p>
             </div>
-            <GigaNote mood="working">Harika! Taşınma sürecini senin için takip etmeye başladım. Randevu zamanı geldiğinde sana soracağım.</GigaNote>
+            <PlainNote>Randevu zamanı geldiğinde tarih ve saat tercihini sana soracağız.</PlainNote>
             <Button size="xl" className="w-full" onClick={() => navigate({ to: "/surec/$id", params: { id: startedId } })}>
               Süreci takip et
             </Button>
