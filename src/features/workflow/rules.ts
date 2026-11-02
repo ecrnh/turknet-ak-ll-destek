@@ -173,7 +173,7 @@ export const HYBRID_OFFER_AFTER_H = 24;
 export const outageElapsedH = (startedAt: number, now: number) => Math.max(0, (now - startedAt) / 3_600_000);
 
 /** Offer the free Hibrit İnternet once an outage passes 24 h, or earlier when its estimated duration already exceeds 24 h. */
-export const hybridOfferOpen = (elapsedH: number, etaH?: number | null) => elapsedH >= HYBRID_OFFER_AFTER_H || (etaH ?? 0) > HYBRID_OFFER_AFTER_H;
+export const hybridOfferOpen = (elapsedH: number, etaH?: number | null | undefined) => elapsedH >= HYBRID_OFFER_AFTER_H || (etaH ?? 0) > HYBRID_OFFER_AFTER_H;
 
 /** Hibrit İnternet needs a compatible backup device, an active SIM and enough mobile coverage. */
 export function hybridBlocker(c: { device: boolean; sim: boolean; coverage: boolean }): "no_device" | "no_coverage" | null {
@@ -183,7 +183,7 @@ export function hybridBlocker(c: { device: boolean; sim: boolean; coverage: bool
 }
 
 /** Activation is only possible during an unresolved outage past 24 h, after a passed check. */
-export function canActivateHybrid(p: { elapsedH: number; etaH?: number | null; fixed: ConnectivityStatus["fixed"]; status: string }): boolean {
+export function canActivateHybrid(p: { elapsedH: number; etaH?: number | null | undefined; fixed: ConnectivityStatus["fixed"]; status: string }): boolean {
   return p.fixed === "down" && hybridOfferOpen(p.elapsedH, p.etaH) && (p.status === "ready" || p.status === "failed");
 }
 

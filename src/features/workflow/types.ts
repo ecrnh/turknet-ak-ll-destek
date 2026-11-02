@@ -301,7 +301,7 @@ export interface OutageState {
   /** Customer-facing repair status line. */
   repairNote: string;
   /** Estimated total outage duration in hours (from start), when known. Over 24 h opens the Hibrit İnternet offer early. */
-  etaH?: number | null;
+  etaH?: number | null | undefined;
   restoredAt: number | null;
   /** Restored card dismissed by the customer. */
   dismissed: boolean;
