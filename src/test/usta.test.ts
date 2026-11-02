@@ -128,3 +128,28 @@ describe("GIGA Teknik · sade bağlantı kontrolü", () => {
     expect(getWf(id)!.decision?.key).toBe("usta_more");
   });
 });
+
+describe("Hibrit Box · otomatik ve manuel açılış ayrı izlenir", () => {
+  it("izin verilmişse 24 saati aşan kesintide otomatik açılır; izin yoksa açılmaz", async () => {
+    const { setAutoFailover, setOutageElapsed } = await import("@/features/workflow/services/hybrid");
+    setAutoFailover(true);
+    setOutageElapsed(25);
+    drain();
+    expect(W.getState().hybrid.status).toBe("active");
+    expect(W.getState().hybrid.activatedBy).toBe("auto");
+
+    W.getState().reset();
+    setOutageElapsed(25);
+    drain();
+    expect(W.getState().hybrid.status).toBe("ready");
+  });
+
+  it("müşteri kendisi açarsa manuel olarak kaydedilir", async () => {
+    const { activateHybrid, setOutageElapsed } = await import("@/features/workflow/services/hybrid");
+    setOutageElapsed(25);
+    drain();
+    expect(activateHybrid()).toBe(true);
+    drain();
+    expect(W.getState().hybrid.activatedBy).toBe("customer");
+  });
+});
