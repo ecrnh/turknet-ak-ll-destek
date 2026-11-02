@@ -7,8 +7,6 @@
 import { BILLING_CHECKS, BILLING_SEED, TEAMS } from "@/data/mock";
 import { fmtTL } from "@/lib/format";
 import { ask, chain, choiceOf, complete, createWorkflow, decide, escalate, getWf, log, notify, registerDecision, registerOp, schedule, setData, setStatus, step, stepStatus, teamResolve, workOrder } from "../engine";
-
-const decideBilling = (id: string) => decide(id, "start", "customer");
 import { MockBillingAPI } from "../mockServices";
 import { compareBilling } from "../rules";
 import { useWorkflowStore as W } from "../store";
@@ -200,5 +198,5 @@ export function consentBillingReview(id: string): boolean {
   }
   if (stepStatus(id, "explain") === "pending") explainBilling(id);
   if (getWf(id)?.decision?.key !== "billing_start") return false;
-  return decideBilling(id);
+  return decide(id, "start", "customer");
 }
