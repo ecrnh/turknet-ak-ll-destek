@@ -1,44 +1,65 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ShieldCheck } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { CheckCircle2, Loader2, ReceiptText, SearchCheck, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { Button } from "@/components/ui/button";
-import { BILLING_CHECKS } from "@/data/mock";
+import { SUBSCRIPTION } from "@/data/mock";
 import { fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { runBillingShield, useWorkflowStore } from "@/features/workflow";
+import { decide, explainBilling, runBillingShield, seedPaidButDebt, useWorkflowStore } from "@/features/workflow";
 import { compareBilling, isActive } from "../rules";
 import { DemoNote, StatusPill } from "../components/ui";
+
+const COMPARE = ["Fatura tutarı", "Ödeme geçmişi", "Kampanya ve indirim bilgileri", "Abonelik değişiklikleri", "Dondurma ve iptal kayıtları"];
+const LIST_PRICE = 949.9;
+
+type Phase = "idle" | "checking" | "ok" | "diff" | "started";
 
 export function BillingShieldScreen() {
   const navigate = useNavigate();
   const bills = useWorkflowStore((s) => s.bills);
   const payments = useWorkflowStore((s) => s.payments);
-  const wfs = useWorkflowStore((s) => s.workflows).filter((w) => w.type === "billing_check");
-  const [ran, setRan] = useState(false);
+  const active = useWorkflowStore((s) => s.workflows.find((w) => w.type === "billing_check" && isActive(w)));
   const bill = bills[0]!;
   const findings = compareBilling(bill, payments);
-  const active = wfs.find(isActive);
-  const checked = ran || wfs.length > 0;
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [line, setLine] = useState(0);
+  const [startedId, setStartedId] = useState<string | null>(null);
 
-  const run = () => {
-    const r = runBillingShield();
-    setRan(true);
-    if (r.wfId) navigate({ to: "/surec/$id", params: { id: r.wfId } });
-    else toast.success("Faturanız uyumlu görünüyor", { description: `${BILLING_CHECKS.length} kontrolün hepsi uyumlu.` });
+  useEffect(() => {
+    if (phase !== "checking") return;
+    setLine(0);
+    const ts = COMPARE.map((_, i) => window.setTimeout(() => setLine(i + 1), 550 * (i + 1)));
+    const done = window.setTimeout(() => setPhase(compareBilling(useWorkflowStore.getState().bills[0]!, useWorkflowStore.getState().payments).length ? "diff" : "ok"), 550 * COMPARE.length + 400);
+    return () => {
+      ts.forEach(clearTimeout);
+      clearTimeout(done);
+    };
+  }, [phase]);
+
+  const review = () => {
+    const { wfId } = runBillingShield();
+    if (!wfId) return setPhase("ok");
+    explainBilling(wfId);
+    decide(wfId, "start", "customer");
+    setStartedId(wfId);
+    setPhase("started");
   };
+
+  const paid = bill.status === "paid" || payments.some((p) => p.billId === bill.id && p.status === "success");
+  const dup = findings.some((f) => f.code === "duplicate_payment");
 
   return (
     <div>
       <PageHeader title="Fatura Kalkanı" />
-      <div className="space-y-4 px-4">
+      <div className="space-y-4 px-4 pb-4">
         <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/15">
             <ShieldCheck className="size-6" />
           </span>
-          <p className="mt-3 text-lg font-semibold leading-snug">Faturanızı ve ödemelerinizi biz karşılaştıralım; olası bir farklılığı siz fark etmeden yakalayalım.</p>
-          <p className="mt-2 text-xs text-primary-foreground/80">Fatura Kalkanı kayıtları kendisi değiştirmez. İade veya borç düzeltme yalnızca sizin onayınızla ve yetkili ekip üzerinden yapılır.</p>
+          <h2 className="mt-3 text-xl font-bold leading-snug">Faturalarınız bizim kontrolümüzde.</h2>
+          <p className="mt-1 text-sm text-primary-foreground/85">Fatura ve abonelik işlemlerinizi sizin için kontrol ediyoruz.</p>
         </div>
 
         {active && (
@@ -49,34 +70,98 @@ export function BillingShieldScreen() {
         )}
 
         <div className="rounded-card bg-card p-5 shadow-card">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{bill.period} faturası</span>
-            <span className="font-bold text-foreground">{fmtTL(bill.amount)}</span>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <ReceiptText className="size-4" /> {bill.period} faturası
+              </p>
+              <p className="mt-1 text-3xl font-bold text-primary">{fmtTL(bill.amount)}</p>
+            </div>
+            <span className={cn("rounded-full px-3 py-1 text-xs font-bold", paid ? "bg-success-soft text-success" : "bg-warning-soft text-warning")}>{paid ? "Ödendi" : "Ödenmedi"}</span>
           </div>
-          <div className="mt-1 flex justify-between text-sm">
-            <span className="text-muted-foreground">Ödemeler</span>
-            <span className="font-bold text-foreground">{fmtTL(payments.reduce((a, p) => a + p.amount, 0))}</span>
-          </div>
-          <div className="mt-1 flex justify-between text-sm">
-            <span className="text-muted-foreground">Ekranda görünen borç</span>
-            <span className={cn("font-bold", bill.shownDebt > 0 ? "text-orange-deep" : "text-success")}>{fmtTL(bill.shownDebt)}</span>
-          </div>
-          <ul className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
-            {BILLING_CHECKS.map((c) => {
-              const hit = findings.some((f) => f.code === c.code);
-              return (
-                <li key={c.code} className="flex items-center justify-between gap-2">
-                  <span className="text-foreground">{c.label}</span>
-                  <span className={cn("shrink-0 text-xs font-bold", !checked ? "text-muted-foreground" : hit ? "text-orange-deep" : "text-success")}>{!checked ? "Kontrol edilmedi" : hit ? "Farklılık olabilir" : "Uyumlu"}</span>
-                </li>
-              );
-            })}
-          </ul>
-          <Button size="xl" className="mt-5 w-full" onClick={run}>
-            Faturamı İncele
-          </Button>
+          <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
+            {[
+              ["Son ödeme tarihi", bill.due],
+              ["Paket", SUBSCRIPTION.packageName],
+              ["Aktif indirim", `Kampanya: ${fmtTL(LIST_PRICE - bill.amount)} / ay`],
+              ["Ekranda görünen borç", fmtTL(bill.shownDebt)],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">{k}</dt>
+                <dd className={cn("text-right font-semibold", k === "Ekranda görünen borç" && bill.shownDebt > 0 ? "text-orange-deep" : "text-foreground")}>{v}</dd>
+              </div>
+            ))}
+          </dl>
+          {phase === "idle" && (
+            <Button size="xl" className="mt-5 w-full" onClick={() => setPhase("checking")}>
+              <SearchCheck /> Faturamı kontrol et
+            </Button>
+          )}
         </div>
-        <DemoNote className="pb-2">Fatura ve ödeme kayıtları örnek verilerdir; gerçek fatura sistemine bağlanılmaz.</DemoNote>
+
+        {phase === "checking" && (
+          <div className="rounded-card bg-card p-5 shadow-card" role="status" aria-live="polite">
+            <p className="flex items-center gap-2 font-semibold text-primary">
+              <Loader2 className="size-5 animate-spin text-magenta" /> Faturanızı karşılaştırıyoruz...
+            </p>
+            <ul className="mt-3 space-y-2 text-sm">
+              {COMPARE.map((c, i) => (
+                <li key={c} className="flex items-center gap-2">
+                  {i < line ? <CheckCircle2 className="size-4 text-success" /> : <Loader2 className={cn("size-4 text-muted-foreground", i === line && "animate-spin")} />}
+                  <span className={i < line ? "text-foreground" : "text-muted-foreground"}>{c}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {phase === "ok" && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-card bg-success-soft p-5">
+            <p className="flex items-start gap-2 text-lg font-semibold leading-snug text-primary">
+              <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-success" /> Her şey yolunda.
+            </p>
+            <p className="mt-1 text-sm text-foreground">Faturanızda dikkat etmemiz gereken bir durum görünmüyor. Sizin bir şey yapmanız gerekmiyor.</p>
+            <Button variant="outline" className="mt-4 w-full" onClick={() => navigate({ to: "/" })}>
+              Ana Sayfaya Dön
+            </Button>
+          </motion.div>
+        )}
+
+        {phase === "diff" && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-card border-gradient p-5 shadow-card">
+            <p className="text-lg font-semibold leading-snug text-primary">Faturanızda kontrol etmemizi istediğiniz bir farklılık var.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {dup ? "Aynı fatura için iki ödeme kaydı görünüyor. Fazla ödeme olup olmadığını sizin için inceleyebiliriz." : "Son ödemeniz başarılı görünüyor, ancak borç bilginiz henüz güncellenmemiş olabilir. Tekrar ödeme yapmanıza gerek yok."}
+            </p>
+            <p className="mt-3 rounded-2xl bg-muted p-3 text-xs text-muted-foreground">İnceleme hiçbir kaydı kendiliğinden değiştirmez. İade veya borç düzeltmesi yalnızca yetkili ekibin onayıyla ve size bilgi verilerek yapılır.</p>
+            <Button size="xl" className="mt-4 w-full" onClick={review}>
+              Benim için incele
+            </Button>
+            <button type="button" onClick={() => setPhase("idle")} className="mt-2 min-h-11 w-full text-sm font-semibold text-primary">
+              Daha Sonra
+            </button>
+          </motion.div>
+        )}
+
+        {phase === "started" && startedId && (
+          <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="rounded-card bg-card p-6 text-center shadow-card">
+            <CheckCircle2 className="mx-auto size-12 text-success" />
+            <p className="mt-2 text-lg font-semibold text-primary">İnceleme sürecini başlattık.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Sonucu buradan ve İşlemlerim'den takip edebilirsiniz.</p>
+            <Button size="lg" className="mt-4 w-full" onClick={() => navigate({ to: "/surec/$id", params: { id: startedId } })}>
+              İncelemeyi Takip Et
+            </Button>
+          </motion.div>
+        )}
+
+        <DemoNote>
+          Fatura ve ödeme kayıtları örnek verilerdir; gerçek fatura sistemine bağlanılmaz.{" "}
+          {!findings.length && !active && (
+            <button type="button" onClick={() => { seedPaidButDebt(false); setPhase("idle"); }} className="font-semibold text-magenta underline">
+              Demo: farklılık olan faturayı yükle
+            </button>
+          )}
+        </DemoNote>
       </div>
     </div>
   );
