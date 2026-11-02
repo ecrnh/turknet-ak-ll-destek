@@ -277,6 +277,12 @@ const STAGE_LABEL: Record<StageState, string> = { done: "Tamamlandı", running: 
 export function RepairProgress({ wf }: { wf: Workflow }) {
   const [details, setDetails] = useState(false);
   const repairStep = wf.steps.find((x) => x.key === "repair")?.status;
+  // Watchdog: if the next check was never queued (reload, demo reset, paused scenario), pick it up again.
+  useEffect(() => {
+    if (repairStep !== "in_progress") return;
+    const t = window.setInterval(() => resumeUsta(wf.id), 2500);
+    return () => window.clearInterval(t);
+  }, [repairStep, wf.id]);
   if (!repairStep || repairStep === "pending") return null;
   const results = repairResults(wf.data);
   const checkIdx = Number(wf.data["checkIdx"] ?? 0);
