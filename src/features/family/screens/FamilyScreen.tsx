@@ -6,7 +6,9 @@ import { PageHeader } from "@/components/layout/headers";
 import { Chip, EmptyState } from "@/components/tn/primitives";
 import { ConfirmDialog } from "@/components/tn/Sheet";
 import { Button } from "@/components/ui/button";
-import { SCOPES } from "@/data/mock";
+import { SCOPE_GROUPS, SCOPES, type ScopeKey } from "@/data/mock";
+import { ToggleRow } from "@/components/tn/primitives";
+import { GigaNote } from "@/features/giga/GigaAvatar";
 import { useFamilyStore, type Delegate } from "../store";
 import { ProfileSwitcher } from "@/screens/AccountScreen";
 import { fmtDate, fmtDateTime } from "@/lib/format";
@@ -25,6 +27,27 @@ function ScopeChips({ scopes }: { scopes: Record<string, boolean> }) {
   );
 }
 
+function ScopeEditor({ initial, onSave, onCancel }: { initial: Record<ScopeKey, boolean>; onSave: (s: Record<ScopeKey, boolean>) => void; onCancel: () => void }) {
+  const [sc, setSc] = useState(initial);
+  return (
+    <div className="mt-3 rounded-2xl bg-muted p-3">
+      <p className="text-sm font-semibold text-primary">Bu kişinin hesabında hangi işlemleri yapabilmesini istiyorsun?</p>
+      {SCOPE_GROUPS.map((g) => (
+        <div key={g.id}>
+          <p className="pt-2 text-[11px] font-bold uppercase tracking-wide text-magenta">{g.title}</p>
+          {SCOPES.filter((s) => s.group === g.id).map((s) => (
+            <ToggleRow key={s.key} id={`edit-${s.key}`} title={s.ownerApproval ? `${s.label} · ek onayınla` : s.label} desc={s.desc} checked={sc[s.key]} onChange={(v) => setSc((p) => ({ ...p, [s.key]: v }))} />
+          ))}
+        </div>
+      ))}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Button variant="outline" onClick={onCancel}>Vazgeç</Button>
+        <Button onClick={() => onSave(sc)}>Kaydet</Button>
+      </div>
+    </div>
+  );
+}
+
 export function FamilyScreen() {
   useFlow("family_auth_list");
   const delegates = useFamilyStore((s) => s.delegates);
@@ -35,6 +58,10 @@ export function FamilyScreen() {
   const switchTo = useFamilyStore((s) => s.switchTo);
   const [tab, setTab] = useState<"mine" | "managed" | "log">("mine");
   const [confirm, setConfirm] = useState<Delegate | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const acceptInvite = useFamilyStore((s) => s.acceptInvite);
+  const updateScopes = useFamilyStore((s) => s.updateScopes);
+  const lastEvent = log[0];
 
   const doRevoke = () => {
     if (!confirm) return;
@@ -53,6 +80,16 @@ export function FamilyScreen() {
           <p className="mt-2 font-semibold text-primary">Yakınların adına güvenle işlem yap</p>
           <p className="mt-1 text-sm text-muted-foreground">Teknolojiye uzak bir yakınının destek taleplerini sen yönet, görüntülü destekte onu da görüşmeye ekle. Fatura ödeme ve iptal varsayılan olarak kapalıdır.</p>
         </div>
+
+        {lastEvent && (lastEvent.kind === "edit" || lastEvent.kind === "invite" || lastEvent.kind === "revoke") && (
+          <GigaNote>
+            {lastEvent.kind === "revoke"
+              ? `${lastEvent.text}. Bu kişi artık hesabında işlem yapamaz.`
+              : lastEvent.kind === "invite"
+                ? "Daveti gönderdim. Kişi kabul edene kadar hiçbir işlem yapamaz; ödeme ve iptal gibi işlemler her zaman senin onayını gerektirir."
+                : "Yetkileri güncelledim. Hassas işlemler yine senin ek onayınla yapılır."}
+          </GigaNote>
+        )}
 
         <div className="flex gap-2">
           <Chip active={tab === "mine"} onClick={() => setTab("mine")}>Yetkili Kişiler</Chip>
@@ -75,13 +112,30 @@ export function FamilyScreen() {
                       {d.relation} · {d.phone}
                     </p>
                   </div>
-                  <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-bold", d.status === "active" ? "bg-success-soft text-success" : "bg-muted text-muted-foreground")}>
-                    {d.status === "active" ? "Aktif" : "İptal"}
+                  <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-bold", d.status === "active" ? "bg-success-soft text-success" : d.status === "invited" ? "bg-warning-soft text-warning" : "bg-muted text-muted-foreground")}>
+                    {d.status === "active" ? "Aktif" : d.status === "invited" ? "Davet bekleniyor" : "İptal"}
                   </span>
                 </div>
-                <ScopeChips scopes={d.scopes} />
+                {editing === d.id ? (
+                  <ScopeEditor initial={d.scopes} onCancel={() => setEditing(null)} onSave={(sc) => { updateScopes(d.id, sc); setEditing(null); toast.success("Yetkiler güncellendi", { description: "GIGA değişikliği yetki geçmişine kaydetti." }); }} />
+                ) : (
+                  <ScopeChips scopes={d.scopes} />
+                )}
                 <p className="mt-3 text-xs text-muted-foreground">{d.expiresAt ? `Bitiş: ${fmtDate(d.expiresAt)}` : "Süresiz"} · {fmtDate(d.createdAt)} tarihinde verildi</p>
-                {d.status === "active" ? (
+                {d.status === "invited" && (
+                  <div className="mt-3 rounded-2xl bg-muted p-3 text-xs text-muted-foreground">
+                    Davet {d.phone} numarasına SMS ile gönderildi (demo). Kabul edene kadar hiçbir işlem yapamaz.
+                    <button type="button" onClick={() => { acceptInvite(d.id); toast.success(`${d.name} daveti kabul etti`); }} className="mt-2 block font-semibold text-magenta">
+                      Demo: davet kabul edildi
+                    </button>
+                  </div>
+                )}
+                {d.status !== "revoked" && editing !== d.id && (
+                  <Button variant="outline" className="mt-4 w-full" onClick={() => setEditing(d.id)}>
+                    Yetkileri Düzenle
+                  </Button>
+                )}
+                {d.status !== "revoked" ? (
                   <Button variant="outline" className="mt-4 w-full border-destructive/30 text-destructive" onClick={() => setConfirm(d)}>
                     <ShieldOff /> Yetkiyi İptal Et
                   </Button>
@@ -132,7 +186,7 @@ export function FamilyScreen() {
               {log.map((l) => (
                 <li key={l.id} className="py-3 text-sm">
                   <p className="text-foreground">{l.text}</p>
-                  <p className="text-[11px] text-muted-foreground">{fmtDateTime(l.time)}</p>
+                  <p className="text-[11px] text-muted-foreground">{fmtDateTime(l.time)}{l.by ? ` · Başlatan: ${l.by}` : ""}</p>
                 </li>
               ))}
             </ul>
