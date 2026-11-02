@@ -130,13 +130,20 @@ export function DeviceTracker({ d }: { d: DeviceRequest }) {
 
 const PRIMARY = "mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-float";
 
-/** Home outage card: one calm message and at most one primary action. */
+/** Home outage card: the problem, how long it has lasted, the estimated fix and the Hibrit İnternet action. */
 export function OutageHomeCard() {
   const o = useWorkflowStore((s) => s.outage);
   const h = useWorkflowStore((s) => s.hybrid);
+  const regional = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.data["outageType"] === "regional");
   const verifying = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status !== "done");
   // Never behind the last state change (the presenter can move the outage start).
-  const now = Math.max(useNow(30_000), o?.lastUpdateAt ?? 0);
+  const now = Math.max(useNow(10_000), o?.lastUpdateAt ?? 0);
+  const busy = h.status === "checking" || h.status === "activating";
+  useEffect(() => {
+    if (!busy) return;
+    const t = window.setInterval(() => runOverdueOps(), 2500);
+    return () => window.clearInterval(t);
+  }, [busy]);
   if (!o || o.dismissed) return null;
 
   if (o.restoredAt) {
