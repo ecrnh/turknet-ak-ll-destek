@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, MessageCircleQuestion, ReceiptText, Video, WifiOff } from "lucide-react";
+import { MessageCircleQuestion, ReceiptText, Video, WifiOff } from "lucide-react";
 import { HomeTopBar } from "@/components/layout/headers";
 import { ActionTile, CampaignCard, TileScroller } from "@/components/tn/cards";
 import { NET_DOT, NET_LABEL, NET_TEXT } from "@/components/tn/NetStatus";
@@ -11,7 +11,7 @@ import { AgentActivityCard } from "@/features/aiAgents/components/AgentActivityC
 import { OutageHomeCard } from "@/features/workflow/components/hybrid";
 import { cn } from "@/lib/utils";
 import { HeroCarousel } from "./home/HeroCarousel";
-import { ForYouCards, HomeWelcome, OngoingProcesses, QuickActions } from "./home/HomeSections";
+import { HomeWelcome, OngoingProcesses } from "./home/HomeSections";
 
 function StatusPill() {
   const status = useAppStore((s) => s.net.status);
@@ -85,10 +85,8 @@ export function HomeScreen() {
           <SimpleHome />
         ) : (
           <>
-            <QuickActions />
             <OngoingProcesses />
             <AgentActivityCard />
-            <ForYouCards />
             <CampaignCard />
           </>
         )}
@@ -101,16 +99,6 @@ export function HomeScreen() {
             <ActionTile key={o.slug} item={o} />
           ))}
         </TileScroller>
-        <Link to="/goruntulu-destek" className="mt-3 flex items-center gap-3 rounded-card border-gradient p-4 shadow-card">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-magenta text-magenta-foreground">
-            <Video className="size-5" />
-          </span>
-          <span className="flex-1">
-            <span className="block font-semibold text-primary">Modem sorunu mu? Uzman görsün</span>
-            <span className="block text-xs text-muted-foreground">Ortalama bekleme 2 dk · saha ekibi beklemeden çözüm</span>
-          </span>
-          <ChevronRight className="size-5 text-primary" />
-        </Link>
 
         <SectionTitle>Abonelik İşlemlerim</SectionTitle>
         <TileScroller>

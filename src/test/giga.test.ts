@@ -56,3 +56,11 @@ describe("GIGA · kim ne yapar", () => {
     }
   });
 });
+
+describe("Ana sayfadan kaldırılan kısayollar sohbetten açılır", () => {
+  it("Benim İçin Hallet ve Hibrit İnternet GIGA'dan erişilebilir", () => {
+    const base2: GigaContext = { net: "online", active: [], outage: false };
+    expect(gigaReply("Benim için hallet", base2).actions?.[0]?.to).toBe("/hallet");
+    expect(gigaReply("Hibrit İnternet", base2).actions?.some((a) => a.to === "/hibrit")).toBe(true);
+  });
+});

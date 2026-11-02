@@ -152,7 +152,6 @@ export const SUPPORT_OPS: OpItem[] = [
   { slug: "video", title: "Görüntülü Destek", icon: "video", to: "/goruntulu-destek", isNew: true },
   { slug: "qr", title: "QR ile Destek", icon: "qr", to: "/qr", isNew: true },
   { slug: "hibrit", title: "Hibrit İnternet", icon: "router", to: "/hibrit", isNew: true },
-  { slug: "agents", title: "GIGA", icon: "bot", to: "/ajanlar", isNew: true },
 ];
 
 export const OPS_LIST = [
@@ -514,12 +513,14 @@ export const GIGA = {
   ],
   placeholder: "GIGA'ya yaz…",
   humanNote: "İstediğin an bir uzmana bağlanabilirsin; konuşmamızı ona iletirim.",
-  /** One assistant, four capabilities. `prompt` is what tapping the capability says to GIGA. */
+  /** One assistant, six capabilities; the home page has no shortcuts for these, so the chat is the way in. `prompt` is what tapping the capability says to GIGA. */
   capabilities: [
     { id: "teknik", name: "Bağlantı sorunu", desc: "Bağlantı ve modem sorunlarını birlikte çözelim", icon: "usta", to: "/ai-usta", prompt: "İnternetim çalışmıyor" },
     { id: "fatura", name: "Fatura Kalkanı", desc: "Faturanı açıklarım, farklı görünen tutarları birlikte inceleriz", icon: "shield", to: "/fatura-kalkani", prompt: "Faturamda tutarsızlık var" },
     { id: "tasinma", name: "Taşınma ve Nakil", desc: "Yeni adresini kontrol edip süreci başlatalım", icon: "route", to: "/tasinma", prompt: "Taşınacağım" },
     { id: "takip", name: "İşlemlerim", desc: "Devam eden işlemlerinin güncel durumu", icon: "track", to: "/takip", prompt: "İşlemim ne durumda?" },
+    { id: "hibrit", name: "Hibrit İnternet", desc: "Kesintide yedek bağlantın ve Box durumu", icon: "router", to: "/hibrit", prompt: "Hibrit İnternet" },
+    { id: "hallet", name: "Benim İçin Hallet", desc: "Ne istediğini söyle, süreci birlikte başlatalım", icon: "hand", to: "/hallet", prompt: "Benim için hallet" },
   ],
   /** How an action is labelled so the customer always knows who does what. */
   modes: {
