@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, Clock3, Headset, Link2, RefreshCw } from "lucide-react";
+import { AlertTriangle, Clock3, Link2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { EmptyState, SectionTitle } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/format";
-import { escalate, recheck, useWorkflowStore } from "@/features/workflow";
+import { recheck, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
-import { customerAction, statusSentence, TEAM_FOR, whatsNext } from "../copy";
+import { customerAction, statusSentence, whatsNext } from "../copy";
 import { AiUstaPanel, BillingPanel, ConnectivityPanel, HealthCard, RelocationPanel, SpeedPanel, TempPanel, UstaWelcome } from "../components/panels";
 import { AuditList, DecisionCard, DemoNote, HandoffCard, OutcomeCard, RecordsList, StatusPill, StepTimeline, TechDetails, TYPE_ICON, TYPE_LABEL } from "../components/ui";
 
