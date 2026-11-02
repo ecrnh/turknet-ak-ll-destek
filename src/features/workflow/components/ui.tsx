@@ -106,32 +106,14 @@ export function TechDetails({ title = "Teknik detayları gör", children, classN
 
 export function DecisionCard({ wf }: { wf: Workflow }) {
   const d = wf.decision;
-  const [preview, setPreview] = useState<string | null>(null);
-  if (!d) return null;
-  const options = d.key === "usta_photo" ? d.options.filter((o) => o.id !== "uploaded") : d.options;
+    if (!d) return null;
+  if (d.key === "usta_photo") return <ModemCameraCard wf={wf} />;
+  const options = d.options;
   return (
     <div className="rounded-card border-2 border-magenta/30 bg-card p-5 shadow-card" role="group" aria-label="Karar bekleniyor">
       <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Sizden bir karar bekleniyor</p>
       <h3 className="mt-1 text-lg font-semibold leading-snug text-primary">{d.prompt}</h3>
       {d.detail && <p className="mt-1.5 text-sm text-muted-foreground">{d.detail}</p>}
-      {d.key === "usta_photo" && (
-        <label className="mt-4 flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/30 bg-icon-box px-4 text-sm font-semibold text-primary">
-          {preview ? <img src={preview} alt="Yüklenen modem fotoğrafı" className="h-10 w-10 rounded-lg object-cover" /> : <Upload className="size-5" />}
-          Fotoğraf Çek veya Yükle
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="sr-only"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              setPreview(URL.createObjectURL(f));
-              decide(wf.id, "uploaded", "customer");
-            }}
-          />
-        </label>
-      )}
       <div className="mt-4 space-y-2.5">
         {options.map((o) => (
           <button
