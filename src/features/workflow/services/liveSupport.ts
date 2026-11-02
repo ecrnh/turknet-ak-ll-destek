@@ -7,7 +7,8 @@ import { APPOINTMENT_SLOTS, FIELD_TEAMS, TEAMS } from "@/data/mock";
 import { uid } from "@/lib/format";
 import { book, getWf, log, notify, registerOp, schedule, setData, workOrder } from "../engine";
 import { useWorkflowStore as W } from "../store";
-import type { LiveChatMessage, Workflow, WorkflowState } from "../types";
+import type { WorkflowState } from "../store";
+import type { LiveChatMessage, Workflow } from "../types";
 
 export const LIVE_AGENT = "Selin · TürkNet Canlı Destek";
 
