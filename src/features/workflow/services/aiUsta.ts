@@ -9,7 +9,7 @@
  */
 import { AI_USTA_CABLE_STEP, AI_USTA_STEPS, CABLE_STATES, CUSTOMER, INTERNET_LIGHT_STATES, IVR_MENU, REPAIR_CHECKS, SUBSCRIPTION, TEAMS, USTA_ISSUES, type CableState, type InternetLight } from "@/data/mock";
 import { uid } from "@/lib/format";
-import { ask, chain, complete, createWorkflow, escalate, getWf, log, notify, registerDecision, registerOp, schedule, setData, step, stepStatus } from "../engine";
+import { ask, chain, complete, createWorkflow, escalate, getWf, log, notify, registerDecision, registerOp, runOverdueOps, schedule, setData, step, stepStatus } from "../engine";
 import { MockNetworkAPI, MockVisionAPI } from "../mockServices";
 import { AI_USTA_MAX_ATTEMPTS } from "../rules";
 import { useWorkflowStore as W } from "../store";
@@ -516,6 +516,8 @@ export function goLive(id: string) {
  * Idempotent: does nothing while a decision is open or an op is already queued.
  */
 export function resumeUsta(id: string) {
+  // A queued check whose timer was lost is run here instead of waiting forever.
+  runOverdueOps();
   const wf = getWf(id);
   if (!wf || wf.type !== "ai_usta" || wf.status === "completed" || wf.handoff || wf.decision) return;
   // Only a queued GIGA Teknik job means the session is moving; unrelated jobs must not block it.
