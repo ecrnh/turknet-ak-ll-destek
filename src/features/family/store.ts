@@ -140,7 +140,7 @@ export const useFamilyStore = create<FamilyState>()(
         return {
           ...initial(),
           ...p,
-          delegates: (p.delegates ?? initial().delegates).map((d) => ({ ...d, scopes: { ...defaultScopes(), view: true, ...d.scopes } })),
+          delegates: (p.delegates ?? initial().delegates).map((d) => ({ ...d, scopes: { ...defaultScopes(), ...d.scopes, view: d.scopes.view !== false } })),
           managed: MANAGED_ACCOUNTS,
         } as FamilyState;
       },
