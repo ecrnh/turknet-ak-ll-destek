@@ -58,11 +58,24 @@ function evaluate(wfId: string) {
   patchOutage({ repairNote: note, lastUpdateAt: now() });
   step(wfId, "repair", "in_progress", note);
   const status = W.getState().hybrid.status;
-  if (hybridOfferOpen(hours)) {
+  if (hybridOfferOpen(hours, o.etaH)) {
     if (status !== "unavailable") return;
+    const early = hours < 24;
     patchHybrid({ status: "offered" });
-    step(wfId, "hybrid_offer", "done", "Kesinti 24 saati aştı · ücretsiz Hibrit İnternet sunuldu", "Kural: 24 saat içinde çözülemeyen kesintide aboneliğe dahil yedek bağlantı sunulur");
-    notify(wfId, "İnternet kesintiniz 24 saati aştı", "Bağlantınızı sürdürmeniz için ücretsiz Hibrit İnternet desteğinizi etkinleştirebilirsiniz.", "push", "/hibrit");
+    step(
+      wfId,
+      "hybrid_offer",
+      "done",
+      early ? `Tahmini çözüm süresi ${o.etaH} saat · ücretsiz Hibrit İnternet sunuldu` : "Kesinti 24 saati aştı · ücretsiz Hibrit İnternet sunuldu",
+      "Kural: 24 saatten uzun süren ya da sürmesi beklenen kesintide aboneliğe dahil yedek bağlantı sunulur",
+    );
+    notify(
+      wfId,
+      early ? "Kesintinin 24 saatten uzun sürmesi bekleniyor" : "İnternet kesintiniz 24 saati aştı",
+      "Bağlantınızı sürdürmeniz için ücretsiz Hibrit İnternet desteğinizi etkinleştirebilirsiniz.",
+      early ? "quiet" : "push",
+      "/hibrit",
+    );
     if (W.getState().hybrid.autoFailover) {
       log(wfId, "system", "info", "Otomatik geçiş izni var: uygunluk kontrolü başlatıldı", "Müşteri, 24 saati aşan kesintide yedek bağlantıya otomatik geçişi önceden onayladı");
       checkHybrid();
@@ -75,7 +88,7 @@ function evaluate(wfId: string) {
 }
 
 /** Network monitoring reports an outage. Idempotent: an open outage is never duplicated. */
-export function startOutage(hours = 0.2): string {
+export function startOutage(hours = 0.2, opts: { etaH?: number; regional?: boolean; relatedIds?: string[]; why?: string } = {}): string {
   const open = openOutage();
   if (open) {
     log(open.wfId, "system", "info", "Kesinti zaten takipte; yeni kayıt oluşturulmadı.", "Mükerrer işlem önleme");
@@ -87,11 +100,12 @@ export function startOutage(hours = 0.2): string {
     title: "İnternet kesintisi takibi",
     dedupeKey: `outage:${SUBSCRIPTION.id}`,
     steps: OUTAGE_STEPS,
-    data: { outageType: W.getState().config.outageType },
-    why: "Ağ izleme servisi ana bağlantıda oturum kaybı bildirdi (demo izleme verisi)",
+    data: { outageType: opts.regional ? "regional" : W.getState().config.outageType },
+    why: opts.why ?? "Ağ izleme servisi ana bağlantıda oturum kaybı bildirdi (demo izleme verisi)",
+    ...(opts.relatedIds ? { relatedIds: opts.relatedIds } : {}),
   });
   const t = now();
-  W.setState({ outage: { wfId: wf.id, startedAt: t - hours * H, lastUpdateAt: t, repairNote: "", restoredAt: null, dismissed: false }, hybrid: initialHybrid(W.getState().hybrid.autoFailover) });
+  W.setState({ outage: { wfId: wf.id, startedAt: t - hours * H, lastUpdateAt: t, repairNote: "", restoredAt: null, dismissed: false, etaH: opts.etaH ?? null }, hybrid: initialHybrid(W.getState().hybrid.autoFailover) });
   step(wf.id, "signal", "done", "Modem oturumu yok · komşu hatlar kontrol edildi (demo)");
   notify(wf.id, "İnternet bağlantınızda kesinti tespit ettik", "Teknik ekibimiz sorunun çözümü için çalışıyor. Gelişmeleri sizin için takip ediyoruz.", "push", "/");
   evaluate(wf.id);
@@ -114,7 +128,7 @@ const CHECKABLE = ["offered", "ready", "no_device", "no_coverage", "failed"];
 export function checkHybrid(): boolean {
   const o = openOutage();
   const h = W.getState().hybrid;
-  if (!o || !hybridOfferOpen(outageHours(o)) || !CHECKABLE.includes(h.status)) return false;
+  if (!o || !hybridOfferOpen(outageHours(o), o.etaH) || !CHECKABLE.includes(h.status)) return false;
   if (h.status === "no_device" && h.device && h.device.status !== "delivered" && h.device.status !== "cancelled") return false;
   patchHybrid({ status: "checking" });
   step(o.wfId, "hybrid", "in_progress", "Cihaz, SIM ve mobil kapsama kontrol ediliyor (demo)");
@@ -141,7 +155,7 @@ registerOp("hybrid.checked", (id) => {
 export function activateHybrid(): boolean {
   const s = W.getState();
   const o = openOutage();
-  if (!o || !canActivateHybrid({ elapsedH: outageHours(o), fixed: s.connectivity.fixed, status: s.hybrid.status })) return false;
+  if (!o || !canActivateHybrid({ elapsedH: outageHours(o), etaH: o.etaH, fixed: s.connectivity.fixed, status: s.hybrid.status })) return false;
   const attempt = s.hybrid.attempts + 1;
   patchHybrid({ status: "activating", attempts: attempt });
   log(o.wfId, "customer", "decision", attempt === 1 ? "Müşteri onayı: Ücretsiz Olarak Etkinleştir" : `Müşteri tekrar denedi (${attempt}. deneme)`, "Hibrit İnternet yalnızca müşterinin onayıyla etkinleşir");

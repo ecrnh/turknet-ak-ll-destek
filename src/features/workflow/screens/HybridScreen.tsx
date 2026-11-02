@@ -28,7 +28,7 @@ export function HybridScreen() {
 
   const ongoing = !!o && !o.restoredAt;
   const hours = ongoing ? outageHours(o, now) : 0;
-  const after24 = ongoing && hybridOfferOpen(hours);
+  const after24 = ongoing && hybridOfferOpen(hours, o.etaH);
 
   // Entering the activation screen runs the device / SIM / coverage check once.
   useEffect(() => {

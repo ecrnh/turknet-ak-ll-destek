@@ -162,7 +162,7 @@ export function OutageHomeCard() {
   }
 
   const hours = outageHours(o, now);
-  const after24 = hybridOfferOpen(hours);
+  const after24 = hybridOfferOpen(hours, o.etaH);
   const active = h.status === "active";
 
   let title: string = C.detected.title;
