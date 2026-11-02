@@ -32,8 +32,8 @@ function transcript(wf: Workflow): Line[] {
   }
   if (st("ivr_check") === "done") {
     lines.push({ who: "ivr", text: wf.data["issue"] === "slow" ? "Bölgenizde genel bir kesinti görünmüyor, ancak hızınız paketinizin altında." : "Bölgenizde genel bir kesinti görünmüyor. Sorunu birlikte inceleyebiliriz." });
-    const ask = wf.decision?.key === "usta_ivr" ? wf.decision.prompt : wf.decisions.find((d) => d.key === "usta_ivr") ? null : null;
-    if (ask) lines.push({ who: "ivr", text: ask });
+    const asked = wf.decisions.find((d) => d.key === "usta_ivr");
+    if (asked) lines.push({ who: "ivr", text: "Telefonunuzdan birkaç basit kontrol yaparak sorunu çözmeyi deneyebiliriz. Size bir bağlantı göndermemi ister misiniz?" });
   }
   const ivr = choice("usta_ivr");
   if (ivr) {
