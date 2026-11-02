@@ -325,7 +325,7 @@ export function AgentCenterScreen() {
         )}
       </div>
 
-      <div className="sticky bottom-[84px] z-20 bg-gradient-to-t from-background via-background to-transparent px-4 pb-1 pt-3">
+      <div className="sticky bottom-0 z-20 bg-gradient-to-t from-background via-background to-transparent px-4 pb-1 pt-3">
         {voice.listening && (
           <p className="mb-2 flex items-center justify-center gap-2 text-xs font-semibold text-magenta" role="status">
             <span className="h-2 w-2 animate-pulse rounded-full bg-magenta" /> Dinliyorum…
