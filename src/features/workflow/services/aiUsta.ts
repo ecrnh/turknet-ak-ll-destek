@@ -55,7 +55,7 @@ export function startAiUsta(issue: "no_internet" | "modem" = "no_internet"): str
 export function resumeUsta(id: string) {
   const wf = getWf(id);
   if (!wf || wf.type !== "ai_usta" || wf.status === "completed" || wf.handoff || wf.decision) return;
-  if (W.getState().ops.some((o) => o.wfId === id)) return;
+  if (W.getState().ops.some((o) => o.workflowId === id)) return;
   if (stepStatus(id, "report") !== "done") return;
   if (stepStatus(id, "context") === "pending" && wf.data["channel"] === "app") schedule("usta.context", id, 800);
   else if (stepStatus(id, "context") === "done" && stepStatus(id, "photo") === "pending") schedule("usta.photo", id, 800);
