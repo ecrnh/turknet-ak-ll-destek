@@ -8,7 +8,7 @@ const base: GigaContext = { net: "online", active: [], outage: false };
 describe("GIGA kullanıcının cümlesinden doğru akışı başlatır", () => {
   it("“İnternetim kesildi” → dijital onarım kontrolleri, sorun türü tekrar sorulmaz", () => {
     const r = gigaReply("İnternetim kesildi.", base);
-    expect(r.text).toBe("Bağlantını kontrol ediyorum. Önce hattında ve bölgende bilinen bir arıza olup olmadığını inceleyelim.");
+    expect(r.text).toBe("Bağlantını kontrol ediyorum. Önce sorunun evindeki bağlantıdan mı yoksa bölgesel bir kesintiden mi kaynaklandığını anlamaya çalışalım.");
     expect(r.start).toBe("ai_usta");
     expect(r.usta).toBe("no_connect");
   });

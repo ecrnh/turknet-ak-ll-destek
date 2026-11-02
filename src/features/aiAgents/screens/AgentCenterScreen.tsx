@@ -21,7 +21,8 @@ import { isActive, nextOpenStep, STATUS_LABEL, type Intent } from "@/features/wo
 import { lastDoneStep } from "@/features/workflow/copy";
 import { openOutage } from "@/features/workflow/services/hybrid";
 import type { Workflow } from "@/features/workflow/types";
-import { AiUstaPanel } from "@/features/workflow/components/panels";
+import { AiUstaPanel, RepairProgress } from "@/features/workflow/components/panels";
+import { HybridOfferInline } from "@/features/workflow/components/hybrid";
 import { DecisionCard, StatusPill } from "@/features/workflow/components/ui";
 import { track, useFlow } from "@/lib/analytics";
 import { fmtRelative } from "@/lib/format";
@@ -77,7 +78,8 @@ function ChatProcess({ wfId }: { wfId: string }) {
   if (!wf) return null;
   const current = nextOpenStep(wf.steps);
   const last = lastDoneStep(wf);
-  const running = isActive(wf) && !wf.decision && current;
+  const usta = wf.type === "ai_usta";
+  const running = !usta && isActive(wf) && !wf.decision && current;
   return (
     <div className="ml-10 space-y-2.5">
       <div className="rounded-2xl border border-magenta/20 bg-card p-3.5 shadow-card" aria-live="polite">
@@ -85,7 +87,7 @@ function ChatProcess({ wfId }: { wfId: string }) {
           <p className="min-w-0 truncate text-sm font-semibold text-foreground">{wf.title}</p>
           <StatusPill status={wf.status} />
         </div>
-        {last && (
+        {last && !usta && (
           <p className="mt-1.5 flex items-start gap-1.5 text-xs text-foreground">
             <CheckCircle2 className="mt-px size-3.5 shrink-0 text-success" /> {last}
           </p>
@@ -100,7 +102,9 @@ function ChatProcess({ wfId }: { wfId: string }) {
           Detayları gör <ChevronRight className="size-4" />
         </Link>
       </div>
-      {wf.type === "ai_usta" && isActive(wf) && <AiUstaPanel wf={wf} />}
+      {usta && <RepairProgress wf={wf} />}
+      {usta && wf.data["repairOutcome"] === "regional" && <HybridOfferInline />}
+      {usta && isActive(wf) && <AiUstaPanel wf={wf} inChat />}
       {wf.decision && <DecisionCard key={wf.decision.key} wf={wf} />}
     </div>
   );
