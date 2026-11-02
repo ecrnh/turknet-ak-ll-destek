@@ -256,6 +256,14 @@ export function AuditList({ events, showWf, dense }: { events: AuditEvent[]; sho
 }
 
 /** Track-hub card: name, start, status, last step, next step, what the customer must do, ETA, details. */
+/** Who started the process: the owner, a family member, or TürkNet itself. */
+export function initiatorLabel(wf: Pick<Workflow, "type" | "data">): string {
+  if (typeof wf.data["initiatedBy"] === "string") return `Başlatan: ${wf.data["initiatedBy"]}`;
+  if (wf.type === "outage_recovery" || wf.type === "proactive_fault") return "TürkNet otomatik başlattı";
+  if (wf.data["channel"] === "ivr") return "Telefonla başlattınız";
+  return "Siz başlattınız";
+}
+
 export function WorkflowCard({ wf }: { wf: Workflow }) {
   const Icon = TYPE_ICON[wf.type];
   const action = customerAction(wf);
@@ -272,7 +280,9 @@ export function WorkflowCard({ wf }: { wf: Workflow }) {
             <p className="font-semibold leading-tight text-primary">{wf.title}</p>
             <StatusPill status={wf.status} />
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">Başlangıç {fmtDateTime(wf.createdAt)}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {initiatorLabel(wf)} · {fmtDateTime(wf.createdAt)} · {wf.id}
+          </p>
         </div>
       </div>
       {closed ? (
