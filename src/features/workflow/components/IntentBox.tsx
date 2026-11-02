@@ -2,21 +2,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { Send } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { startIntent } from "@/features/giga/actions";
 import { log } from "../engine";
 import { detectIntent, type Intent } from "../rules";
-import { startAiUsta } from "../services/aiUsta";
-import { runBillingShield } from "../services/billing";
-import { startSpeedCheck } from "../services/proactive";
-import { openOutage } from "../services/hybrid";
-
-const LABEL: Record<Intent, string> = {
-  relocation: "Taşınma",
-  billing: "Fatura Kalkanı",
-  ai_usta: "AI Usta",
-  temp_internet: "Bağlantım · Hibrit İnternet",
-  speed: "Hız kontrolü",
-  track: "İşlemlerim",
-};
 
 export const QUICK_INTENTS = ["Taşınacağım", "İnternetim çok yavaş", "Faturamda tutarsızlık var", "İnternetim kesildi", "İşlemim ne durumda?"];
 
@@ -38,27 +26,9 @@ export function IntentBox({ onDark, className }: { onDark?: boolean; className?:
   const [unsure, setUnsure] = useState(false);
 
   const run = (intent: Intent, said: string) => {
-    log(null, "customer", "info", `Talep: “${said}” → ${LABEL[intent]}`, "Talep algılama: anahtar kelime eşleşmesi (demo)");
     setText("");
     setUnsure(false);
-    switch (intent) {
-      case "relocation":
-        return navigate({ to: "/tasinma" });
-      case "billing": {
-        const r = runBillingShield();
-        return r.wfId ? navigate({ to: "/surec/$id", params: { id: r.wfId } }) : navigate({ to: "/fatura-kalkani" });
-      }
-      case "ai_usta":
-        // A known outage is already being tracked: no modem steps for the customer.
-        if (openOutage()) return navigate({ to: "/hibrit" });
-        return navigate({ to: "/surec/$id", params: { id: startAiUsta() } });
-      case "speed":
-        return navigate({ to: "/surec/$id", params: { id: startSpeedCheck() } });
-      case "temp_internet":
-        return navigate({ to: openOutage() ? "/hibrit" : "/baglanti" });
-      case "track":
-        return navigate({ to: "/takip" });
-    }
+    startIntent(intent, said, navigate);
   };
 
   const go = (t: string) => {
@@ -80,7 +50,7 @@ export function IntentBox({ onDark, className }: { onDark?: boolean; className?:
         }}
         className={cn("flex h-12 items-center gap-2 rounded-full pl-4 pr-1.5", onDark ? "bg-card" : "border border-border bg-card shadow-sm")}
       >
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Talebinizi yazın…" aria-label="Talebinizi yazın" className="h-full min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground" />
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="GIGA'ya talebinizi yazın…" aria-label="GIGA'ya talebinizi yazın" className="h-full min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground" />
         <button type="submit" aria-label="Gönder" className="flex h-9 w-9 items-center justify-center rounded-full bg-magenta text-magenta-foreground">
           <Send className="size-4" />
         </button>

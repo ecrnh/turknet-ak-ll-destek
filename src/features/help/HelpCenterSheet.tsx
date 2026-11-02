@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, ChevronRight, CircleHelp, Headset, HeartPulse, Loader2, SendHorizontal, Wifi, X, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { CHAT_TOPICS, GIGA, POPULAR_QUESTIONS, SPEED_FIX_STEPS, USER } from "@/data/mock";
+import { CHAT_TOPICS, GIGA, POPULAR_QUESTIONS, SPEED_FIX_STEPS } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
 import { useAgentsStore } from "@/features/aiAgents/store";
 import { useActingAccount } from "@/features/family/store";
@@ -192,7 +192,7 @@ export function HelpCenterSheet() {
                 <p className="font-semibold text-primary">{GIGA.welcome[0]}</p>
                 <p className="mt-1 text-sm leading-relaxed text-foreground">{GIGA.welcome[1]}</p>
                 <p className="mt-1 text-sm font-semibold text-foreground">{GIGA.welcome[2]}</p>
-                {acting && <p className="mt-2 text-xs text-muted-foreground">Şu an {acting.short} adına işlem yapıyorsun, {acting ? acting.honorific : USER.firstName}.</p>}
+                {acting && <p className="mt-2 text-xs text-muted-foreground">Şu an {acting.short} adına işlem yapıyorsun.</p>}
               </BotBubble>
 
               {active.length > 0 && (
