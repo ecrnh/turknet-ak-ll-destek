@@ -16,13 +16,17 @@ export function AiUstaStartScreen() {
 
   const go = (id: string) => navigate({ to: "/surec/$id", params: { id } });
   const notWorking = (issue: "no_internet" | "modem") => {
-    if (issue === "no_internet" && openOutage()) return navigate({ to: "/hibrit" });
+    if (issue === "no_internet" && openOutage()) {
+      navigate({ to: "/hibrit" });
+      return;
+    }
     go(startAiUsta(issue));
   };
   const call = () => {
     if (active && active.data["channel"] !== "ivr") {
       toast("Devam eden bir GIGA Teknik oturumun var", { description: "Kaldığın yerden devam edelim; tekrar anlatmana gerek yok." });
-      return go(active.id);
+      go(active.id);
+      return;
     }
     startUstaCall();
   };

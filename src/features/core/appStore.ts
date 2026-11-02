@@ -225,7 +225,7 @@ export const useAppStore = create<AppState>()(
         const status = p.net?.status as string | undefined;
         return {
           ...p,
-          ...(p.prefs ? { prefs: { campaignPush: true, ...p.prefs } } : {}),
+          ...(p.prefs ? { prefs: { ...p.prefs, campaignPush: p.prefs["campaignPush"] !== false } } : {}),
           net: p.net && (status === "outage" || status === "backup") ? { ...p.net, status: "online" } : p.net,
           notifications: (p.notifications ?? [])
             .filter((n) => (n.kind as string) !== "gift" && !legacy(n.to))
