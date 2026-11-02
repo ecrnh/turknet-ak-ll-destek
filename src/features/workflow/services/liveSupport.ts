@@ -3,7 +3,7 @@
  * The agent starts with the full troubleshooting context, so the customer never
  * repeats the problem. No real agent, chat backend or dispatch system exists.
  */
-import { APPOINTMENT_SLOTS, FIELD_TEAMS, TEAMS } from "@/data/mock";
+import { APPOINTMENT_SLOTS, CABLE_STATES, FIELD_TEAMS, REPAIR_CHECKS, TEAMS } from "@/data/mock";
 import { uid } from "@/lib/format";
 import { book, getWf, log, notify, registerOp, schedule, setData, workOrder } from "../engine";
 import { useWorkflowStore as W } from "../store";
@@ -16,7 +16,8 @@ const msg = (from: LiveChatMessage["from"], text: string, offer?: LiveChatMessag
 
 /** What the agent sees before the chat starts. Derived only from the real workflow and connection state. */
 export function handoffSummary(wf: Workflow, connectivity: WorkflowState["connectivity"]): { label: string; value: string }[] {
-  const note = (k: string) => wf.steps.find((s) => s.key === k)?.note;
+  const step = (k: string) => wf.steps.find((s) => s.key === k);
+  const note = (k: string) => step(k)?.note;
   const leds = String(wf.data["leds"] ?? "")
     .split("|")
     .filter(Boolean)
@@ -24,14 +25,20 @@ export function handoffSummary(wf: Workflow, connectivity: WorkflowState["connec
       const [name, , state] = x.split(":");
       return `${name}: ${state}`;
     });
+  const repair = String(wf.data["repair"] ?? "").split("|").filter(Boolean);
+  const repairText = step("repair")?.status === "done" ? (note("repair") ?? "Tamamlandı") : repair.length ? `${repair.length}/${REPAIR_CHECKS.length} kontrol tamamlandı` : "Yapılmadı";
+  const cable = CABLE_STATES.find((c) => c.id === wf.data["cable"]);
   const done = wf.steps.filter((s) => s.status === "done" && !["call", "report"].includes(s.key)).map((s) => s.label);
   const conn = connectivity.fixed === "up" ? "Ana bağlantı aktif" : connectivity.mobile === "active" ? "Ana bağlantı kesik · yedek bağlantı aktif" : "Ana bağlantı kesik";
   return [
     { label: "Sorun", value: String(wf.data["issue"] ?? wf.title) },
-    { label: "Telefon triyajı", value: note("ivr_check") ?? (wf.data["channel"] === "ivr" ? "Telefonda temsilci istendi" : "Telefon görüşmesi yapılmadı") },
+    ...(wf.data["channel"] === "ivr" ? [{ label: "Telefon görüşmesi", value: note("ivr_check") ?? "Telefonda temsilci istendi" }] : []),
+    { label: "Dijital onarım", value: repairText },
+    { label: "Tespit edilen sorun", value: wf.data["finding"] ? String(wf.data["finding"]) : "Bilinen bir arıza bulunmadı" },
+    ...(step("remote")?.status === "done" ? [{ label: "Uzaktan düzeltme", value: `${note("remote") ?? ""} → ${note("verify") ?? "sonuç yok"}` }] : []),
     { label: "Modem ışıkları", value: leds.length ? leds.join(" · ") : "Kontrol edilmedi" },
+    { label: "Kablo kontrolü", value: cable ? cable.say : "Kontrol edilmedi" },
     { label: "Yapılan adımlar", value: done.length ? done.join(" → ") : "Henüz adım yapılmadı" },
-    { label: "Bağlantı kontrolü", value: note("recheck") ?? note("verify") ?? "Sonuç yok" },
     { label: "Mevcut durum", value: conn },
   ];
 }
@@ -56,7 +63,7 @@ export function openLiveChat(wfId: string): boolean {
         startedAt: Date.now(),
         messages: [
           msg("giga", "Yaptığımız kontrolleri temsilcine ilettim. Aynı şeyleri tekrar anlatmana gerek yok."),
-          msg("agent", "Merhaba, bağlantı sorununla ilgili yaptığın kontrolleri görebiliyorum. Aynı adımları tekrar yapmana gerek yok. Şimdi birlikte devam edelim."),
+          msg("agent", "Merhaba, dijital onarım sonuçlarını ve yaptığın kontrolleri görebiliyorum. Aynı şeyleri tekrar anlatmana ya da adımları baştan yapmana gerek yok; kaldığımız yerden devam edelim."),
         ],
       },
     ],
