@@ -6,6 +6,7 @@ import type {
   AuditEvent,
   BillingRecord,
   BoxDevice,
+  ChatMessage,
   ConnectivityStatus,
   CustomerNotification,
   DemoConfig,
@@ -35,6 +36,7 @@ export interface WorkflowState {
   messages: CustomerNotification[];
   box: BoxDevice | null;
   sms: SmsMessage[];
+  chats: ChatMessage[];
   audit: AuditEvent[];
   ops: ScheduledOp[];
   config: DemoConfig;
@@ -55,6 +57,8 @@ export const defaultConfig = (): DemoConfig => ({
   reconciliation: "settled",
   aiFix: "fixed",
   proactive: "remote_fix",
+  teamMatch: "accept",
+  appInstalled: true,
 });
 
 export const initialConnectivity = (): ConnectivityStatus => ({
@@ -80,6 +84,7 @@ const initial = () => ({
   messages: [] as CustomerNotification[],
   box: null as BoxDevice | null,
   sms: [] as SmsMessage[],
+  chats: [] as ChatMessage[],
   audit: [] as AuditEvent[],
   ops: [] as ScheduledOp[],
   config: defaultConfig(),
@@ -101,7 +106,7 @@ export const useWorkflowStore = create<WorkflowState>()(
       name: "tn-workflow",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      version: 3,
+      version: 4,
       migrate: (persisted) => ({ ...initial(), ...upgrade(persisted as Partial<WorkflowState>) }) as WorkflowState,
       merge: (persisted, current) => ({ ...current, ...initial(), ...upgrade((persisted ?? {}) as Partial<WorkflowState>), reset: current.reset }),
     },
