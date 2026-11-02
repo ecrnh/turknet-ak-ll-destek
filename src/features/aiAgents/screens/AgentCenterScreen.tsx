@@ -251,7 +251,7 @@ export function AgentCenterScreen() {
         }
       />
 
-      <div className="flex-1 space-y-4 px-4 pb-4">
+      <div className="flex-1 space-y-4 px-4 pb-20">
         <BotBubble mood={mood}>
           <p className="font-semibold text-primary">{GIGA.welcome[0].replace("{name}", name)}</p>
           <p className="mt-0.5 text-sm text-foreground">{GIGA.welcome[1]}</p>
@@ -325,7 +325,7 @@ export function AgentCenterScreen() {
         )}
       </div>
 
-      <div className="sticky bottom-0 z-20 bg-gradient-to-t from-background via-background to-transparent px-4 pb-1 pt-3">
+      <div className="fixed inset-x-0 bottom-[80px] z-30 bg-gradient-to-t from-background via-background to-transparent px-4 pb-2 pt-3">
         {voice.listening && (
           <p className="mb-2 flex items-center justify-center gap-2 text-xs font-semibold text-magenta" role="status">
             <span className="h-2 w-2 animate-pulse rounded-full bg-magenta" /> Dinliyorum…
