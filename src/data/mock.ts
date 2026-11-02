@@ -478,10 +478,10 @@ export const AI_USTA_CABLE_STEP = {
 
 /** "İnternetim çalışmıyor" → what exactly? Kept for the whole session. `finding`/`fix` are the simulated detected issue and remote action. */
 export const USTA_ISSUES = [
-  { id: "no_connect", label: "İnternete hiç bağlanamıyorum.", issue: "İnternete hiç bağlanamıyor", check: "session", finding: "İnternet oturumun kapanmış görünüyor; modemin hatta bağlı ama internete çıkamıyor.", fix: "İnternet oturumunu uzaktan yeniliyorum" },
-  { id: "slow", label: "İnternetim yavaş.", issue: "İnternet yavaş", check: "line", finding: "Hattında paketine göre belirgin bir hız düşüşü görünüyor.", fix: "Hat ayarlarını uzaktan yeniliyorum" },
-  { id: "drops", label: "Bağlantım sürekli kopuyor.", issue: "Bağlantı sürekli kopuyor", check: "line", finding: "Son saatlerde bağlantında sık kopma görünüyor.", fix: "Hattını uzaktan yeniden eşitliyorum" },
-  { id: "wifi", label: "Wi-Fi ağıma bağlanamıyorum.", issue: "Wi-Fi ağına bağlanamıyor", check: "diag", finding: "Wi-Fi kanalın çevredeki ağlar nedeniyle çok yoğun görünüyor.", fix: "Wi-Fi'ını daha az yoğun bir kanala alıyorum" },
+  { id: "no_connect", label: "İnternete hiç bağlanamıyorum.", issue: "İnternete hiç bağlanamıyor", check: "session", finding: "İnternet oturumun kapanmış görünüyor; modemin hatta bağlı ama internete çıkamıyor.", fix: "İnternet oturumunu uzaktan yeniliyorum", fixed: "İnternet oturumunu uzaktan yeniledim" },
+  { id: "slow", label: "İnternetim yavaş.", issue: "İnternet yavaş", check: "line", finding: "Hattında paketine göre belirgin bir hız düşüşü görünüyor.", fix: "Hat ayarlarını uzaktan yeniliyorum", fixed: "Hat ayarlarını uzaktan yeniledim" },
+  { id: "drops", label: "Bağlantım sürekli kopuyor.", issue: "Bağlantı sürekli kopuyor", check: "line", finding: "Son saatlerde bağlantında sık kopma görünüyor.", fix: "Hattını uzaktan yeniden eşitliyorum", fixed: "Hattını uzaktan yeniden eşitledim" },
+  { id: "wifi", label: "Wi-Fi ağıma bağlanamıyorum.", issue: "Wi-Fi ağına bağlanamıyor", check: "diag", finding: "Wi-Fi kanalın çevredeki ağlar nedeniyle çok yoğun görünüyor.", fix: "Wi-Fi'ını daha az yoğun bir kanala alıyorum", fixed: "Wi-Fi'ını daha az yoğun bir kanala aldım" },
 ] as const;
 export type UstaIssueId = (typeof USTA_ISSUES)[number]["id"];
 
@@ -511,8 +511,8 @@ export const MODEM_LIGHTS = [
 ] as const;
 
 export const INTERNET_LIGHT_STATES = [
-  { id: "red", label: "Kırmızı", ok: false, say: "İnternet ışığının kırmızı olduğunu görüyorum. Önce bağlantını kontrol edelim." },
-  { id: "off", label: "Kapalı", ok: false, say: "İnternet ışığı yanmıyor görünüyor. Önce bağlantını kontrol edelim." },
+  { id: "red", label: "Kırmızı", ok: false, say: "İnternet ışığı kırmızı; modem internete çıkamıyor. Kablolarla başlayıp adım adım ilerleyelim." },
+  { id: "off", label: "Kapalı", ok: false, say: "İnternet ışığı yanmıyor görünüyor. Kablolarla başlayıp adım adım ilerleyelim." },
   { id: "blink", label: "Yanıp sönüyor", ok: false, say: "İnternet ışığı yanıp sönüyor; modem bağlanmaya çalışıyor olabilir. Birlikte kontrol edelim." },
   { id: "green", label: "Yeşil", ok: true, say: "Işıklar normal görünüyor. Yine de bağlantını adım adım kontrol edelim." },
 ] as const;

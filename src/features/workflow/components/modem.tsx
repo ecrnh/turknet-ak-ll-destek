@@ -1,11 +1,11 @@
-import { motion } from "framer-motion";
-import { Camera, CameraOff, Upload } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Camera, CheckCircle2, Headset } from "lucide-react";
 import { useState } from "react";
-import { INTERNET_LIGHT_STATES, MODEM_LIGHTS, type InternetLight } from "@/data/mock";
+import { CABLE_STATES, INTERNET_LIGHT_STATES, MODEM_LIGHTS, type CableState, type InternetLight } from "@/data/mock";
 import { GigaNote } from "@/features/giga/GigaAvatar";
 import { cn } from "@/lib/utils";
 import { decide } from "../engine";
-import { setModemLight } from "../services/aiUsta";
+import { setInspection } from "../services/aiUsta";
 import type { Workflow } from "../types";
 
 const LIGHT_CLS: Record<InternetLight, string> = {
@@ -36,81 +36,75 @@ export function ModemIllustration({ internet, className }: { internet: InternetL
   );
 }
 
+/** One photo slot (front or back). The image stays on the phone; nothing is analysed for real. */
+function PhotoSlot({ title, hint, preview, onFile }: { title: string; hint: string; preview: string | null; onFile: (url: string) => void }) {
+  return (
+    <label className={cn("flex min-h-[132px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed p-3 text-center", preview ? "border-success/40 bg-success-soft" : "border-primary/25 bg-icon-box/40")}>
+      {preview ? <img src={preview} alt={`${title} fotoğrafı`} className="h-14 w-14 rounded-xl object-cover" /> : <Camera className="size-6 text-primary" strokeWidth={1.5} />}
+      <span className="text-sm font-semibold text-primary">{title}</span>
+      <span className="text-[11px] leading-snug text-muted-foreground">{preview ? "Fotoğraf eklendi" : hint}</span>
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onFile(URL.createObjectURL(f));
+        }}
+      />
+    </label>
+  );
+}
+
 /**
- * GIGA Teknik camera step (simulated). Works without camera permission: the
- * customer sees a viewfinder with a modem and shows which light is on.
+ * Modem inspection after a clean digital repair: two photo slots (front = lights,
+ * back = cables) plus manual answers, so the flow works without a camera or image analysis.
  */
-export function ModemCameraCard({ wf }: { wf: Workflow }) {
-  const [open, setOpen] = useState(false);
-  const [light, setLight] = useState<InternetLight>((wf.data["light"] as InternetLight | undefined) ?? "red");
-  const [preview, setPreview] = useState<string | null>(null);
-
-  const shoot = () => {
-    setModemLight(wf.id, light);
-    decide(wf.id, "demo_photo", "customer");
+export function ModemInspectCard({ wf }: { wf: Workflow }) {
+  const [front, setFront] = useState<string | null>(null);
+  const [back, setBack] = useState<string | null>(null);
+  const [light, setLight] = useState<InternetLight | null>((wf.data["light"] as InternetLight | undefined) ?? null);
+  const [cable, setCable] = useState<CableState | null>((wf.data["cable"] as CableState | undefined) ?? null);
+  const ready = !!light && !!cable;
+  const send = () => {
+    if (!light || !cable) return;
+    setInspection(wf.id, { light, cable, front: !!front, back: !!back });
+    decide(wf.id, "done", "customer");
   };
-
   return (
     <div className="rounded-card border-2 border-magenta/30 bg-card p-5 shadow-card" role="group" aria-label="Modem kontrolü">
-      <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">GIGA Teknik yanında</p>
-      <h3 className="mt-1 text-lg font-semibold leading-snug text-primary">Modemini göster, birlikte kontrol edelim.</h3>
-      {!open ? (
-        <>
-          <p className="mt-1.5 text-sm text-muted-foreground">Kamerayı açıp modeminin ön yüzünü göster. Işıklara bakıp sana tek seferde bir güvenli adım söyleyeceğim.</p>
-          <button type="button" onClick={() => setOpen(true)} className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-primary text-base font-semibold text-primary-foreground shadow-float">
-            <Camera className="size-5" /> Kamerayı aç
+      <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Modem kontrolü</p>
+      <h3 className="mt-1 text-base font-semibold leading-snug text-primary">{wf.decision?.prompt}</h3>
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
+        <PhotoSlot title="Ön yüz" hint="Işıkları görelim" preview={front} onFile={(u) => { setFront(u); setInspection(wf.id, { front: true }); }} />
+        <PhotoSlot title="Arka yüz" hint="Kablo ve portları görelim" preview={back} onFile={(u) => { setBack(u); setInspection(wf.id, { back: true }); }} />
+      </div>
+      <p className="mt-4 text-sm font-semibold text-foreground">Internet ışığı ne renk?</p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {INTERNET_LIGHT_STATES.map((s) => (
+          <button key={s.id} type="button" onClick={() => { setLight(s.id); setInspection(wf.id, { light: s.id }); }} aria-pressed={light === s.id} className={cn("flex min-h-11 items-center gap-2 rounded-xl border px-3 text-sm font-semibold", light === s.id ? "border-primary bg-icon-box text-primary" : "border-border text-muted-foreground")}>
+            <span className={cn("h-2.5 w-2.5 rounded-full", LIGHT_CLS[s.id])} /> {s.label}
           </button>
-          <label className="mt-2 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full border border-primary/20 text-sm font-semibold text-primary">
-            {preview ? <img src={preview} alt="Yüklenen modem fotoğrafı" className="h-8 w-8 rounded-lg object-cover" /> : <Upload className="size-4" />}
-            Fotoğraf yükle
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="sr-only"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (!f) return;
-                setPreview(URL.createObjectURL(f));
-                setModemLight(wf.id, light);
-                decide(wf.id, "uploaded", "customer");
-              }}
-            />
-          </label>
-        </>
-      ) : (
-        <>
-          <div className="relative mt-4 overflow-hidden rounded-3xl bg-primary-deep px-4 pb-5 pt-8">
-            <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-2.5 py-1 text-[10px] font-bold text-primary-foreground">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" /> Kamera · simülasyon
-            </span>
-            {/* viewfinder corners */}
-            {["left-3 top-10 border-l-2 border-t-2", "right-3 top-10 border-r-2 border-t-2", "bottom-3 left-3 border-b-2 border-l-2", "bottom-3 right-3 border-b-2 border-r-2"].map((c) => (
-              <span key={c} className={cn("absolute h-6 w-6 rounded-sm border-primary-foreground/60", c)} />
-            ))}
-            <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-              <ModemIllustration internet={light} className="mt-3" />
-            </motion.div>
-            <div className="scan-line pointer-events-none absolute inset-x-0 top-0 h-full" />
-          </div>
-          <p className="mt-4 text-sm font-semibold text-foreground">Modemindeki Internet ışığı nasıl görünüyor?</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {INTERNET_LIGHT_STATES.map((s) => (
-              <button key={s.id} type="button" onClick={() => setLight(s.id)} aria-pressed={light === s.id} className={cn("flex min-h-11 items-center gap-2 rounded-xl border px-3 text-sm font-semibold", light === s.id ? "border-primary bg-icon-box text-primary" : "border-border text-muted-foreground")}>
-                <span className={cn("h-2.5 w-2.5 rounded-full", LIGHT_CLS[s.id])} /> {s.label}
-              </button>
-            ))}
-          </div>
-          <GigaNote className="mt-4">{INTERNET_LIGHT_STATES.find((s) => s.id === light)?.say}</GigaNote>
-          <button type="button" onClick={shoot} className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-primary text-base font-semibold text-primary-foreground shadow-float">
-            <Camera className="size-5" /> Görüntüyü gönder
+        ))}
+      </div>
+      <p className="mt-4 text-sm font-semibold text-foreground">Modemin arkasındaki kablolar takılı mı?</p>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {CABLE_STATES.map((c) => (
+          <button key={c.id} type="button" onClick={() => { setCable(c.id); setInspection(wf.id, { cable: c.id }); }} aria-pressed={cable === c.id} className={cn("min-h-11 rounded-xl border px-2 text-xs font-semibold leading-tight", cable === c.id ? "border-primary bg-icon-box text-primary" : "border-border text-muted-foreground")}>
+            {c.label}
           </button>
-          <button type="button" onClick={() => setOpen(false)} className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 text-sm font-semibold text-primary">
-            <CameraOff className="size-4" /> Kamerayı kapat
-          </button>
-        </>
-      )}
-      <p className="mt-3 text-[11px] text-muted-foreground">Görsel analiz bu prototipte simülasyondur; gerçek kamera görüntüsü işlenmez, kesin teşhis yapılmaz.</p>
+        ))}
+      </div>
+      {light && <GigaNote className="mt-4">{INTERNET_LIGHT_STATES.find((s) => s.id === light)?.say}</GigaNote>}
+      <button type="button" onClick={send} disabled={!ready} className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-primary text-base font-semibold text-primary-foreground shadow-float disabled:opacity-50">
+        <CheckCircle2 className="size-5" /> İncelemeyi gönder
+      </button>
+      {!ready && <p className="mt-1.5 text-center text-[11px] text-muted-foreground">Işık rengini ve kablo durumunu seçmen yeterli; fotoğraf isteğe bağlı.</p>}
+      <Link to="/canli-destek/$id" params={{ id: wf.id }} onClick={() => decide(wf.id, "live", "customer")} className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 text-sm font-semibold text-primary">
+        <Headset className="size-4" /> Canlı destekle görüşmek istiyorum.
+      </Link>
+      <p className="mt-3 text-[11px] text-muted-foreground">Fotoğraflar bu prototipte işlenmez; değerlendirme seçimlerine göre yapılır (simülasyon).</p>
     </div>
   );
 }

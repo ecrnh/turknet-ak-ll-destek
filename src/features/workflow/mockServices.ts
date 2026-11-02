@@ -55,6 +55,10 @@ export const MockNetworkAPI = {
   remoteFixWorks(): boolean {
     return cfg().proactive === "remote_fix";
   },
+  /** Digital repair (simulated): does it find an issue on the customer's connection? */
+  repairFindsIssue(): boolean {
+    return cfg().ustaDiag === "issue";
+  },
   connectionAfterSelfFix(): boolean {
     return cfg().aiFix === "fixed";
   },

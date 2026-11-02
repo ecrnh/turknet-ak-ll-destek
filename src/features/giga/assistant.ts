@@ -151,7 +151,7 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
       if (has(t, "ışık", "modem", "led", "kırmızı")) {
         return {
           topic: "modem",
-          text: "Modem ışıklarını birlikte inceleyelim. GIGA Teknik'te ışıkların fotoğrafını çekersin; ne anlama geldiklerini açıklar, tek seferde bir güvenli adım öneririm.",
+          text: "Önce bağlantını uzaktan kontrol ederim. Bir arıza görünmezse modeminin ışıklarına ve kablolarına birlikte bakar, tek seferde bir güvenli adım öneririm.",
           actions: [
             { label: "GIGA Teknik'i Başlat", kind: "auto", intent: "ai_usta" },
             { label: "Görüntülü destek", kind: "go", to: "/goruntulu-destek" },
@@ -160,7 +160,7 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
       }
       return {
         topic: "ai_usta",
-        text: "Bağlantını kontrol edebilirim. Gerekirse modem ışıklarının fotoğrafını isteyip seninle adım adım ilerleriz; çözülmezse yaptıklarımızı uzmana aktarırım.",
+        text: "Önce dijital onarımla bağlantını uzaktan kontrol ederim. Gerekirse modemine birlikte bakar, adım adım ilerleriz; çözülmezse yaptıklarımızı uzmana aktarırım.",
         actions: [{ label: "GIGA Teknik'i Başlat", kind: "auto", intent: "ai_usta" }],
       };
     default:

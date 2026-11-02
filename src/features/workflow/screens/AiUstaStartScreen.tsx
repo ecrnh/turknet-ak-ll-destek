@@ -73,9 +73,9 @@ export function AiUstaStartScreen() {
         )}
 
         <div className="space-y-2.5">
-          <Entry icon={WifiOff} title="İnternetim çalışmıyor" desc="Bağlantını kontrol edip adım adım birlikte çözelim" onClick={() => notWorking("no_internet")} />
+          <Entry icon={WifiOff} title="İnternetim çalışmıyor" desc="Önce sorunu anlayıp bağlantını uzaktan kontrol edelim" onClick={() => notWorking("no_internet")} />
           <Entry icon={Gauge} title="İnternetim yavaş" desc="Hızını ölçer, uzaktan iyileştirebileceğimi denerim" onClick={() => go(startSpeedCheck())} />
-          <Entry icon={Router} title="Modemimde sorun var" desc="Modem ışıklarını kamerayla birlikte kontrol edelim" onClick={() => notWorking("modem")} />
+          <Entry icon={Router} title="Modemimde sorun var" desc="Önce uzaktan kontrol ederim, gerekirse modemine birlikte bakarız" onClick={() => notWorking("modem")} />
           <Link to="/yardim" className="flex w-full items-center gap-4 rounded-card border border-dashed border-border bg-card p-4 text-left">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-icon-box text-primary"><HelpCircle className="size-6" strokeWidth={1.5} /></span>
             <span className="flex-1">

@@ -131,6 +131,8 @@ const MODE_STYLE: Record<GigaActionMode, { icon: typeof Zap; cls: string }> = {
 
 /** Tells the customer whether GIGA does it, needs their approval, or hands over to a person. */
 export function ActionModeTag({ mode, className }: { mode: GigaActionMode; className?: string }) {
+  // Actions GIGA does itself carry no tag; only approval and hand-over are labelled.
+  if (mode === "auto") return null;
   const m = MODE_STYLE[mode];
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold", m.cls, className)}>

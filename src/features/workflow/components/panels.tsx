@@ -1,16 +1,16 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { PlainNote } from "@/components/tn/primitives";
-import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
+import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, Loader2, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
 import { motion } from "framer-motion";
-import { BILLING_CHECKS, CURRENT_ADDRESS, INTERNET_LIGHT_STATES, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
+import { BILLING_CHECKS, CABLE_STATES, CURRENT_ADDRESS, INTERNET_LIGHT_STATES, REPAIR_CHECKS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
 import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
 import { fmtRelative, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { choiceOf } from "../engine";
 import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY } from "../rules";
-import { rateUsta, resumeUsta } from "../services/aiUsta";
+import { rateUsta, repairResults, resumeUsta, ustaIssue } from "../services/aiUsta";
 import { measureNearModem } from "../services/proactive";
 import { resumeBillingReview } from "../services/billing";
 import { toggleBox } from "../services/connectivity";
@@ -281,9 +281,70 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
   const rating = wf.data["rating"];
   const st = (k: string) => wf.steps.find((x) => x.key === k)?.status;
   const light = INTERNET_LIGHT_STATES.find((x) => x.id === wf.data["light"]);
+  const cable = CABLE_STATES.find((x) => x.id === wf.data["cable"]);
+  const results = repairResults(wf.data);
+  const checkIdx = Number(wf.data["checkIdx"] ?? 0);
+  const repairing = st("repair") === "in_progress";
+  const finding = wf.data["finding"] ? String(wf.data["finding"]) : null;
+  const issue = ustaIssue(wf.id);
+  const open = wf.status !== "completed" && !wf.handoff;
   return (
     <div className="space-y-3">
-    {st("analysis") === "done" && light && st("recheck") !== "done" && !wf.handoff && <GigaNote>{light.say}</GigaNote>}
+    {(repairing || st("repair") === "done") && (
+      <>
+        {repairing && <GigaNote mood="working">Anladım. Önce bağlantını uzaktan kontrol edelim. Dijital onarımı başlatıyorum.</GigaNote>}
+        <Box>
+          <div className="flex items-center justify-between">
+            <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <Radar className="size-4 text-magenta" /> Dijital onarım
+            </p>
+            <span className="text-xs font-semibold text-muted-foreground">{Math.min(checkIdx, REPAIR_CHECKS.length)}/{REPAIR_CHECKS.length}</span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-magenta transition-all duration-700" style={{ width: `${(Math.min(checkIdx, REPAIR_CHECKS.length) / REPAIR_CHECKS.length) * 100}%` }} />
+          </div>
+          <ul className="mt-3 space-y-2.5">
+            {REPAIR_CHECKS.map((c, i) => {
+              const r = results[c.id];
+              const running = repairing && i === checkIdx;
+              return (
+                <li key={c.id} className="flex items-start gap-2.5 text-sm">
+                  <span className="mt-0.5 shrink-0">
+                    {r === undefined ? (
+                      running ? <Loader2 className="size-4 animate-spin text-magenta" /> : <span className="block h-4 w-4 rounded-full border-2 border-muted" />
+                    ) : r ? (
+                      <CheckCircle2 className="size-4 text-success" />
+                    ) : (
+                      <ShieldAlert className="size-4 text-warning" />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className={cn("block font-semibold", r === undefined && !running ? "text-muted-foreground" : "text-foreground")}>{c.label}</span>
+                    {(running || r !== undefined) && (
+                      <span className="block text-xs text-muted-foreground">{running ? c.running : r ? c.ok : issue.finding}</span>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-3 text-[11px] text-muted-foreground">Kontroller bu prototipte simülasyondur; gerçek TürkNet sistemlerine bağlanılmaz.</p>
+        </Box>
+      </>
+    )}
+    {finding && open && (st("remote") === "in_progress" || st("verify") === "in_progress") && (
+      <>
+        <GigaNote mood="working">Bağlantında bir sorun tespit ettim. Önce uzaktan çözebileceğimiz adımları deneyelim.</GigaNote>
+        <Box>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Tespit edilen sorun</p>
+          <p className="mt-1 text-sm font-semibold text-foreground">{finding}</p>
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin text-magenta" /> {st("remote") === "in_progress" ? `${issue.fix}…` : "Bağlantını tekrar kontrol ediyorum…"}
+          </p>
+        </Box>
+      </>
+    )}
+    {st("analysis") === "done" && light && st("recheck") !== "done" && open && <GigaNote>{light.say}</GigaNote>}
     {st("reconnect") === "in_progress" && (
       <Box>
         <p className="flex items-center gap-2 text-sm font-semibold text-primary">
@@ -305,52 +366,59 @@ export function AiUstaPanel({ wf }: { wf: Workflow }) {
         <Link to="/" className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">Ana sayfaya dön</Link>
       </div>
     )}
-    <Box>
-      <div className="flex items-center gap-4">
-        <img src={modemImg} alt="Modem görseli" width={120} height={120} className="h-24 w-24 object-contain" loading="lazy" />
-        <div className="flex-1">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">GIGA Teknik · ışık kontrolü</p>
-          {leds.length ? (
-            <ul className="mt-1.5 space-y-1 text-xs">
-              {leds.map((l) => (
-                <li key={l.name} className="flex items-center gap-2">
-                  <span className={cn("h-2.5 w-2.5 rounded-full", l.ok ? "bg-success" : "bg-destructive")} />
-                  <span className="w-16 font-semibold text-foreground">{l.name}</span>
-                  <span className="text-muted-foreground">{l.state}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-1 text-sm text-muted-foreground">Modem ışıklarını görmek için kamera görüntüsünü bekliyorum.</p>
-          )}
-        </div>
-      </div>
-      {leds.some((l) => !l.ok) && <p className="mt-3 rounded-2xl bg-orange-soft p-3 text-sm text-foreground">İnternet göstergenizde anormal bir durum görünüyor. Şimdi modem bağlantınızı birlikte kontrol edelim.</p>}
-      <p className="mt-3 text-[11px] text-muted-foreground">Görsel analiz bu prototipte simülasyondur; sonuç kesin teşhis değildir, yalnızca sıradaki güvenli adımı seçmek içindir.</p>
-      {wf.status === "completed" && wf.data["reward"] === true && (
-        <div className="mt-3 rounded-2xl bg-magenta-soft p-3">
-          {rating ? (
-            <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <CheckCircle2 className="size-4 text-success" /> Geri bildiriminiz için teşekkürler
-            </p>
-          ) : (
-            <>
-              <p className="text-sm font-semibold text-foreground">GIGA Teknik ile çözüm deneyiminiz nasıldı?</p>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                {([3, 2, 1] as const).map((n) => (
-                  <button key={n} type="button" onClick={() => rateUsta(wf.id, n)} className="min-h-11 rounded-xl bg-card text-sm font-semibold text-primary">
-                    {n === 3 ? "Çok iyi" : n === 2 ? "İdare eder" : "Kötü"}
-                  </button>
+    {(leds.length > 0 || cable) && (
+      <Box>
+        <div className="flex items-center gap-4">
+          <img src={modemImg} alt="Modem görseli" width={120} height={120} className="h-24 w-24 object-contain" loading="lazy" />
+          <div className="flex-1">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Modem kontrolü</p>
+            {leds.length > 0 && (
+              <ul className="mt-1.5 space-y-1 text-xs">
+                {leds.map((l) => (
+                  <li key={l.name} className="flex items-center gap-2">
+                    <span className={cn("h-2.5 w-2.5 rounded-full", l.ok ? "bg-success" : "bg-destructive")} />
+                    <span className="w-16 font-semibold text-foreground">{l.name}</span>
+                    <span className="text-muted-foreground">{l.state}</span>
+                  </li>
                 ))}
-              </div>
-            </>
-          )}
-          <p className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Award className="size-4 text-magenta" /> Doğrulanmış çözüm rozeti örnek gösterimdir; gerçek ödül veya kampanya vaadi değildir.
-          </p>
+              </ul>
+            )}
+            {cable && (
+              <p className="mt-1.5 flex items-center gap-2 text-xs">
+                <span className={cn("h-2.5 w-2.5 rounded-full", cable.id === "ok" ? "bg-success" : "bg-warning")} />
+                <span className="font-semibold text-foreground">Kablolar</span>
+                <span className="text-muted-foreground">{cable.label}</span>
+              </p>
+            )}
+          </div>
         </div>
-      )}
-    </Box>
+        {leds.some((l) => !l.ok) && open && <p className="mt-3 rounded-2xl bg-orange-soft p-3 text-sm text-foreground">İnternet göstergende anormal bir durum görünüyor. Şimdi modem bağlantını birlikte kontrol edelim.</p>}
+        <p className="mt-3 text-[11px] text-muted-foreground">Değerlendirme bu prototipte simülasyondur; sonuç kesin teşhis değildir, yalnızca sıradaki güvenli adımı seçmek içindir.</p>
+      </Box>
+    )}
+    {wf.status === "completed" && wf.data["reward"] === true && (
+      <Box>
+        {rating ? (
+          <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <CheckCircle2 className="size-4 text-success" /> Geri bildiriminiz için teşekkürler
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-foreground">GIGA Teknik ile çözüm deneyiminiz nasıldı?</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {([3, 2, 1] as const).map((n) => (
+                <button key={n} type="button" onClick={() => rateUsta(wf.id, n)} className="min-h-11 rounded-xl bg-magenta-soft text-sm font-semibold text-primary">
+                  {n === 3 ? "Çok iyi" : n === 2 ? "İdare eder" : "Kötü"}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        <p className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <Award className="size-4 text-magenta" /> Doğrulanmış çözüm rozeti örnek gösterimdir; gerçek ödül veya kampanya vaadi değildir.
+        </p>
+      </Box>
+    )}
     </div>
   );
 }
