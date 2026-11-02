@@ -7,17 +7,15 @@ import type { OpItem } from "@/data/mock";
 
 export function CampaignCard({ className }: { className?: string }) {
   return (
-    <AppLink to="/islem/fiyat-sabitle" className={cn("block rounded-card bg-campaign p-5 text-primary-foreground shadow-card", className)}>
-      <div className="flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-card text-primary">
-          <HandCoins className="size-6" strokeWidth={1.75} />
-        </span>
-        <p className="flex-1 text-lg font-semibold leading-snug">12 Aylık Peşin Ödemede İndirimli Fiyat Fırsatı</p>
-        <ChevronRight className="mt-1 size-5 shrink-0" />
-      </div>
-      <p className="mt-3 text-sm leading-relaxed text-primary-foreground/95">
-        12 aylık peşin ödeyerek yılda ₺2.400 tasarruf edebilir ve 12 ay boyunca fiyatı sabitleyebilirsin. Böylece 2.5 ayın ücreti cebinde kalır. Peşin fiyatına 3 taksit imkanı da var.
-      </p>
+    <AppLink to="/islem/fiyat-sabitle" className={cn("flex items-center gap-3 rounded-card bg-campaign px-4 py-3 text-primary-foreground shadow-card", className)}>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card text-primary">
+        <HandCoins className="size-5" strokeWidth={1.75} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold leading-snug">12 Ay Peşin Öde, ₺2.400 Kazan</span>
+        <span className="block text-xs text-primary-foreground/90">Fiyatın 12 ay sabit · 3 taksit imkanı</span>
+      </span>
+      <ChevronRight className="size-5 shrink-0" />
     </AppLink>
   );
 }

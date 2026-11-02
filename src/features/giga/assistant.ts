@@ -24,7 +24,7 @@ export interface GigaReply {
   actions?: GigaAction[];
   /** Streams the speed-guard steps inside the chat. */
   agent?: "speed";
-  topic: Intent | "human" | "privacy" | "payment" | "modem" | "wifi" | "family" | "subscription" | "upgrade" | "clarify";
+  topic: Intent | "human" | "privacy" | "hallet" | "payment" | "modem" | "wifi" | "family" | "subscription" | "upgrade" | "clarify";
 }
 
 export interface GigaContext {
@@ -73,6 +73,14 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
       topic: "privacy",
       text: PRIVACY_REPLY,
       actions: [{ label: "Otomatik kontrolleri yönet", kind: "go", to: "/ajanlar" }],
+    };
+  }
+
+  if (has(t, "hallet")) {
+    return {
+      topic: "hallet",
+      text: "Ne yapmak istediğini yazman yeterli. Taşınma, fatura kontrolü veya bağlantı sorunu için süreci birlikte başlatalım; onayın gereken her adımda önce sana sorarım.",
+      actions: [{ label: "Benim İçin Hallet", kind: "go", to: "/hallet" }, ...CLARIFY_PROMPTS.slice(0, 3).map((p) => ({ label: p, kind: "ask" as const, prompt: p }))],
     };
   }
 
