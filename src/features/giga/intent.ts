@@ -58,12 +58,12 @@ const RULES: Record<Exclude<GigaTopic, "track" | "yes" | "no" | "greeting" | "th
   video: [["goruntulu", 4], ["video", 3], ["kamerali gorus", 4], ["yuz yuze", 3]],
   privacy: [["izliyor", 4], ["izleme", 3], ["gizlilik", 4], ["kisisel veri", 4], ["verilerim", 3], ["kvkk", 4], ["neyi kontrol", 4], ["ne kontrol", 3], ["hangi bilgi", 3], ["mesajlarimi", 3], ["gecmisimi", 3], ["gezinme", 3]],
   hallet: [["hallet", 4], ["benim icin yap", 3]],
-  relocation: [["tasin", 4], ["nakil", 4], ["yeni adres", 4], ["adres degis", 4], ["adresimi degis", 4], ["ev degis", 3], ["yeni ev", 3], ["baska eve", 3], ["baska sehre", 3], ["tasiyorum", 4], ["tasima", 3]],
+  relocation: [["tasin", 4], ["nakil", 4], ["nakl", 4], ["yeni adres", 4], ["adres degis", 4], ["adresimi degis", 4], ["ev degis", 3], ["yeni ev", 3], ["baska eve", 3], ["baska sehre", 3], ["tasiyorum", 4], ["tasima", 3]],
   billing: [["fatura", 3], ["mukerrer", 4], ["iki kez", 3], ["iki kere", 3], ["tutarsiz", 4], ["borc", 3], ["ucret", 2], ["tahsil", 3], ["pahali", 3], ["yuksek", 1], ["fazla", 1], ["zam", 2], ["itiraz", 3], ["neden bu kadar", 2], ["kampanya bitti", 2]],
   refund: [["iade", 4], ["param geri", 4], ["paramı geri", 4], ["geri odeme", 4]],
   payment: [["nasil ode", 4], ["odeme yap", 3], ["otomatik odeme", 4], ["talimat", 3], ["son odeme", 3], ["kartla", 2], ["kredi karti", 2], ["ode", 1]],
   speed: [["yavas", 4], ["hiz dus", 4], ["hizim", 3], ["dusuk hiz", 4], ["hiz sorun", 4], ["donuyor", 3], ["kasiyor", 3], ["takiliyor", 3], ["gecikme", 3], ["ping", 2], ["lag", 2], ["yuklenmiyor", 2], ["hizi dusuk", 4], ["mbps", 2]],
-  outage: [["calismiyor", 4], ["kesildi", 4], ["kesinti", 4], ["kesik", 3], ["internet yok", 4], ["baglanti yok", 4], ["kopuyor", 3], ["koptu", 3], ["baglanamiyorum", 4], ["baglanmiyor", 4], ["gitti", 2], ["girmiyor", 3], ["acilmiyor", 2], ["cokmus", 3], ["cekmiyor", 1]],
+  outage: [["calismiyor", 4], ["kesildi", 4], ["kesinti", 4], ["internet kesik", 4], ["hat kesik", 4], ["internet yok", 4], ["baglanti yok", 4], ["kopuyor", 3], ["koptu", 3], ["baglanamiyorum", 4], ["baglanmiyor", 4], ["gitti", 2], ["girmiyor", 3], ["acilmiyor", 2], ["cokmus", 3], ["cekmiyor", 1]],
   modem: [["modem", 3], ["isik", 3], ["led", 2], ["kirmizi", 3], ["yanip son", 3], ["router", 3], ["fotograf", 2]],
   wifi: [["wifi", 4], ["wi-fi", 4], ["kablosuz", 4], ["sinyal", 3], ["cekmiyor", 2], ["kapsama", 2], ["odada", 1], ["qr", 3]],
   internet: [["internet", 1], ["sorun", 1], ["problem", 1], ["ariza", 2], ["teknik", 1], ["baglanti", 1]],
@@ -87,14 +87,18 @@ function editDistance(a: string, b: string): number {
   for (let j = 1; j <= b.length; j++) dp[0]![j] = j;
   for (let i = 1; i <= a.length; i++)
     for (let j = 1; j <= b.length; j++)
+    {
       dp[i]![j] = Math.min(dp[i - 1]![j]! + 1, dp[i]![j - 1]! + 1, dp[i - 1]![j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1));
+      // Swapped neighbours ("fatrua") count as one typo.
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) dp[i]![j] = Math.min(dp[i]![j]!, dp[i - 2]![j - 2]! + 1);
+    }
   return dp[a.length]![b.length]!;
 }
 
-/** A stem matches a word that starts with it, or (stems of 5+ letters) one typo away. */
+/** A stem matches a word that starts with it, or (stems of 6+ letters) one typo away. Shorter stems stay exact to avoid "model"→"modem" style mix-ups. */
 function tokenMatches(token: string, stem: string): boolean {
   if (token.startsWith(stem)) return true;
-  if (stem.length < 5 || token.length < stem.length - 1) return false;
+  if (stem.length < 6 || token.length < stem.length - 1) return false;
   for (let len = stem.length - 1; len <= stem.length + 1; len++) {
     if (editDistance(token.slice(0, len), stem) <= 1) return true;
   }
@@ -103,7 +107,7 @@ function tokenMatches(token: string, stem: string): boolean {
 
 function matches(text: string, tokens: string[], stem: string): boolean {
   if (stem.includes(" ")) return text.includes(stem);
-  if (stem.length <= 3) return tokens.some((t) => t === stem || (stem.length === 3 && t.startsWith(stem)));
+  if (stem.length <= 3) return tokens.includes(stem);
   return tokens.some((t) => tokenMatches(t, stem));
 }
 
