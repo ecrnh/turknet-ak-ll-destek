@@ -27,7 +27,7 @@ export function GigaAvatar({ size = 40, mood = "idle", className, label = true }
 
   const eye = (i: number) =>
     mood === "done" ? (
-      <span key={i} className="block rounded-t-full border-t-[2.5px] border-x-[2.5px] border-primary-foreground" style={{ width: eyeW * 1.6, height: eyeW * 0.9, borderWidth: Math.max(2, size * 0.05) }} />
+      <span key={i} className="block rounded-t-full border-solid border-primary-foreground" style={{ width: eyeW * 1.7, height: eyeW * 1.1, borderWidth: `${Math.max(2, size * 0.05)}px ${Math.max(2, size * 0.05)}px 0` }} />
     ) : (
       <motion.span
         key={i}
