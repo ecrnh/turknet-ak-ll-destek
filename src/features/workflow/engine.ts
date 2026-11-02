@@ -281,7 +281,8 @@ export function schedule(op: string, wfId: string, delayMs: number, payload?: st
 export const hasOp = (wfId: string | null | undefined, op?: string) => !!wfId && W.getState().ops.some((o) => o.workflowId === wfId && (!op || o.op === op));
 
 function runOps(filter: (o: { dueAt: number; workflowId: string }) => boolean) {
-  const due = W.getState().ops.filter(filter);
+  // A job whose handler is not registered (yet) stays queued instead of being silently dropped.
+  const due = W.getState().ops.filter((o) => filter(o) && !!opHandlers[o.op]);
   if (!due.length) return 0;
   const ids = new Set(due.map((o) => o.id));
   W.setState((s) => ({ ops: s.ops.filter((o) => !ids.has(o.id)) }));
