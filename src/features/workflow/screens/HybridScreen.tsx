@@ -10,7 +10,7 @@ import { HYBRID_COPY as C } from "../copy";
 import { HYBRID_OFFER_AFTER_H, hybridOfferOpen } from "../rules";
 import { activateHybrid, checkHybrid, declineHybrid, outageHours, requestHybridDevice } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
-import { ChecksList, DeviceTracker, FreeBadge, LinkStatus, OutageMeta } from "../components/hybrid";
+import { ChecksList, ConnectionMap, DeviceTracker, FreeBadge, HybridBoxCard, LinkStatus, OutageMeta } from "../components/hybrid";
 import { DemoNote, TechDetails } from "../components/ui";
 
 const Card = ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={cn("rounded-card bg-card p-5 shadow-card", className)}>{children}</div>;
@@ -52,12 +52,16 @@ export function HybridScreen() {
               <Router className="size-6" />
             </span>
             <div className="flex-1">
-              <p className="text-lg font-semibold leading-snug">Kesintide bağlı kalın</p>
+              <p className="text-lg font-semibold leading-snug">İnternetiniz kesilse bile bağlantınız devam etsin.</p>
               <FreeBadge onDark className="mt-1" />
             </div>
           </div>
-          <p className="mt-3 text-sm text-primary-foreground/85">{C.what}</p>
+          <p className="mt-3 text-sm text-primary-foreground/85">TürkNet Hibrit İnternet ile sabit bağlantınız kesildiğinde mobil yedek bağlantınızı kullanabilirsiniz. {C.what}</p>
         </div>
+
+        <Card>
+          <ConnectionMap />
+        </Card>
 
         {/* No outage */}
         {!o && (
@@ -96,7 +100,7 @@ export function HybridScreen() {
         {/* After 24 hours */}
         {after24 && (
           <>
-            {h.status !== "active" && (
+            {h.status !== "active" && h.status !== "paused" && (
               <Card>
                 <p className="font-semibold text-primary">Uygunluk kontrolü</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">Yedek bağlantı için cihazınızı, SIM'inizi ve mobil kapsamayı kontrol ediyoruz.</p>
@@ -222,6 +226,8 @@ export function HybridScreen() {
             <OutageMeta o={o} now={now} className="mt-3" />
           </Card>
         )}
+
+        <HybridBoxCard />
 
         <TechDetails>
           {o && (
