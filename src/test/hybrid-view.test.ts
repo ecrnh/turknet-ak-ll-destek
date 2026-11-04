@@ -43,6 +43,7 @@ describe("Hibrit İnternet ekranı · durum tutarlılığı", () => {
   it("24 saat sonrası otomatik açılan yedek 'Yedek bağlantı aktif' ve Kesik/Aktif/Bağlı gösterir", () => {
     const v = hybridView({ ...base, fixed: "down", outageOngoing: true, hours: 25, offerOpen: true, status: "active", activatedBy: "auto" });
     expect(v.title).toBe("Yedek bağlantı aktif");
+    expect(v.badge.label).toBe("NetBox'ta");
     expect([v.main, v.box, v.mobile]).toEqual(["Kesik", "Aktif", "Bağlı"]);
     expect(v.failbackNote).toBe(true);
     expect(v.showOpen).toBe(false);
