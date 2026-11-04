@@ -12,7 +12,7 @@ import { TurknetLogo } from "./headers";
  * deliver lands on its lock screen, so the audience sees what reaches the customer
  * while the app is closed. Tapping a card opens that page in the main app.
  */
-export function LockPhone({ onHide }: { onHide: () => void }) {
+export function LockPhone({ onHide, className = "hidden xl:flex" }: { onHide: () => void; className?: string }) {
   const list = useAppStore((s) => s.lockScreen);
   const markRead = useAppStore((s) => s.markRead);
   const dismissLock = useAppStore((s) => s.dismissLock);
@@ -30,7 +30,7 @@ export function LockPhone({ onHide }: { onHide: () => void }) {
   const date = new Date(now).toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" });
 
   return (
-    <div className="hidden shrink-0 flex-col items-center xl:flex">
+    <div className={`shrink-0 flex-col items-center ${className}`}>
       <div className="mb-3 flex w-[280px] items-center justify-between">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-magenta">Sunum aracı</p>
