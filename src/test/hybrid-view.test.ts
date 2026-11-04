@@ -81,3 +81,39 @@ describe("Ana sayfa kesinti kartı · tahmini çözüm süresi", () => {
     expect(outageRemainingH(25, null, false)).toBe(4);
   });
 });
+
+import { hybridSwitchView } from "@/features/workflow/hybridView";
+
+describe("Hibrit İnternet anahtarı ve ana buton aynı durumu gösterir", () => {
+  const sw = { status: "offered" as const, paused: false, switching: null, openRequested: false, offerOpen: true };
+
+  it("kapalıyken anahtar kapalı, etiket 'Kapalı', buton 'Hibrit Box'ı Aç'", () => {
+    const v = hybridSwitchView(sw);
+    expect([v.on, v.label, v.cta, v.canToggle, v.ctaEnabled]).toEqual([false, "Kapalı", "Hibrit Box'ı Aç", true, true]);
+  });
+
+  it("aktivasyon sürerken buton 'Aktive Ediliyor...' der ve ikisi de kilitlenir", () => {
+    for (const v of [hybridSwitchView({ ...sw, status: "activating" }), hybridSwitchView({ ...sw, status: "checking", openRequested: true }), hybridSwitchView({ ...sw, status: "active", paused: true, switching: "on" })]) {
+      expect(v.cta).toBe("Aktive Ediliyor...");
+      expect(v.busy).toBe("opening");
+      expect(v.canToggle).toBe(false);
+      expect(v.ctaEnabled).toBe(false);
+    }
+  });
+
+  it("aktifken anahtar açık, etiket 'Aktif', buton 'Hibrit İnternet Aktif'; anahtar kapatılabilir", () => {
+    const v = hybridSwitchView({ ...sw, status: "active" });
+    expect([v.on, v.label, v.cta, v.canToggle, v.ctaEnabled]).toEqual([true, "Aktif", "Hibrit İnternet Aktif", true, false]);
+  });
+
+  it("kapatma sürerken kilitlenir; kapatıldıktan sonra yeniden açılabilir", () => {
+    expect(hybridSwitchView({ ...sw, status: "active", switching: "off" })).toMatchObject({ busy: "closing", canToggle: false, label: "Kapatılıyor…" });
+    expect(hybridSwitchView({ ...sw, status: "active", paused: true })).toMatchObject({ on: false, label: "Kapalı", canToggle: true, cta: "Hibrit Box'ı Aç" });
+  });
+
+  it("ilk 24 saatte ve kapsama/cihaz yokken anahtar açılamaz", () => {
+    expect(hybridSwitchView({ ...sw, offerOpen: false })).toMatchObject({ canToggle: false, cta: null });
+    expect(hybridSwitchView({ ...sw, status: "no_coverage" })).toMatchObject({ canToggle: false, cta: null });
+    expect(hybridSwitchView({ ...sw, status: "no_device" })).toMatchObject({ canToggle: false, cta: null });
+  });
+});

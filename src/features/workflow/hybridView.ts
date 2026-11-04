@@ -156,6 +156,45 @@ export function hybridView(i: HybridViewInput): HybridView {
 }
 
 /**
+ * The Hibrit İnternet on/off control on the outage card. The toggle and the big
+ * "Hibrit Box'ı Aç" button read this one view, so they can never disagree.
+ */
+export interface HybridSwitchInput {
+  status: HybridStatus;
+  paused: boolean;
+  switching?: "on" | "off" | null | undefined;
+  openRequested?: boolean | undefined;
+  /** The 24-hour rule allows opening the backup now. */
+  offerOpen: boolean;
+}
+export interface HybridSwitchView {
+  /** Position of the toggle (the target position while a command runs). */
+  on: boolean;
+  busy: "opening" | "closing" | null;
+  /** Status label next to the toggle. */
+  label: "Kapalı" | "Aktif" | "Açılıyor…" | "Kapatılıyor…";
+  /** The toggle can be tapped now. */
+  canToggle: boolean;
+  /** Big button text; null hides it. */
+  cta: "Hibrit Box'ı Aç" | "Hibrit İnternet Aktif" | "Aktive Ediliyor..." | "Kapatılıyor..." | null;
+  /** The big button can be tapped (only to open). */
+  ctaEnabled: boolean;
+}
+
+const OPENABLE: HybridStatus[] = ["offered", "ready", "failed", "checking"];
+
+export function hybridSwitchView(i: HybridSwitchInput): HybridSwitchView {
+  const running = i.status === "active" && !i.paused;
+  const busy: HybridSwitchView["busy"] =
+    i.switching === "off" ? "closing" : i.switching === "on" || i.status === "activating" || (i.status === "checking" && !!i.openRequested) ? "opening" : null;
+  if (busy === "opening") return { on: true, busy, label: "Açılıyor…", canToggle: false, cta: "Aktive Ediliyor...", ctaEnabled: false };
+  if (busy === "closing") return { on: false, busy, label: "Kapatılıyor…", canToggle: false, cta: "Kapatılıyor...", ctaEnabled: false };
+  if (running) return { on: true, busy: null, label: "Aktif", canToggle: true, cta: "Hibrit İnternet Aktif", ctaEnabled: false };
+  const openable = i.offerOpen && ((i.status === "active" && i.paused) || OPENABLE.includes(i.status));
+  return { on: false, busy: null, label: "Kapalı", canToggle: openable, cta: openable ? "Hibrit Box'ı Aç" : null, ctaEnabled: openable };
+}
+
+/**
  * Estimated hours until the outage is fixed. Uses the known estimate when there is one;
  * otherwise a demo estimate that always leaves a few hours ahead (never "0 saat").
  * Returns null once a known estimate has passed (the estimate is being updated).
