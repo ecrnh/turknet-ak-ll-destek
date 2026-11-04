@@ -24,7 +24,6 @@ const RECENT_FIX_MS = 3 * 24 * 60 * 60 * 1000;
 export function AgentActivityCard() {
   const run = useAgentsStore((s) => s.speedRun);
   const actions = useAgentsStore((s) => s.actions);
-  const backupOn = useWorkflowStore((s) => s.hybrid.status === "active");
   const workflows = useWorkflowStore((s) => s.workflows);
   const openHelp = useAppStore((s) => s.openHelp);
   const acting = useActingAccount();
@@ -39,14 +38,14 @@ export function AgentActivityCard() {
 
   return (
     <section aria-label="GIGA" className="rounded-card bg-plum px-4 py-3.5 text-primary-foreground shadow-float">
-      <Link to={running ? "/ajanlar/hiz" : backupOn ? "/hibrit" : "/ajanlar"} className="flex items-start gap-3">
-        <GigaAvatar size={36} mood={running ? "working" : backupOn ? "listening" : "idle"} label={false} />
+      <Link to={running ? "/ajanlar/hiz" : "/ajanlar"} className="flex items-start gap-3">
+        <GigaAvatar size={36} mood={running ? "working" : "idle"} label={false} />
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-foreground/70">
             <GigaName />
           </p>
           <p className="text-sm font-semibold leading-snug">
-            {running ? "Hızını düzeltmeye çalışıyorum…" : backupOn ? "Yedek bağlantıdasın; ana bağlantın düzelince haber vereceğiz" : GIGA.homeGreeting.replace("{name}", name)}
+            {running ? "Hızını düzeltmeye çalışıyorum…" : GIGA.homeGreeting.replace("{name}", name)}
           </p>
         </div>
         <ChevronRight className="mt-1 size-5 shrink-0" />
