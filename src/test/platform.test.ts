@@ -149,7 +149,7 @@ describe("Ücretsiz Hibrit İnternet", () => {
     startOutage(2);
     setOutageElapsed(25);
     expect(W.getState().hybrid.status).toBe("offered");
-    expect(pushes()[0]).toBe("İnternet kesintiniz 24 saati aştı");
+    expect(pushes()[0]).toBe("Tek tıkla internete erişebilirsin");
     expect(activateHybrid()).toBe(false);
     checkHybrid();
     flushOps();
