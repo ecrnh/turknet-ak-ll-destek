@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, CloudOff, Loader2, Power, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { CheckCircle2, Clock, CloudOff, Loader2, Power, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
@@ -133,23 +133,42 @@ export function DeviceTracker({ d }: { d: DeviceRequest }) {
 }
 
 /**
- * Hibrit İnternet on/off service control: router icon, name and "free" line on the left,
- * a switch with its state label on the right. A running command shows a spinner in the
- * thumb and locks the switch so it can't be tapped twice.
+ * Hibrit İnternet on/off service control — the whole Hibrit area on the home page:
+ * router icon, name and "free" line on the left, a switch with its state pill on the right.
+ * A running command shows a spinner in the thumb and locks the switch so it can't be tapped twice.
  */
-export function HybridSwitchCard({ sw, active, auto, note, onChange }: { sw: HybridSwitchView; active: boolean; auto: boolean; note: string | null; onChange: (on: boolean) => void }) {
+export function HybridSwitchCard({ sw, active, auto, note, action, onChange }: { sw: HybridSwitchView; active: boolean; auto: boolean; note: string | null; action?: ReactNode; onChange: (on: boolean) => void }) {
   const locked = !sw.canToggle;
+  const on = sw.on && !sw.busy;
   return (
-    <div className={cn("mt-3 rounded-2xl border p-3 transition-colors", sw.on && !sw.busy ? "border-success/30 bg-success-soft/40" : "border-border")}>
+    <section
+      aria-labelledby="hybrid-switch-title"
+      aria-live="polite"
+      className={cn(
+        "relative overflow-hidden rounded-card border bg-card p-4 shadow-card transition-colors duration-300",
+        on ? "border-success/25 bg-gradient-to-br from-success-soft/70 via-card to-card" : sw.busy ? "border-magenta/20" : "border-transparent",
+      )}
+    >
       <div className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-icon-box-border bg-icon-box text-primary">
-          <Router className="size-5" strokeWidth={1.75} aria-hidden />
+        <span
+          className={cn(
+            "relative flex size-12 shrink-0 items-center justify-center rounded-2xl border transition-colors duration-300",
+            on ? "border-success/20 bg-success-soft text-success" : sw.busy ? "border-magenta/20 bg-magenta-soft text-magenta" : "border-icon-box-border bg-icon-box text-primary",
+          )}
+        >
+          <Router className="size-6" strokeWidth={1.6} aria-hidden />
+          {on && (
+            <span className="absolute -right-0.5 -top-0.5 flex size-3" aria-hidden>
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60" />
+              <span className="relative inline-flex size-3 rounded-full border-2 border-card bg-success" />
+            </span>
+          )}
         </span>
         <div className="min-w-0 flex-1">
-          <p id="hybrid-switch-title" className="text-sm font-semibold text-primary">Hibrit İnternet</p>
-          <p className="text-xs text-muted-foreground">Ücretsiz, aboneliğinize dahil</p>
+          <p id="hybrid-switch-title" className="text-[15px] font-semibold leading-tight text-primary">Hibrit İnternet</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Ücretsiz, aboneliğinize dahil</p>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1">
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
           <button
             type="button"
             role="switch"
@@ -160,36 +179,62 @@ export function HybridSwitchCard({ sw, active, auto, note, onChange }: { sw: Hyb
             disabled={locked}
             onClick={() => onChange(!sw.on)}
             className={cn(
-              "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              sw.on ? "bg-magenta" : "bg-input",
+              "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full p-0.5 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              sw.on ? "bg-magenta shadow-[inset_0_1px_2px_rgb(0_0_0/0.15)]" : "bg-input",
               locked && !sw.busy && "cursor-not-allowed opacity-50",
               sw.busy && "cursor-wait",
             )}
           >
-            <span className={cn("flex size-6 items-center justify-center rounded-full bg-card shadow-md transition-transform duration-200", sw.on ? "translate-x-5" : "translate-x-0")}>
-              {sw.busy && <Loader2 className="size-3.5 animate-spin text-magenta" aria-hidden />}
+            <span className={cn("flex size-7 items-center justify-center rounded-full bg-card shadow-md transition-transform duration-300 ease-out", sw.on ? "translate-x-6" : "translate-x-0")}>
+              {sw.busy && <Loader2 className="size-4 animate-spin text-magenta" aria-hidden />}
             </span>
           </button>
-          <span id="hybrid-switch-state" className={cn("text-[11px] font-semibold", sw.busy ? "text-muted-foreground" : sw.on ? "text-success" : "text-muted-foreground")}>
+          <span
+            id="hybrid-switch-state"
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+              on ? "bg-success-soft text-success" : sw.busy ? "bg-magenta-soft text-magenta" : "bg-muted text-muted-foreground",
+            )}
+          >
+            <span className={cn("size-1.5 rounded-full", on ? "bg-success" : sw.busy ? "animate-pulse bg-magenta" : "bg-muted-foreground/50")} aria-hidden />
             {sw.label}
           </span>
         </div>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">İnternet kesintisi sırasında alternatif bağlantınızı kullanabilirsiniz.</p>
-      {active && !sw.busy && (
-        <p className="mt-2 flex items-start gap-1.5 rounded-xl bg-success-soft px-2.5 py-2 text-xs font-semibold text-success">
-          <CheckCircle2 className="mt-px size-3.5 shrink-0" aria-hidden />
-          {auto ? "Hibrit İnternet, önceden verdiğiniz izinle devreye alındı." : "Hibrit İnternet devreye alındı. Yedek bağlantıyla internete bağlısınız."}
+
+      <p className="mt-3 border-t border-border/70 pt-3 text-xs leading-relaxed text-muted-foreground">İnternet kesintisi sırasında alternatif bağlantınızı kullanabilirsiniz.</p>
+
+      {sw.busy && (
+        <p className="mt-2.5 flex items-center gap-2 rounded-xl bg-magenta-soft px-3 py-2 text-xs font-semibold text-magenta">
+          <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
+          {sw.busy === "opening" ? "Yedek bağlantınız açılıyor, birkaç saniye sürebilir." : "Yedek bağlantınız kapatılıyor."}
         </p>
       )}
-      {note && <p className="mt-1.5 text-xs font-semibold text-foreground/80">{note}</p>}
-    </div>
+      {active && !sw.busy && (
+        <div className="mt-2.5 flex items-start gap-2 rounded-xl bg-success-soft px-3 py-2.5 text-success">
+          <CheckCircle2 className="mt-px size-4 shrink-0" aria-hidden />
+          <div className="text-xs">
+            <p className="font-semibold">{auto ? "Önceden verdiğiniz izinle devreye alındı." : "Hibrit İnternet devreye alındı."}</p>
+            <p className="mt-0.5 text-success/80">Yedek bağlantıyla internete bağlısınız; ana bağlantınız düzelince otomatik geri dönersiniz.</p>
+          </div>
+        </div>
+      )}
+      {note && (
+        <div className="mt-2.5 flex items-start gap-2 rounded-xl bg-muted px-3 py-2 text-xs text-foreground/80">
+          <Clock className="mt-px size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">{note}</p>
+            {action}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
 const PRIMARY = "mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-float";
 
-/** Home outage card: only the Hibrit İnternet control and its action. */
+/** Home outage card: only the Hibrit İnternet on/off control. */
 export function OutageHomeCard() {
   const o = useWorkflowStore((s) => s.outage);
   const h = useWorkflowStore((s) => s.hybrid);
@@ -269,28 +314,20 @@ export function OutageHomeCard() {
   else if (h.status === "failed") hybridNote = "Son deneme başarısız oldu. Tekrar açmayı deneyebilirsiniz.";
 
   return (
-    <div className={cn("rounded-card bg-card p-5 shadow-card [&>*:first-child]:mt-0", sw.ctaEnabled && "border-gradient")} role="status" aria-live="polite">
-      <HybridSwitchCard sw={sw} active={active} auto={h.activatedBy === "auto"} note={hybridNote} onChange={change} />
-
-      {sw.cta ? (
-        <button
-          type="button"
-          onClick={() => change(true)}
-          disabled={!sw.ctaEnabled}
-          aria-busy={!!sw.busy}
-          className={cn(PRIMARY, "disabled:cursor-default", sw.on && !sw.busy && "bg-success-soft text-success shadow-none", sw.busy && "opacity-80")}
-        >
-          {sw.busy ? <Loader2 className="mr-2 size-4 animate-spin" /> : sw.on ? <CheckCircle2 className="mr-2 size-4" /> : <Power className="mr-2 size-4" />} {sw.cta}
-        </button>
-      ) : h.status === "no_device" && after24 && !h.device ? (
-        <Link to="/hibrit" className={PRIMARY}>
-          {C.noDevice.cta}
-        </Link>
-      ) : null}
-      <Link to="/hibrit" className="mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-primary">
-        Detayları Gör
-      </Link>
-    </div>
+    <HybridSwitchCard
+      sw={sw}
+      active={active}
+      auto={h.activatedBy === "auto"}
+      note={hybridNote}
+      onChange={change}
+      action={
+        h.status === "no_device" && after24 && !h.device ? (
+          <Link to="/hibrit" className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-magenta">
+            {C.noDevice.cta} →
+          </Link>
+        ) : undefined
+      }
+    />
   );
 }
 
