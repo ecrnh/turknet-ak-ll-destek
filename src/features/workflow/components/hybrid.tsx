@@ -165,7 +165,7 @@ export function HybridSwitchCard({ sw, active, auto, note, action, onChange }: {
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p id="hybrid-switch-title" className="text-[15px] font-semibold leading-tight text-primary">Hibrit İnternet</p>
+          <p id="hybrid-switch-title" className="text-[15px] font-semibold leading-tight text-primary">NetBox'u etkinleştir</p>
           <p className="mt-0.5 text-xs text-muted-foreground">Ücretsiz, aboneliğinize dahil</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -202,7 +202,7 @@ export function HybridSwitchCard({ sw, active, auto, note, action, onChange }: {
         </div>
       </div>
 
-      <p className="mt-3 border-t border-border/70 pt-3 text-xs leading-relaxed text-muted-foreground">İnternet kesintisi sırasında alternatif bağlantınızı kullanabilirsiniz.</p>
+      <p className="mt-3 border-t border-border/70 pt-3 text-xs leading-relaxed text-muted-foreground">İnternet kesintisi sırasında alternatif bağlantınızı aktif ederek kullanabilirsiniz.</p>
 
       {sw.busy && (
         <p className="mt-2.5 flex items-center gap-2 rounded-xl bg-magenta-soft px-3 py-2 text-xs font-semibold text-magenta">
