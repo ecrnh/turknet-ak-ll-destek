@@ -132,6 +132,61 @@ export function DeviceTracker({ d }: { d: DeviceRequest }) {
   );
 }
 
+/**
+ * Hibrit İnternet on/off service control: router icon, name and "free" line on the left,
+ * a switch with its state label on the right. A running command shows a spinner in the
+ * thumb and locks the switch so it can't be tapped twice.
+ */
+export function HybridSwitchCard({ sw, active, auto, note, onChange }: { sw: HybridSwitchView; active: boolean; auto: boolean; note: string | null; onChange: (on: boolean) => void }) {
+  const locked = !sw.canToggle;
+  return (
+    <div className={cn("mt-3 rounded-2xl border p-3 transition-colors", sw.on && !sw.busy ? "border-success/30 bg-success-soft/40" : "border-border")}>
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-icon-box-border bg-icon-box text-primary">
+          <Router className="size-5" strokeWidth={1.75} aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p id="hybrid-switch-title" className="text-sm font-semibold text-primary">Hibrit İnternet</p>
+          <p className="text-xs text-muted-foreground">Ücretsiz, aboneliğinize dahil</p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={sw.on}
+            aria-labelledby="hybrid-switch-title"
+            aria-describedby="hybrid-switch-state"
+            aria-busy={!!sw.busy}
+            disabled={locked}
+            onClick={() => onChange(!sw.on)}
+            className={cn(
+              "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              sw.on ? "bg-magenta" : "bg-input",
+              locked && !sw.busy && "cursor-not-allowed opacity-50",
+              sw.busy && "cursor-wait",
+            )}
+          >
+            <span className={cn("flex size-6 items-center justify-center rounded-full bg-card shadow-md transition-transform duration-200", sw.on ? "translate-x-5" : "translate-x-0")}>
+              {sw.busy && <Loader2 className="size-3.5 animate-spin text-magenta" aria-hidden />}
+            </span>
+          </button>
+          <span id="hybrid-switch-state" className={cn("text-[11px] font-semibold", sw.busy ? "text-muted-foreground" : sw.on ? "text-success" : "text-muted-foreground")}>
+            {sw.label}
+          </span>
+        </div>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">İnternet kesintisi sırasında alternatif bağlantınızı kullanabilirsiniz.</p>
+      {active && !sw.busy && (
+        <p className="mt-2 flex items-start gap-1.5 rounded-xl bg-success-soft px-2.5 py-2 text-xs font-semibold text-success">
+          <CheckCircle2 className="mt-px size-3.5 shrink-0" aria-hidden />
+          {auto ? "Hibrit İnternet, önceden verdiğiniz izinle devreye alındı." : "Hibrit İnternet devreye alındı. Yedek bağlantıyla internete bağlısınız."}
+        </p>
+      )}
+      {note && <p className="mt-1.5 text-xs font-semibold text-foreground/80">{note}</p>}
+    </div>
+  );
+}
+
 const PRIMARY = "mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-float";
 
 /** Home outage card: the problem, how long it has lasted, the estimated fix and the Hibrit İnternet action. */
