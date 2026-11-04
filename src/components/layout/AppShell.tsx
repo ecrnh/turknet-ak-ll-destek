@@ -58,9 +58,7 @@ function PhoneApp() {
         <Outlet />
       </main>
       {showNav && <BottomNav />}
-      <PushBanner />
       <CallSmsLayer />
-      <Toaster position="top-center" richColors closeButton />
     </div>
   );
 }
