@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useAppStore, type AppNotification } from "@/features/core/appStore";
-import { mergeNotification, pushAllowed } from "@/features/core/notifications";
+import { addToLockScreen, mergeNotification, pushAllowed } from "@/features/core/notifications";
 import {
   acceptFieldVisit,
   announceCollection,
@@ -130,5 +130,26 @@ describe("Akıllı bildirimler", () => {
     expect(pushAllowed("support", { push: true, campaignPush: false })).toBe(true);
     expect(pushAllowed("support", { push: false })).toBe(false);
     expect(useAppStore.getState().prefs.campaignPush).toBe(true);
+  });
+});
+
+describe("Kilitli telefon bildirimleri", () => {
+  const n = (id: string, kind: AppNotification["kind"] = "support"): AppNotification => ({ id, kind, title: id, body: "", time: 0, read: false });
+  it("birleşen güncelleme kilit ekranında eski kartın yerini alır", () => {
+    expect(addToLockScreen([n("a"), n("b")], { ...n("a"), title: "yeni" }).map((x) => x.title)).toEqual(["yeni", "b"]);
+  });
+  it("kilit ekranı en fazla 6 bildirim tutar", () => {
+    let list: AppNotification[] = [];
+    for (let i = 0; i < 9; i++) list = addToLockScreen(list, n(`x${i}`));
+    expect(list).toHaveLength(6);
+    expect(list[0]!.id).toBe("x8");
+  });
+  it("yalnızca telefona giden bildirimler kilit ekranına düşer", () => {
+    useAppStore.getState().reset();
+    useAppStore.getState().notify({ kind: "support", title: "sessiz", body: "" }, false);
+    useAppStore.getState().notify({ kind: "support", title: "önemli", body: "" });
+    useAppStore.getState().setPref("campaignPush", false);
+    useAppStore.getState().notify({ kind: "campaign", title: "kampanya", body: "" });
+    expect(useAppStore.getState().lockScreen.map((x) => x.title)).toEqual(["önemli"]);
   });
 });
