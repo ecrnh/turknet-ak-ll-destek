@@ -50,7 +50,7 @@ export function HybridScreen() {
   }, [offerOpen, h.status]);
 
   // A check or activation in progress can never stall on this screen.
-  const busyOp = h.status === "checking" || h.status === "activating";
+  const busyOp = h.status === "checking" || h.status === "activating" || !!h.switching;
   useEffect(() => {
     if (!busyOp) return;
     const t = window.setInterval(() => runOverdueOps(), 2500);
@@ -87,7 +87,7 @@ export function HybridScreen() {
     { icon: Smartphone, label: "Mobil yedek", value: v.mobile, tone: v.mobile === "Bağlı" ? "on" : "off" },
   ];
 
-  const busy = wantOpen && h.status === "checking";
+  const busy = (wantOpen && h.status === "checking") || !!h.switching;
 
   return (
     <div>

@@ -161,6 +161,28 @@ describe("Ücretsiz Hibrit İnternet", () => {
     expect(useAppStore.getState().net.status).toBe("mobile");
   });
 
+  it("anahtar ve buton tek komutla açar, kapatır, yeniden açar; işlem sürerken ikinci komut yok sayılır", async () => {
+    const { setHybridOn } = await import("@/features/workflow/services/hybrid");
+    startOutage(25);
+    expect(setHybridOn(true)).toBe(true);
+    expect(setHybridOn(true)).toBe(true);
+    drain();
+    expect(W.getState().hybrid.status).toBe("active");
+    expect(W.getState().hybrid.attempts).toBe(1);
+    expect(setHybridOn(false)).toBe(true);
+    expect(W.getState().hybrid.switching).toBe("off");
+    expect(setHybridOn(false)).toBe(false);
+    expect(setHybridOn(true)).toBe(false);
+    drain();
+    expect(W.getState().hybrid.pausedAt).not.toBeNull();
+    expect(W.getState().connectivity.mobile).toBe("standby");
+    expect(setHybridOn(true)).toBe(true);
+    drain();
+    expect(W.getState().hybrid.pausedAt).toBeNull();
+    expect(W.getState().hybrid.switching).toBeNull();
+    expect(W.getState().connectivity.mobile).toBe("active");
+  });
+
   it("uyumlu cihaz yoksa yedek bağlantı aktif gösterilmez; cihaz talebi tek kez açılır ve teslimattan sonra etkinleşir", () => {
     setCfg({ hybridDevice: false });
     startOutage(25);
