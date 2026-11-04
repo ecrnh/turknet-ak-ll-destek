@@ -57,6 +57,17 @@ function evaluate(wfId: string) {
   const note = repairNoteFor(hours, getWf(wfId)?.data["outageType"] === "regional");
   patchOutage({ repairNote: note, lastUpdateAt: now() });
   step(wfId, "repair", "in_progress", note);
+  // One-time push the first time the outage reaches 24 hours (even if the offer opened earlier).
+  if (hours >= 24 && !o.notified24) {
+    patchOutage({ notified24: true });
+    notify(
+      wfId,
+      "Tek tıkla internete erişebilirsin",
+      "Devam eden genel arıza durumunda internetsiz kalmanı istemiyoruz. Uygulama içerisinde Netbox butonunu aktif ederek ev internetini kesintisiz kullanmaya devam edebilirsin.",
+      "push",
+      "/hibrit",
+    );
+  }
   const status = W.getState().hybrid.status;
   if (hybridOfferOpen(hours, o.etaH)) {
     if (status !== "unavailable") return;
@@ -69,15 +80,7 @@ function evaluate(wfId: string) {
       early ? `Tahmini çözüm süresi ${o.etaH} saat · ücretsiz Hibrit İnternet sunuldu` : "Kesinti 24 saati aştı · ücretsiz Hibrit İnternet sunuldu",
       "Kural: 24 saatten uzun süren ya da sürmesi beklenen kesintide aboneliğe dahil yedek bağlantı sunulur",
     );
-    notify(
-      wfId,
-      early ? "Kesintinin 24 saatten uzun sürmesi bekleniyor" : "Tek tıkla internete erişebilirsin",
-      early
-        ? "Bağlantınızı sürdürmeniz için ücretsiz Hibrit İnternet desteğinizi etkinleştirebilirsiniz."
-        : "Devam eden genel arıza durumunda internetsiz kalmanı istemiyoruz. Uygulama içerisinde Netbox butonunu aktif ederek ev internetini kesintisiz kullanmaya devam edebilirsin.",
-      early ? "quiet" : "push",
-      "/hibrit",
-    );
+    if (early) notify(wfId, "Kesintinin 24 saatten uzun sürmesi bekleniyor", "Bağlantınızı sürdürmeniz için ücretsiz Hibrit İnternet desteğinizi etkinleştirebilirsiniz.", "quiet", "/hibrit");
     if (W.getState().hybrid.autoFailover) {
       log(wfId, "system", "info", "Otomatik geçiş izni var: uygunluk kontrolü başlatıldı", "Müşteri, 24 saati aşan kesintide yedek bağlantıya otomatik geçişi önceden onayladı");
       checkHybrid();

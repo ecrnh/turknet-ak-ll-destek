@@ -305,6 +305,8 @@ export interface OutageState {
   restoredAt: number | null;
   /** Restored card dismissed by the customer. */
   dismissed: boolean;
+  /** The one-time "outage reached 24 h" push was sent. */
+  notified24?: boolean;
 }
 
 export type HybridStatus =
