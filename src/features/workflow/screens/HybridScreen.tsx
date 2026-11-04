@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock, Gauge, Loader2, Power, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Clock, Gauge, Loader2, Power, TriangleAlert, Wifi } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
@@ -28,7 +28,7 @@ const PILL: Record<HybridTone | "muted", string> = {
 };
 
 function StatusPill({ label, tone, className }: { label: string; tone: HybridTone | "muted"; className?: string }) {
-  const Icon = tone === "ok" ? CheckCircle2 : tone === "warn" || tone === "down" ? TriangleAlert : tone === "info" && /lıyor|nıyor/.test(label) ? Loader2 : Clock;
+  const Icon = tone === "ok" ? CheckCircle2 : tone === "warn" || tone === "down" ? TriangleAlert : tone === "info" ? (/lıyor|nıyor/.test(label) ? Loader2 : Wifi) : Clock;
   return (
     <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold", PILL[tone], className)}>
       <Icon className={cn("size-3.5", Icon === Loader2 && "animate-spin")} aria-hidden /> {label}
