@@ -121,9 +121,11 @@ export function HybridScreen() {
     <div>
       <PageHeader title="İnternet Durumu" right={<StatusPill label={v.badge.label} tone={v.badge.tone} className="mr-1" />} />
       <div className="space-y-3 px-4 pb-4">
-        <section className={card}>
-          <p className="text-lg font-bold leading-snug text-primary">İnternetin kesilse bile bağlantın NetBox ile devam etsin.</p>
-        </section>
+        {info && (
+          <section className={card}>
+            <p className="text-lg font-bold leading-snug text-primary">İnternetin kesilse bile bağlantın NetBox ile devam etsin.</p>
+          </section>
+        )}
 
         {info ? (
           <section className={card} aria-labelledby="net-status-title" aria-live="polite">
