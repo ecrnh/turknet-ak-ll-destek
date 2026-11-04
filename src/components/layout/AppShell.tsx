@@ -12,6 +12,7 @@ import { fmtClock } from "@/lib/format";
 import { CallSmsLayer } from "@/features/workflow/components/CallSms";
 import { BottomNav } from "./BottomNav";
 import { ActingBanner, PushBanner, Splash } from "./Overlays";
+import { ContextualGiga } from "@/features/giga/ContextualGiga";
 import { TurknetLogo } from "./headers";
 
 const NO_NAV = ["/goruntulu-destek/gorusme", "/qr/tara"];
@@ -57,6 +58,7 @@ function PhoneApp() {
       <main ref={scroller} id="tn-scroll" className={showNav ? "flex-1 overflow-y-auto pb-28 no-scrollbar" : "flex-1 overflow-y-auto no-scrollbar"}>
         <Outlet />
       </main>
+      <ContextualGiga />
       {showNav && <BottomNav />}
       <CallSmsLayer />
     </div>
