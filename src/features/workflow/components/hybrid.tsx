@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock, CloudOff, Loader2, Power, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, CloudOff, Loader2, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
 import { type ReactNode, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
@@ -180,7 +180,7 @@ export function HybridSwitchCard({ sw, active, auto, note, action, onChange }: {
             onClick={() => onChange(!sw.on)}
             className={cn(
               "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full p-0.5 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              sw.on ? "bg-magenta shadow-[inset_0_1px_2px_rgb(0_0_0/0.15)]" : "bg-input",
+              sw.on ? "bg-magenta" : "bg-input",
               locked && !sw.busy && "cursor-not-allowed opacity-50",
               sw.busy && "cursor-wait",
             )}
