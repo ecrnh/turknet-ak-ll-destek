@@ -74,7 +74,6 @@ export function AppShell() {
   const lockPhone = useAppStore((s) => s.prefs.lockPhone);
   const showLock = ready && lockPhone !== false;
   const [mobilePanel, setMobilePanel] = useState(false);
-  const [lockOverlay, setLockOverlay] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
@@ -90,7 +89,7 @@ export function AppShell() {
   }
 
   return (
-    <div className={cn("min-h-dvh w-full sm:flex sm:items-center sm:justify-center sm:gap-10 sm:p-6", showLock && "xl:gap-8")}>
+    <div className={cn("min-h-dvh w-full sm:flex sm:items-center sm:justify-center sm:gap-10 sm:p-6", showLock && "sm:gap-3 sm:p-3 xl:gap-8 xl:p-6")}>
       <aside className={cn("hidden max-w-[260px]", showLock ? "2xl:block" : "xl:block")}>
         <TurknetLogo className="text-6xl" />
         <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-magenta">Product Bootcamp · Final Case</p>
@@ -101,49 +100,36 @@ export function AppShell() {
         </Link>
       </aside>
 
-      {showLock && <LockPhone onHide={() => setPref("lockPhone", false)} />}
+      {showLock && <LockPhone className="hidden sm:flex" onHide={() => setPref("lockPhone", false)} />}
 
       <div className="relative h-dvh w-full overflow-hidden bg-background sm:h-[844px] sm:w-[390px] sm:shrink-0 sm:rounded-[48px] sm:border-[10px] sm:border-device sm:shadow-device">
         {ready ? <PhoneApp /> : <Splash />}
       </div>
 
       {ready && demoPanel && (
-        <aside className="hidden max-h-[844px] w-[380px] shrink-0 overflow-y-auto rounded-card bg-card p-5 shadow-card no-scrollbar lg:block">
+        <aside className="hidden max-h-[844px] w-[380px] shrink-0 overflow-y-auto rounded-card bg-card p-5 shadow-card no-scrollbar xl:block">
           <ScenarioPanel onHide={() => setPref("demoPanel", false)} />
         </aside>
       )}
       {ready && !demoPanel && (
-        <button onClick={() => setPref("demoPanel", true)} className="fixed right-4 top-4 hidden min-h-11 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-primary shadow-card lg:flex">
+        <button onClick={() => setPref("demoPanel", true)} className="fixed right-4 top-4 hidden min-h-11 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-primary shadow-card xl:flex">
           <Eye className="size-4" /> Demo Paneli
         </button>
       )}
       {ready && !lockPhone && (
-        <button onClick={() => setPref("lockPhone", true)} className="fixed left-4 top-4 hidden min-h-11 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-primary shadow-card xl:flex">
+        <button onClick={() => setPref("lockPhone", true)} className="fixed left-4 top-4 hidden min-h-11 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-primary shadow-card sm:flex">
           <Smartphone className="size-4" /> Kilitli telefon
         </button>
-      )}
-
-      {ready && (
-        <button onClick={() => setLockOverlay(true)} aria-label="Kilitli telefonu göster" className="fixed bottom-4 left-4 z-[90] flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-float xl:hidden">
-          <Smartphone className="size-4" /> Kilitli telefon
-        </button>
-      )}
-      {ready && lockOverlay && (
-        <div className="fixed inset-0 z-[96] flex items-center justify-center overflow-y-auto bg-primary-deep/60 p-4 xl:hidden" onClick={() => setLockOverlay(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="rounded-card bg-background p-4 shadow-float">
-            <LockPhone className="flex" onHide={() => setLockOverlay(false)} />
-          </div>
-        </div>
       )}
 
       {ready && <ScenarioDriver />}
       {ready && (
         <>
-          <button onClick={() => setMobilePanel(true)} aria-label="Demo paneli" className="fixed right-0 top-1/3 z-[90] flex h-11 w-9 items-center justify-center rounded-l-2xl bg-primary/90 text-primary-foreground shadow-float lg:hidden">
+          <button onClick={() => setMobilePanel(true)} aria-label="Demo paneli" className="fixed right-0 top-1/3 z-[90] flex h-11 w-9 items-center justify-center rounded-l-2xl bg-primary/90 text-primary-foreground shadow-float xl:hidden">
             <SlidersHorizontal className="size-5" />
           </button>
           {mobilePanel && (
-            <div className="fixed inset-0 z-[95] flex justify-end bg-primary-deep/50 lg:hidden" onClick={() => setMobilePanel(false)}>
+            <div className="fixed inset-0 z-[95] flex justify-end bg-primary-deep/50 xl:hidden" onClick={() => setMobilePanel(false)}>
               <div className="h-full w-[380px] max-w-[92%] overflow-y-auto bg-card p-5" onClick={(e) => e.stopPropagation()}>
                 <div className="mb-2 flex justify-end">
                   <button onClick={() => setMobilePanel(false)} aria-label="Kapat" className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted">
