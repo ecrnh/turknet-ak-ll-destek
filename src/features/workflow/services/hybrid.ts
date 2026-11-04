@@ -71,8 +71,10 @@ function evaluate(wfId: string) {
     );
     notify(
       wfId,
-      early ? "Kesintinin 24 saatten uzun sürmesi bekleniyor" : "İnternet kesintiniz 24 saati aştı",
-      "Bağlantınızı sürdürmeniz için ücretsiz Hibrit İnternet desteğinizi etkinleştirebilirsiniz.",
+      early ? "Kesintinin 24 saatten uzun sürmesi bekleniyor" : "Tek tıkla internete erişebilirsin",
+      early
+        ? "Bağlantınızı sürdürmeniz için ücretsiz Hibrit İnternet desteğinizi etkinleştirebilirsiniz."
+        : "Devam eden genel arıza durumunda internetsiz kalmanı istemiyoruz. Uygulama içerisinde Netbox butonunu aktif ederek ev internetini kesintisiz kullanmaya devam edebilirsin.",
       early ? "quiet" : "push",
       "/hibrit",
     );

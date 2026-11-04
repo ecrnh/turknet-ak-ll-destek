@@ -93,7 +93,7 @@ export function LockPhone({ onHide, className = "hidden xl:flex" }: { onHide: ()
                       <span className="shrink-0 normal-case">{fmtRelative(n.time, now)}</span>
                     </span>
                     <span className="block text-[13px] font-semibold leading-snug">{n.title}</span>
-                    <span className="line-clamp-2 block text-[11px] leading-snug text-muted-foreground">{n.body}</span>
+                    <span className="line-clamp-4 block text-[11px] leading-snug text-muted-foreground">{n.body}</span>
                     {n.count && n.count > 1 ? <span className="mt-0.5 block text-[10px] font-semibold text-magenta">{n.count} güncelleme birleştirildi</span> : null}
                   </span>
                 </motion.button>
