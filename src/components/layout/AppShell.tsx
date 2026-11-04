@@ -74,6 +74,7 @@ export function AppShell() {
   const lockPhone = useAppStore((s) => s.prefs.lockPhone);
   const showLock = ready && lockPhone !== false;
   const [mobilePanel, setMobilePanel] = useState(false);
+  const [lockOverlay, setLockOverlay] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
@@ -120,6 +121,19 @@ export function AppShell() {
         <button onClick={() => setPref("lockPhone", true)} className="fixed left-4 top-4 hidden min-h-11 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-primary shadow-card xl:flex">
           <Smartphone className="size-4" /> Kilitli telefon
         </button>
+      )}
+
+      {ready && (
+        <button onClick={() => setLockOverlay(true)} aria-label="Kilitli telefonu göster" className="fixed bottom-4 left-4 z-[90] flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-float xl:hidden">
+          <Smartphone className="size-4" /> Kilitli telefon
+        </button>
+      )}
+      {ready && lockOverlay && (
+        <div className="fixed inset-0 z-[96] flex items-center justify-center overflow-y-auto bg-primary-deep/60 p-4 xl:hidden" onClick={() => setLockOverlay(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="rounded-card bg-background p-4 shadow-float">
+            <LockPhone className="flex" onHide={() => setLockOverlay(false)} />
+          </div>
+        </div>
       )}
 
       {ready && <ScenarioDriver />}
