@@ -74,6 +74,7 @@ export function AppShell() {
   const lockPhone = useAppStore((s) => s.prefs.lockPhone);
   const showLock = ready && lockPhone !== false;
   const [mobilePanel, setMobilePanel] = useState(false);
+  const [lockOverlay, setLockOverlay] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
