@@ -13,6 +13,17 @@ export function mergeNotification(list: AppNotification[], item: AppNotification
   return [merged, ...list.filter((n) => n.id !== prev.id)];
 }
 
+/** How many pushes the presenter's locked phone keeps on its lock screen. */
+export const LOCK_SCREEN_MAX = 6;
+
+/**
+ * Lock screen of the presenter's second (locked) phone: every delivered push lands
+ * here, newest first. A merged update (same id) replaces its older card.
+ */
+export function addToLockScreen(list: AppNotification[], item: AppNotification, max = LOCK_SCREEN_MAX): AppNotification[] {
+  return [item, ...list.filter((n) => n.id !== item.id)].slice(0, max);
+}
+
 /** Whether a notification of this kind may appear as a phone push. */
 export function pushAllowed(kind: AppNotification["kind"], prefs: { push: boolean; campaignPush?: boolean }): boolean {
   if (!prefs.push) return false;
