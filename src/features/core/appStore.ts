@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { uid } from "@/lib/format";
 import { USER } from "@/data/mock";
-import { mergeNotification, pushAllowed } from "./notifications";
+import { addToLockScreen, mergeNotification, pushAllowed } from "./notifications";
 
 export type NetStatus = "online" | "slow" | "down" | "mobile";
 export type Channel = "Görüntülü" | "QR" | "GIGA" | "Chat" | "Dijital Onarım" | "Otonom";
@@ -81,6 +81,8 @@ interface Prefs {
   /** Campaign pushes (process updates are always delivered when push is on). */
   campaignPush: boolean;
   demoPanel: boolean;
+  /** Presenter's second, locked phone next to the app. */
+  lockPhone: boolean;
 }
 
 interface AppState {
@@ -96,7 +98,11 @@ interface AppState {
   helpOpen: boolean;
   helpPrefill: string | null;
   push: AppNotification | null;
+  /** Pushes shown on the presenter's locked phone (what arrives while the app is closed). */
+  lockScreen: AppNotification[];
 
+  dismissLock: (id: string) => void;
+  clearLock: () => void;
   setNet: (p: Partial<NetState>) => void;
   notify: (n: Omit<AppNotification, "id" | "time" | "read">, asPush?: boolean) => void;
   dismissPush: () => void;
@@ -172,7 +178,7 @@ const initial = () => ({
   notifications: seedNotifications(),
   records: seedRecords(),
   history: seedHistory(),
-  prefs: { bigText: false, simpleMode: false, push: true, campaignPush: true, demoPanel: true },
+  prefs: { bigText: false, simpleMode: false, push: true, campaignPush: true, demoPanel: true, lockPhone: true },
   savedFieldVisits: 0,
   feedback: [] as FeedbackItem[],
   ratings: [] as Rating[],
@@ -180,6 +186,7 @@ const initial = () => ({
   helpOpen: false,
   helpPrefill: null,
   push: null,
+  lockScreen: [] as AppNotification[],
 });
 
 export const useAppStore = create<AppState>()(
@@ -191,10 +198,14 @@ export const useAppStore = create<AppState>()(
         const item: AppNotification = { ...n, id: uid(), time: Date.now(), read: false };
         set((s) => {
           const notifications = mergeNotification(s.notifications, item);
-          return { notifications, push: asPush && pushAllowed(item.kind, s.prefs) ? notifications[0]! : s.push };
+          if (!asPush || !pushAllowed(item.kind, s.prefs)) return { notifications };
+          const pushed = notifications[0]!;
+          return { notifications, push: pushed, lockScreen: addToLockScreen(s.lockScreen, pushed) };
         });
       },
       dismissPush: () => set({ push: null }),
+      dismissLock: (id) => set((s) => ({ lockScreen: s.lockScreen.filter((n) => n.id !== id) })),
+      clearLock: () => set({ lockScreen: [] }),
       markRead: (id) => set((s) => ({ notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) })),
       markAllRead: () => set((s) => ({ notifications: s.notifications.map((n) => ({ ...n, read: true })) })),
       addRecord: (r) => {
@@ -217,7 +228,7 @@ export const useAppStore = create<AppState>()(
       name: "tn-app",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      version: 4,
+      version: 5,
       /** v0 saved gift-internet notifications and old outage states (dropped); v1 used pre-GIGA assistant names (renamed). */
       migrate: (persisted) => {
         const p = persisted as Partial<AppState> & { prefs?: Record<string, unknown> };
@@ -225,7 +236,8 @@ export const useAppStore = create<AppState>()(
         const status = p.net?.status as string | undefined;
         return {
           ...p,
-          ...(p.prefs ? { prefs: { ...p.prefs, campaignPush: p.prefs["campaignPush"] !== false } } : {}),
+          ...(p.prefs ? { prefs: { ...p.prefs, campaignPush: p.prefs["campaignPush"] !== false, lockPhone: p.prefs["lockPhone"] !== false } } : {}),
+          lockScreen: p.lockScreen ?? [],
           net: p.net && (status === "outage" || status === "backup") ? { ...p.net, status: "online" } : p.net,
           notifications: (p.notifications ?? [])
             .filter((n) => (n.kind as string) !== "gift" && !legacy(n.to))

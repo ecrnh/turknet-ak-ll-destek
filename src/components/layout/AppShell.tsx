@@ -1,5 +1,7 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BarChart3, Eye, SlidersHorizontal, Signal, Wifi, BatteryMedium, X } from "lucide-react";
+import { BarChart3, Eye, SlidersHorizontal, Signal, Smartphone, Wifi, BatteryMedium, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { LockPhone } from "./LockPhone";
 import { useEffect, useRef, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { useAppStore } from "@/features/core/appStore";
@@ -69,6 +71,8 @@ export function AppShell() {
   const bigText = useAppStore((s) => s.prefs.bigText);
   const demoPanel = useAppStore((s) => s.prefs.demoPanel);
   const setPref = useAppStore((s) => s.setPref);
+  const lockPhone = useAppStore((s) => s.prefs.lockPhone);
+  const showLock = ready && lockPhone !== false;
   const [mobilePanel, setMobilePanel] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
 
@@ -85,8 +89,8 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-dvh w-full sm:flex sm:items-center sm:justify-center sm:gap-10 sm:p-6">
-      <aside className="hidden max-w-[260px] xl:block">
+    <div className={cn("min-h-dvh w-full sm:flex sm:items-center sm:justify-center sm:gap-10 sm:p-6", showLock && "xl:gap-8")}>
+      <aside className={cn("hidden max-w-[260px]", showLock ? "2xl:block" : "xl:block")}>
         <TurknetLogo className="text-6xl" />
         <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-magenta">Product Bootcamp · Final Case</p>
         <h1 className="mt-2 text-3xl font-semibold leading-tight text-primary">Otonom Müşteri Deneyimi Platformu</h1>
@@ -95,6 +99,8 @@ export function AppShell() {
           <BarChart3 className="size-4" /> Etki Panosu
         </Link>
       </aside>
+
+      {showLock && <LockPhone onHide={() => setPref("lockPhone", false)} />}
 
       <div className="relative h-dvh w-full overflow-hidden bg-background sm:h-[844px] sm:w-[390px] sm:shrink-0 sm:rounded-[48px] sm:border-[10px] sm:border-device sm:shadow-device">
         {ready ? <PhoneApp /> : <Splash />}
@@ -108,6 +114,11 @@ export function AppShell() {
       {ready && !demoPanel && (
         <button onClick={() => setPref("demoPanel", true)} className="fixed right-4 top-4 hidden min-h-11 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-primary shadow-card lg:flex">
           <Eye className="size-4" /> Demo Paneli
+        </button>
+      )}
+      {ready && !lockPhone && (
+        <button onClick={() => setPref("lockPhone", true)} className="fixed left-4 top-4 hidden min-h-11 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-primary shadow-card xl:flex">
+          <Smartphone className="size-4" /> Kilitli telefon
         </button>
       )}
 
