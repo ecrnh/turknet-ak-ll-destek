@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hybridView, type HybridViewInput } from "@/features/workflow/hybridView";
+import { hybridView, outageInfo, type HybridViewInput } from "@/features/workflow/hybridView";
 
 const base: HybridViewInput = {
   fixed: "up",
@@ -115,5 +115,20 @@ describe("Hibrit İnternet anahtarı ve ana buton aynı durumu gösterir", () =>
     expect(hybridSwitchView({ ...sw, offerOpen: false })).toMatchObject({ canToggle: false, cta: null });
     expect(hybridSwitchView({ ...sw, status: "no_coverage" })).toMatchObject({ canToggle: false, cta: null });
     expect(hybridSwitchView({ ...sw, status: "no_device" })).toMatchObject({ canToggle: false, cta: null });
+  });
+});
+
+describe("Hibrit İnternet ekranı · arıza bilgisi", () => {
+  it("bağlantı çalışırken arıza bilgisi göstermez", () => {
+    expect(outageInfo({ fixed: "up", outageOngoing: false, regional: false, hours: 0 })).toBeNull();
+  });
+  it("hat arızasında sebep ve tahmini çözüm süresini verir", () => {
+    expect(outageInfo({ fixed: "down", outageOngoing: true, regional: false, hours: 25, etaH: 29 })).toEqual({ cause: "Hattınızda bağlantı kesintisi", remaining: "Yaklaşık 4 saat içinde" });
+  });
+  it("bölgesel arızada sebebi bölgesel altyapı olarak gösterir", () => {
+    expect(outageInfo({ fixed: "down", outageOngoing: true, regional: true, hours: 2 })?.cause).toBe("Bölgenizdeki altyapı arızası");
+  });
+  it("arıza kaydı yokken ana hat kesikse yine bilgi kartı çıkar", () => {
+    expect(outageInfo({ fixed: "down", outageOngoing: false, regional: false, hours: 0 })).not.toBeNull();
   });
 });

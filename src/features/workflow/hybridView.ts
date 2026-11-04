@@ -208,6 +208,24 @@ export function outageRemainingH(hours: number, etaH: number | null | undefined,
   return Math.max(1, Math.ceil(total - hours));
 }
 
+/**
+ * The outage summary at the top of the Hibrit İnternet page: cause and estimated fix
+ * time. Shown whenever the main line is down, whether the backup is on or off.
+ * Returns null while the main line works.
+ */
+export interface OutageInfo {
+  cause: string;
+  remaining: string;
+}
+export function outageInfo(i: { fixed: ConnectivityStatus["fixed"]; outageOngoing: boolean; regional: boolean; hours: number; etaH?: number | null | undefined }): OutageInfo | null {
+  if (!i.outageOngoing && i.fixed !== "down") return null;
+  if (!i.outageOngoing) return { cause: "Hattınızda bağlantı sorunu tespit edildi", remaining: "Arıza kaydı oluşturuluyor" };
+  return {
+    cause: i.regional ? "Bölgenizdeki altyapı arızası" : "Hattınızda bağlantı kesintisi",
+    remaining: fmtRemaining(outageRemainingH(i.hours, i.etaH, i.regional)),
+  };
+}
+
 /** Customer wording of the remaining time, e.g. "Yaklaşık 4 saat içinde". */
 export function fmtRemaining(left: number | null): string {
   if (left == null) return "Tahmini süre güncelleniyor";
