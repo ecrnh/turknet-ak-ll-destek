@@ -16,16 +16,18 @@ const base: HybridViewInput = {
 };
 
 describe("Hibrit İnternet ekranı · durum tutarlılığı", () => {
-  it("ana internet bağlıyken 'Bağlantın normal' der ve mobil yedek beklemede olur", () => {
+  it("ana internet bağlıyken 'İnternetin aktif' der, başlık rozeti 'Aktif' olur ve mobil yedek beklemede olur", () => {
     const v = hybridView(base);
-    expect(v.title).toBe("Bağlantın normal");
+    expect(v.title).toBe("İnternetin aktif");
+    expect(v.badge.label).toBe("Aktif");
     expect([v.main, v.box, v.mobile]).toEqual(["Bağlı", "Hazır", "Beklemede"]);
     expect(v.showOpen).toBe(false);
     expect(v.failbackNote).toBe(false);
   });
 
-  it("ana internet kesikken (kesinti kaydı olmasa bile) asla 'Bağlantın normal' demez", () => {
+  it("ana internet kesikken (kesinti kaydı olmasa bile) asla 'İnternetin aktif' demez ve rozet 'Kesinti' olur", () => {
     const v = hybridView({ ...base, fixed: "down" });
+    expect(v.badge.label).toBe("Kesinti");
     expect(v.title).toBe("Ana internet bağlantın kesildi");
     expect(v.main).toBe("Kesik");
   });
