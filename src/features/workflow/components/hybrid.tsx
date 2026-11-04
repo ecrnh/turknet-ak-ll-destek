@@ -7,7 +7,7 @@ import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
 import { runOverdueOps } from "../engine";
-import { fmtRemaining, hybridSwitchView, outageRemainingH, type HybridSwitchView } from "../hybridView";
+import { hybridSwitchView, type HybridSwitchView } from "../hybridView";
 import { hybridOfferOpen, hybridUsageMb } from "../rules";
 import { activateHybrid, checkHybrid, declineHybrid, dismissOutage, outageHours, setHybridOn } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
@@ -189,11 +189,10 @@ export function HybridSwitchCard({ sw, active, auto, note, onChange }: { sw: Hyb
 
 const PRIMARY = "mt-4 flex min-h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-float";
 
-/** Home outage card: the problem, how long it has lasted, the estimated fix and the Hibrit İnternet action. */
+/** Home outage card: only the Hibrit İnternet control and its action. */
 export function OutageHomeCard() {
   const o = useWorkflowStore((s) => s.outage);
   const h = useWorkflowStore((s) => s.hybrid);
-  const regional = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.data["outageType"] === "regional");
   const verifying = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status !== "done");
   // Never behind the last state change (the presenter can move the outage start).
   const now = Math.max(useNow(10_000), o?.lastUpdateAt ?? 0);
@@ -259,16 +258,7 @@ export function OutageHomeCard() {
   const hours = outageHours(o, now);
   const after24 = hybridOfferOpen(hours, o.etaH);
   const active = h.status === "active" && !h.pausedAt && h.switching !== "off";
-  const remaining = fmtRemaining(outageRemainingH(hours, o.etaH, regional));
   const sw = hybridSwitchView({ status: h.status, paused: !!h.pausedAt, switching: h.switching, openRequested: h.openRequested, offerOpen: after24 });
-
-  const title = active ? "İnternet kesintisi sürüyor · yedek bağlantı aktif" : regional ? "Bölgenizde internet kesintisi var" : "İnternet bağlantınızda kesinti var";
-  const facts: [string, string][] = [
-    ["Sorun", regional ? "Bölgesel altyapı arızası" : "Hattınızda bağlantı kesintisi"],
-    ["Süre", `${fmtOngoing(hours)} sürüyor`],
-    ["Tahmini çözüm", `${remaining} (demo)`],
-    ["Durum", o.repairNote || "Teknik ekibimiz çalışıyor"],
-  ];
 
   // Why the toggle can't be used right now (only when there is a reason to tell).
   let hybridNote: string | null = null;
@@ -279,26 +269,7 @@ export function OutageHomeCard() {
   else if (h.status === "failed") hybridNote = "Son deneme başarısız oldu. Tekrar açmayı deneyebilirsiniz.";
 
   return (
-    <div className={cn("rounded-card bg-card p-5 shadow-card", sw.ctaEnabled && "border-gradient")} role="status" aria-live="polite">
-      <div className="flex items-start gap-3">
-        <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl", active ? "bg-orange-soft text-orange-deep" : "bg-destructive-soft text-destructive")}>
-          {active ? <Smartphone className="size-6" /> : <CloudOff className="size-6" />}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold leading-snug text-primary">{title}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{active ? "Ana bağlantınız düzelince otomatik olarak ana bağlantıya döneceksiniz." : "Teknik ekibimiz çalışıyor; gelişmeleri size bildireceğiz."}</p>
-        </div>
-      </div>
-
-      <dl className="mt-4 space-y-1.5 rounded-2xl bg-muted p-3 text-xs">
-        {facts.map(([k, v]) => (
-          <div key={k} className="flex gap-2">
-            <dt className="w-24 shrink-0 text-muted-foreground">{k}</dt>
-            <dd className="font-semibold text-foreground">{v}</dd>
-          </div>
-        ))}
-      </dl>
-
+    <div className={cn("rounded-card bg-card p-5 shadow-card [&>*:first-child]:mt-0", sw.ctaEnabled && "border-gradient")} role="status" aria-live="polite">
       <HybridSwitchCard sw={sw} active={active} auto={h.activatedBy === "auto"} note={hybridNote} onChange={change} />
 
       {sw.cta ? (
