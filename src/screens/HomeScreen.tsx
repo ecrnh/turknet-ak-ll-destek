@@ -7,7 +7,6 @@ import { SectionTitle } from "@/components/tn/primitives";
 import { INTERNET_OPS, SUBSCRIPTION_OPS, USER } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
 import { useActingAccount } from "@/features/family/store";
-import { AgentActivityCard } from "@/features/aiAgents/components/AgentActivityCard";
 import { OutageHomeCard } from "@/features/workflow/components/hybrid";
 import { cn } from "@/lib/utils";
 import { HeroCarousel } from "./home/HeroCarousel";
@@ -79,7 +78,6 @@ export function HomeScreen() {
 
       <div className="space-y-4 px-4">
         <OutageHomeCard />
-        <AgentActivityCard />
         {simple ? <SimpleHome /> : <CampaignCard />}
       </div>
 
