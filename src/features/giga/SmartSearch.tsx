@@ -1,7 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Check, Mic, Search, Sparkles, X } from "lucide-react";
 import { useRef, useState } from "react";
-import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { GigaAvatar } from "./GigaAvatar";
 import { useSearchCtx } from "./searchContext";
@@ -27,8 +26,7 @@ export function SmartSearchBar() {
     const t = text.trim();
     if (!t) return;
     const intent = detectSearchIntent(t);
-    track("smart_search", { query: t, intent: intent?.id ?? "none" });
-    setResult({ query: t, intent });
+        setResult({ query: t, intent });
     setOpen(true);
   };
 
@@ -59,7 +57,7 @@ export function SmartSearchBar() {
 
   const simulate = () => {
     rec.current = null; setSimulated(true);
-    const phrase = DEMO_PHRASES[Math.floor(Math.random() * DEMO_PHRASES.length)];
+    const phrase = DEMO_PHRASES[Math.floor(Math.random() * DEMO_PHRASES.length)] ?? DEMO_PHRASES[0]!;
     let i = 0;
     if (timer.current) window.clearInterval(timer.current);
     timer.current = window.setInterval(() => {
