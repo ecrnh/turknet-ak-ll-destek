@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock, CloudOff, Loader2, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
-import { type ReactNode, useEffect, useRef } from "react";
+import { CheckCircle2, Clock, Star, CloudOff, Loader2, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
@@ -270,25 +270,21 @@ export function OutageHomeCard() {
   if (!o || o.dismissed) return null;
 
   if (o.restoredAt) {
-    const used = h.status === "ended" || h.status === "active";
-    return (
-      <div className="rounded-card bg-card p-5 shadow-card" role="status">
-        <div className="flex items-start gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-success-soft text-success">
-            {verifying ? <Loader2 className="size-6 animate-spin" /> : <CheckCircle2 className="size-6" />}
-          </span>
-          <div>
-            <p className="font-semibold leading-snug text-primary">{verifying ? "Ana bağlantınız doğrulanıyor" : used ? C.restored.title : "İnternetiniz normale döndü"}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{verifying ? "Bağlantınız kararlı çalışınca yedek bağlantıyı kapatacağız." : used ? C.restored.text : C.restored.plain}</p>
+    if (verifying)
+      return (
+        <div className="rounded-card bg-card p-5 shadow-card" role="status">
+          <div className="flex items-start gap-3">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-success-soft text-success">
+              <Loader2 className="size-6 animate-spin" />
+            </span>
+            <div>
+              <p className="font-semibold leading-snug text-primary">Ana bağlantınız doğrulanıyor</p>
+              <p className="mt-1 text-sm text-muted-foreground">Bağlantınız kararlı çalışınca yedek bağlantıyı kapatacağız.</p>
+            </div>
           </div>
         </div>
-        {!verifying && (
-          <button type="button" onClick={dismissOutage} className={PRIMARY}>
-            Tamam
-          </button>
-        )}
-      </div>
-    );
+      );
+    return <RatingCard />;
   }
 
   const hours = outageHours(o, now);
@@ -415,6 +411,31 @@ export function HybridOfferInline() {
         </p>
       )}
       <Link to="/hibrit" className="mt-3 inline-flex min-h-9 items-center text-sm font-semibold text-magenta">Kesinti durumunu gör</Link>
+    </div>
+  );
+}
+
+/** After the outage ends: a 5-star rating; sending it closes the card. */
+function RatingCard() {
+  const [stars, setStars] = useState(0);
+  const send = () => {
+    toast.success("Teşekkür ederiz!", { description: "Değerlendirmeniz bize ulaştı." });
+    dismissOutage();
+  };
+  return (
+    <div className="rounded-card bg-card p-5 shadow-card" role="status">
+      <p className="font-semibold leading-snug text-primary">İnternetiniz yeniden aktif</p>
+      <p className="mt-1 text-sm text-muted-foreground">Kesinti sürecinde aldığınız hizmetten ne kadar memnun kaldınız?</p>
+      <div className="mt-3 flex justify-center gap-2" role="radiogroup" aria-label="Puanınız">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" role="radio" aria-checked={stars === n} aria-label={`${n} yıldız`} onClick={() => setStars(n)} className="flex h-11 w-11 items-center justify-center">
+            <Star className={cn("size-8", n <= stars ? "fill-warning text-warning" : "text-muted-foreground/40")} strokeWidth={1.5} />
+          </button>
+        ))}
+      </div>
+      <button type="button" onClick={send} disabled={!stars} className={cn(PRIMARY, !stars && "opacity-50")}>
+        Gönder
+      </button>
     </div>
   );
 }
