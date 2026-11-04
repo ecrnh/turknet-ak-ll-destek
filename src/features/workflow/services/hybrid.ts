@@ -265,6 +265,7 @@ export function restoreMain(): boolean {
   setConnectivity({ fixed: "up", metric: { optic: -19.4, drops: 0, speed: 96 } }, "Ana bağlantı geri geldi");
   step(id, "restore", "done", "Ana bağlantı oturumu açıldı");
   patchOutage({ restoredAt: t, lastUpdateAt: t, repairNote: "Arıza giderildi" });
+  patchHybrid({ switching: null });
   const h = W.getState().hybrid;
   if (h.status === "active") {
     step(id, "switch_back", "in_progress", "Ana bağlantı doğrulanıyor; yedekten dönüş hazırlanıyor", "Ana bağlantı kararlı çalışmadan yedekten çıkılmaz");
