@@ -219,7 +219,7 @@ export function HybridScreen() {
               <ChecksList checks={h.checks} checking={h.status === "checking"} />
             </div>
           )}
-          {o && <OutageMeta o={o} now={now} />}
+          {o && !ongoing && <OutageMeta o={o} now={now} />}
           {o && (
             <Link to="/surec/$id" params={{ id: o.wfId }} className="block text-sm font-semibold text-primary">
               İşlem adımlarını gör →
