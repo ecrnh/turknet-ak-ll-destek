@@ -14,7 +14,7 @@ import { HeroCarousel } from "./home/HeroCarousel";
 function StatusPill() {
   const status = useAppStore((s) => s.net.status);
   const acting = useActingAccount();
-  const to = status === "down" || status === "mobile" ? "/hibrit" : status === "slow" ? "/ajanlar/hiz" : "/hiz-testi";
+  const to = status === "slow" ? "/ajanlar/hiz" : "/hibrit";
   return (
     <div className="mx-auto -mt-1 flex w-[88%] overflow-hidden rounded-full bg-primary-deep/85 text-primary-foreground shadow-float backdrop-blur">
       <Link to="/hesabim" className="flex flex-1 flex-col justify-center rounded-full border border-primary-foreground/10 bg-primary/40 px-5 py-2.5">

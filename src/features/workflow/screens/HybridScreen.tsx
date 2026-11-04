@@ -1,31 +1,56 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock, CloudOff, Info, Loader2, Power, Router, Signal, Smartphone, Timer, TriangleAlert, Wifi, Wrench } from "lucide-react";
+import { CheckCircle2, Clock, Gauge, Loader2, Power, TriangleAlert, Wifi } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
-import { ToggleRow } from "@/components/tn/primitives";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { HYBRID_BACKUP_QUOTA_MB } from "@/data/mock";
+import { HYBRID_BACKUP_QUOTA_MB, USER } from "@/data/mock";
+import { useAppStore } from "@/features/core/appStore";
 import { useNow } from "@/hooks/use-now";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
 import { runOverdueOps } from "../engine";
-import { hybridView, outageInfo } from "../hybridView";
+import { hybridView, outageInfo, type HybridTone } from "../hybridView";
 import { HYBRID_OFFER_AFTER_H, hybridOfferOpen, hybridUsageMb } from "../rules";
 import { checkHybrid, openHybridBox, outageHours, requestHybridDevice, setAutoFailover } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
-import { ChecksList, DeviceTracker, FreeBadge, fmtOngoing, fmtUsage, OutageMeta } from "../components/hybrid";
+import { ChecksList, DeviceTracker, fmtOngoing, fmtUsage, OutageMeta } from "../components/hybrid";
 import { DemoNote, TechDetails } from "../components/ui";
 
-type Tone = "ok" | "warn" | "down" | "info";
-const TONE: Record<Tone, string> = { ok: "bg-success-soft text-success", warn: "bg-warning-soft text-warning", down: "bg-destructive-soft text-destructive", info: "bg-icon-box text-primary" };
+const PILL: Record<HybridTone | "muted", string> = {
+  ok: "bg-success-soft text-success",
+  warn: "bg-warning-soft text-warning",
+  down: "bg-destructive-soft text-destructive",
+  info: "bg-icon-box text-primary",
+  muted: "bg-muted text-muted-foreground",
+};
+
+function StatusPill({ label, tone, className }: { label: string; tone: HybridTone | "muted"; className?: string }) {
+  const Icon = tone === "ok" ? CheckCircle2 : tone === "warn" || tone === "down" ? TriangleAlert : tone === "info" ? (/lıyor|nıyor/.test(label) ? Loader2 : Wifi) : Clock;
+  return (
+    <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold", PILL[tone], className)}>
+      <Icon className={cn("size-3.5", Icon === Loader2 && "animate-spin")} aria-hidden /> {label}
+    </span>
+  );
+}
+
+/** Tone of a single connection row value (Bağlı / Kesik / Hazır / Beklemede …). */
+function rowTone(value: string): HybridTone | "muted" {
+  if (value === "Kesik") return "warn";
+  if (value === "Yavaş") return "warn";
+  if (value === "Bağlı" || value === "Aktif" || value === "Hazır") return "ok";
+  if (value === "Açılıyor" || value === "Bağlanıyor") return "info";
+  return "muted";
+}
+
+const card = "rounded-card bg-card p-5 shadow-card";
 
 /**
- * Hibrit İnternet, simplified: one connection card (main line, Hibrit Box,
- * mobile backup, remaining backup data), one action ("Hibrit Box'ı Aç"), one
- * automatic-switch setting, and everything technical behind "Teknik detayları gör".
- * There is no switch-off button: the backup closes itself when the main line is back.
+ * İnternet Durumu (route /hibrit): one page for the connection, whether the main
+ * line works, is down, or the customer is on NetBox (Hibrit Box). All status text
+ * comes from hybridView()/outageInfo(); the open action is the shared openHybridBox().
  */
 export function HybridScreen() {
   const flow = useFlow("hybrid_internet");
@@ -35,6 +60,7 @@ export function HybridScreen() {
   const hasDevice = useWorkflowStore((s) => s.config.hybridDevice);
   const verify = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status);
   const regional = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.data["outageType"] === "regional");
+  const speed = useAppStore((s) => s.net.speed);
   const now = Math.max(useNow(5_000), o?.lastUpdateAt ?? 0);
   const wantOpen = !!h.openRequested;
 
@@ -63,10 +89,9 @@ export function HybridScreen() {
   }, [h.status, h.attempts, flow]);
 
   const openBox = () => {
-    if (!openHybridBox()) toast("Hibrit Box şu an açılamıyor", { description: `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştığında ya da aşması beklendiğinde açılabilir.` });
+    if (!openHybridBox()) toast("NetBox şu an açılamıyor", { description: `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştığında ya da aşması beklendiğinde açılabilir.` });
   };
 
-  // The whole status area is derived from the real connection state (see hybridView).
   const v = hybridView({
     fixed: c.fixed,
     outageOngoing: ongoing,
@@ -80,99 +105,98 @@ export function HybridScreen() {
     autoFailover: h.autoFailover,
     hasDevice,
   });
-  const { tone } = v;
   const info = outageInfo({ fixed: c.fixed, outageOngoing: ongoing, regional, hours, etaH: o?.etaH });
+  const busy = (wantOpen && h.status === "checking") || !!h.switching || h.status === "activating";
 
-  const rows: { icon: typeof Router; label: string; value: string; tone: "on" | "off" | "bad" }[] = [
-    { icon: Wifi, label: "Ana internet", value: v.main, tone: v.main === "Bağlı" ? "on" : "bad" },
-    { icon: Router, label: "Hibrit Box", value: v.box, tone: v.box === "Cihaz yok" ? "off" : "on" },
-    { icon: Smartphone, label: "Mobil yedek", value: v.mobile, tone: v.mobile === "Bağlı" ? "on" : "off" },
+  const rows = [
+    { label: "Ana internet", value: v.main },
+    { label: "Hibrit Box", value: v.box },
+    { label: "Mobil yedek", value: v.mobile },
   ];
 
-  const busy = (wantOpen && h.status === "checking") || !!h.switching;
+  // Only problem states get a note in the connection card; the normal flow stays quiet.
+  const showNote = !!info && (h.status === "no_device" || h.status === "no_coverage" || h.status === "failed" || v.phase === "activating");
 
   return (
     <div>
-      <PageHeader title={C.name} />
-      <div className="space-y-4 px-4 pb-4">
-        <div>
-          <p className="text-lg font-semibold leading-snug text-primary">İnternetin kesilse bile bağlantın devam etsin.</p>
-          <FreeBadge className="mt-1.5" label="Ücretsiz · Aboneliğine dahil" />
-        </div>
+      <PageHeader title="İnternet Durumu" right={<StatusPill label={v.badge.label} tone={v.badge.tone} className="mr-1" />} />
+      <div className="space-y-3 px-4 pb-4">
+        <section className={card}>
+          <p className="text-lg font-bold leading-snug text-primary">İnternetin kesilse bile bağlantın NetBox ile devam etsin.</p>
+        </section>
 
-        {info && (
-          <section className="rounded-card bg-card p-5 shadow-card" aria-labelledby="outage-info-title">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-destructive-soft text-destructive">
-                <CloudOff className="size-5" strokeWidth={1.75} />
-              </span>
-              <div className="min-w-0">
-                <p id="outage-info-title" className="font-semibold leading-snug text-primary">{regional ? "Bölgenizde internet kesintisi var" : "İnternet bağlantınızda kesinti var"}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Teknik ekibimiz çalışıyor; gelişmeleri size bildireceğiz.</p>
-              </div>
-            </div>
-            <dl className="mt-4 space-y-2.5 rounded-2xl bg-muted p-3.5 text-sm">
+        {info ? (
+          <section className={card} aria-labelledby="net-status-title" aria-live="polite">
+            <p id="net-status-title" className="text-base font-bold text-primary">
+              {regional ? "Bölgende internet kesintisi var" : "Ana internetinde kesinti var"}
+            </p>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              {backupOn ? "Şu anda NetBox ile internete bağlısın; ana bağlantın düzelince otomatik geri dönersin." : "Teknik ekibimiz çalışıyor; gelişmeleri sana bildireceğiz."}
+            </p>
+            <dl className="mt-4 space-y-3 text-sm">
               {[
-                { icon: TriangleAlert, k: "Arıza sebebi", v: info.cause },
-                { icon: Clock, k: "Tahmini çözüm", v: ongoing ? `${info.remaining} (demo)` : info.remaining },
-                ...(ongoing ? [{ icon: Timer, k: "Süre", v: `${fmtOngoing(hours)} sürüyor` }, { icon: Wrench, k: "Durum", v: o.repairNote }] : []),
+                { k: "Arıza sebebi", v: info.cause },
+                { k: "Tahmini çözüm", v: ongoing ? `${info.remaining} (demo)` : info.remaining },
+                ...(ongoing ? [{ k: "Süre", v: `Kesinti ${fmtOngoing(hours)} sürüyor` }, { k: "Onarım durumu", v: o.repairNote }] : []),
               ].map((r) => (
-                <div key={r.k} className="flex items-start gap-2.5">
-                  <r.icon className="mt-0.5 size-4 shrink-0 text-magenta" aria-hidden />
-                  <div className="min-w-0">
-                    <dt className="text-[11px] text-muted-foreground">{r.k}</dt>
-                    <dd className="font-semibold text-foreground">{r.v}</dd>
-                  </div>
+                <div key={r.k} className="grid grid-cols-[96px_1fr] gap-3">
+                  <dt className="text-xs font-medium leading-5 text-muted-foreground">{r.k}</dt>
+                  <dd className="font-semibold leading-5 text-foreground">{r.v}</dd>
                 </div>
               ))}
             </dl>
           </section>
+        ) : (
+          <section className={card} aria-labelledby="net-status-title" aria-live="polite">
+            <div className="flex items-start gap-3">
+              <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl", PILL[v.tone])}>
+                {v.tone === "ok" ? <CheckCircle2 className="size-5" strokeWidth={1.75} /> : v.tone === "warn" ? <Gauge className="size-5" strokeWidth={1.75} /> : <Loader2 className="size-5 animate-spin" />}
+              </span>
+              <div className="min-w-0">
+                <p id="net-status-title" className="text-base font-bold text-primary">{v.title}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">{v.lines[0]}</p>
+              </div>
+            </div>
+            <dl className="mt-4 space-y-3 text-sm">
+              {[
+                { k: "Paket", v: USER.packageName },
+                { k: "Bağlantı", v: "Fiber · ana hat" },
+                { k: "Son ölçülen hız", v: `${speed} Mbps` },
+              ].map((r) => (
+                <div key={r.k} className="grid grid-cols-[112px_1fr] gap-3">
+                  <dt className="text-xs font-medium leading-5 text-muted-foreground">{r.k}</dt>
+                  <dd className="font-semibold leading-5 text-foreground">{r.v}</dd>
+                </div>
+              ))}
+            </dl>
+            <Link to="/hiz-testi" className="mt-4 inline-flex min-h-9 items-center text-sm font-semibold text-magenta">
+              Hız testi yap
+            </Link>
+          </section>
         )}
 
-        <section className="rounded-card bg-card p-5 shadow-card" aria-live="polite">
-          <div className={cn("flex items-start gap-2.5 rounded-2xl px-3 py-2.5", TONE[tone])}>
-            {tone === "ok" ? <CheckCircle2 className="mt-0.5 size-5 shrink-0" /> : tone === "down" ? <CloudOff className="mt-0.5 size-5 shrink-0" /> : tone === "warn" ? <TriangleAlert className="mt-0.5 size-5 shrink-0" /> : v.phase === "activating" || (v.phase === "restored" && verify !== "done") ? <Loader2 className="mt-0.5 size-5 shrink-0 animate-spin" /> : <Signal className="mt-0.5 size-5 shrink-0" />}
-            <div>
-              <p className="text-sm font-semibold">{v.title}</p>
-              {v.lines.map((l) => (
-                <p key={l} className="mt-0.5 text-xs text-foreground/80">{l}</p>
-              ))}
-            </div>
-          </div>
-
-          <dl className="mt-4 grid grid-cols-3 gap-2">
+        <section className={card}>
+          <p className="text-base font-bold text-foreground">Bağlantı durumları</p>
+          <dl className="mt-3 space-y-3">
             {rows.map((r) => (
-              <div key={r.label} className="rounded-2xl bg-muted p-3">
-                <dt className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <r.icon className="size-3.5" /> {r.label}
-                </dt>
-                <dd className={cn("mt-0.5 break-words text-[13px] font-semibold", r.tone === "on" ? "text-foreground" : r.tone === "bad" ? "text-destructive" : "text-muted-foreground")}>{r.value}</dd>
+              <div key={r.label} className="flex items-center justify-between gap-3">
+                <dt className="text-sm text-muted-foreground">{r.label}</dt>
+                <dd><StatusPill label={r.value} tone={rowTone(r.value)} /></dd>
               </div>
             ))}
           </dl>
 
-          <div className="mt-3">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Kalan yedek internet (demo)</span>
-              <span className="font-semibold text-foreground">{fmtUsage(left)} / {fmtUsage(HYBRID_BACKUP_QUOTA_MB)}</span>
+          {showNote && (
+            <div className="mt-4 rounded-2xl bg-muted px-3.5 py-3 text-xs text-foreground/80">
+              <p className="font-semibold text-foreground">{v.title}</p>
+              {v.lines.map((l) => <p key={l} className="mt-0.5">{l}</p>)}
             </div>
-            <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-magenta" style={{ width: `${(left / HYBRID_BACKUP_QUOTA_MB) * 100}%` }} />
-            </div>
-          </div>
+          )}
 
-          {v.showOpen && (
-            <>
-              <Button size="xl" className="mt-4 w-full rounded-full" onClick={openBox} disabled={!v.canOpen || busy}>
-                {busy ? <Loader2 className="animate-spin" /> : <Power />} Hibrit Box'ı Aç
-              </Button>
-              {v.openHint && (
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  {v.openHint}
-                  {hours > 0 ? ` Kesinti ${fmtOngoing(hours)} sürüyor.` : ""}
-                </p>
-              )}
-            </>
+          {v.showOpen && v.canOpen && (
+            <Button size="xl" className="mt-4 w-full rounded-full" onClick={openBox} disabled={busy}>
+              {busy ? <Loader2 className="animate-spin" /> : <Power />} {busy ? "Aktive Ediliyor..." : "NetBox'u etkinleştir"}
+            </Button>
           )}
           {ongoing && h.status === "no_device" && (
             h.device ? (
@@ -185,17 +209,30 @@ export function HybridScreen() {
               </Button>
             )
           )}
-
-          {v.failbackNote && (
-            <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
-              <Info className="mt-0.5 size-3.5 shrink-0" /> Ana internetin düzeldiğinde otomatik olarak ana bağlantına dönersin.
-            </p>
-          )}
         </section>
 
-        <section className="rounded-card bg-card px-5 py-1 shadow-card">
-          <ToggleRow id="hybrid-auto" title="Otomatik yedek geçişi" desc="Kesinti 24 saati aşarsa mobil yedek bağlantın otomatik açılsın." checked={h.autoFailover} onChange={(val) => setAutoFailover(val)} />
-          <p className="border-t border-border py-3 text-xs text-muted-foreground">Ana internetin yeniden bağlandığında sistem otomatik olarak sabit bağlantına döner.</p>
+        <section className={card}>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-base font-bold text-foreground">Kalan yedek internet</p>
+            <span className="rounded-full bg-icon-box px-2.5 py-1 text-xs font-semibold text-primary">Demo</span>
+          </div>
+          <div className="mt-3 flex justify-between text-sm">
+            <span className="text-muted-foreground">Kalan</span>
+            <span className="font-semibold text-foreground">{fmtUsage(left)} / {fmtUsage(HYBRID_BACKUP_QUOTA_MB)}</span>
+          </div>
+          <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary" style={{ width: `${(left / HYBRID_BACKUP_QUOTA_MB) * 100}%` }} />
+          </div>
+        </section>
+
+        <section className={card}>
+          <label htmlFor="hybrid-auto" className="flex items-center justify-between gap-3">
+            <span className="text-base font-bold text-foreground">Otomatik yedek geçiş</span>
+            <Switch id="hybrid-auto" checked={h.autoFailover} onCheckedChange={(val) => setAutoFailover(val)} className="data-[state=checked]:bg-magenta" />
+          </label>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Açtığında, kesinti 24 saati aşarsa mobil yedek bağlantın otomatik açılır. Ana internetin geri geldiğinde sistem sabit bağlantıya döner.
+          </p>
         </section>
 
         <TechDetails>
@@ -206,10 +243,10 @@ export function HybridScreen() {
               ["Mobil bağlantı", backupOn ? "Bağlı · 4.5G · sinyal iyi" : "Beklemede"],
               ["Bağlantı modu", backupOn ? "Mobil yedek" : v.main === "Kesik" ? "Bağlantı yok" : "Ana hat (fiber)"],
               ["Açan", h.activatedBy === "auto" ? "Otomatik yedek geçişi" : h.activatedBy === "customer" ? "Sen (manuel)" : "—"],
-            ].map(([k, v]) => (
+            ].map(([k, val]) => (
               <div key={k} className="flex gap-2">
                 <dt className="w-28 shrink-0 text-muted-foreground">{k}</dt>
-                <dd className="font-semibold text-foreground">{v}</dd>
+                <dd className="font-semibold text-foreground">{val}</dd>
               </div>
             ))}
           </dl>

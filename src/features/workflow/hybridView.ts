@@ -29,6 +29,8 @@ export interface HybridViewInput {
 
 export interface HybridView {
   phase: HybridPhase;
+  /** Short status badge in the page header ("Aktif", "Kesinti", "NetBox'ta", "Yavaş"). */
+  badge: { label: "Aktif" | "Kesinti" | "NetBox'ta" | "Yavaş"; tone: HybridTone };
   tone: HybridTone;
   title: string;
   lines: string[];
@@ -52,13 +54,15 @@ export function hybridView(i: HybridViewInput): HybridView {
   const backupOn = i.status === "active" && !i.paused;
   const box = !i.hasDevice ? "Cihaz yok" : backupOn ? "Aktif" : i.status === "activating" ? "Açılıyor" : "Hazır";
   const mobile = backupOn ? "Bağlı" : i.status === "activating" ? "Bağlanıyor" : "Beklemede";
-  const base = { box, mobile, showOpen: false, canOpen: false, openHint: null, failbackNote: false };
+  const down = { label: "Kesinti", tone: "warn" } as const;
+  const base = { box, mobile, showOpen: false, canOpen: false, openHint: null, failbackNote: false, badge: down as HybridView["badge"] };
 
   if (!mainDown) {
     if (i.restored) {
       return {
         ...base,
         phase: "restored",
+        badge: { label: "Aktif", tone: "ok" },
         tone: i.restoredVerified ? "ok" : "info",
         title: i.restoredVerified ? "Ana bağlantına döndün" : "Ana bağlantın doğrulanıyor",
         lines: i.status === "ended" ? ["Ana internetin yeniden bağlandı.", "Hibrit Box mobil bağlantısı otomatik olarak kapatıldı."] : ["Ana internetin yeniden bağlandı.", "Şu anda sabit internetini kullanıyorsun."],
@@ -71,6 +75,7 @@ export function hybridView(i: HybridViewInput): HybridView {
       return {
         ...base,
         phase: "slow",
+        badge: { label: "Yavaş", tone: "warn" },
         tone: "warn",
         title: "Ana internetin yavaş",
         lines: ["Bağlantın açık ama beklenenden yavaş çalışıyor.", "Hibrit Box yalnızca ana internetin kesilirse devreye girer."],
@@ -80,9 +85,10 @@ export function hybridView(i: HybridViewInput): HybridView {
     return {
       ...base,
       phase: "normal",
+      badge: { label: "Aktif", tone: "ok" },
       tone: "ok",
-      title: "Bağlantın normal",
-      lines: ["Ana internetin aktif.", i.hasDevice ? "Şu anda sabit internetini kullanıyorsun. Hibrit Box olası kesintiler için hazır bekliyor." : "Şu anda sabit internetini kullanıyorsun. Kesinti olursa Hibrit Box'ı ücretsiz gönderebiliriz."],
+      title: "İnternetin aktif",
+      lines: ["Ana bağlantın sorunsuz çalışıyor.", i.hasDevice ? "Şu anda sabit internetini kullanıyorsun. Hibrit Box olası kesintiler için hazır bekliyor." : "Şu anda sabit internetini kullanıyorsun. Kesinti olursa Hibrit Box'ı ücretsiz gönderebiliriz."],
       main: "Bağlı",
     };
   }
@@ -92,6 +98,7 @@ export function hybridView(i: HybridViewInput): HybridView {
     return {
       ...base,
       phase: "backup",
+      badge: { label: "NetBox'ta", tone: "info" },
       tone: "info",
       title: "Yedek bağlantı aktif",
       lines:
