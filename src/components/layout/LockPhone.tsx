@@ -31,7 +31,7 @@ export function LockPhone({ onHide, className = "hidden xl:flex" }: { onHide: ()
 
   return (
     <div className={`shrink-0 flex-col items-center ${className}`}>
-      <div className="mb-3 flex w-[260px] items-center justify-between">
+      <div className="mb-3 flex w-[330px] items-center justify-between">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-magenta">Sunum aracı</p>
           <p className="text-sm font-semibold text-primary">Uygulama kapalıyken telefon</p>
@@ -44,7 +44,7 @@ export function LockPhone({ onHide, className = "hidden xl:flex" }: { onHide: ()
       <div
         role="region"
         aria-label="Kilitli telefon bildirimleri"
-        className="relative h-[606px] w-[260px] overflow-hidden rounded-[40px] border-[8px] border-device bg-gradient-to-b from-primary-deep via-primary to-primary-deep shadow-device"
+        className="relative h-[740px] w-[330px] overflow-hidden rounded-[40px] border-[8px] border-device bg-gradient-to-b from-primary-deep via-primary to-primary-deep shadow-device"
       >
         <div className="pointer-events-none absolute -right-16 top-24 size-56 rounded-full bg-magenta/35 blur-3xl" aria-hidden />
         <div className="pointer-events-none absolute -left-20 bottom-24 size-56 rounded-full bg-orange/25 blur-3xl" aria-hidden />
@@ -94,7 +94,6 @@ export function LockPhone({ onHide, className = "hidden xl:flex" }: { onHide: ()
                     </span>
                     <span className="block text-[13px] font-semibold leading-snug">{n.title}</span>
                     <span className="line-clamp-4 block text-[11px] leading-snug text-muted-foreground">{n.body}</span>
-                    {n.count && n.count > 1 ? <span className="mt-0.5 block text-[10px] font-semibold text-magenta">{n.count} güncelleme birleştirildi</span> : null}
                   </span>
                 </motion.button>
               ))}
