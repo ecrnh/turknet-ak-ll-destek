@@ -1,15 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { CheckCircle2, CloudOff, Loader2, Power, Router, Signal, Smartphone, Truck, WifiOff, XCircle } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
 import { runOverdueOps } from "../engine";
-import { fmtRemaining, outageRemainingH } from "../hybridView";
+import { fmtRemaining, hybridSwitchView, outageRemainingH, type HybridSwitchView } from "../hybridView";
 import { hybridOfferOpen, hybridUsageMb } from "../rules";
-import { activateHybrid, checkHybrid, declineHybrid, dismissOutage, openHybridBox, outageHours } from "../services/hybrid";
+import { activateHybrid, checkHybrid, declineHybrid, dismissOutage, outageHours, setHybridOn } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
 import type { DeviceRequest, HybridChecks, OutageState } from "../types";
 
@@ -142,12 +142,41 @@ export function OutageHomeCard() {
   const verifying = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status !== "done");
   // Never behind the last state change (the presenter can move the outage start).
   const now = Math.max(useNow(10_000), o?.lastUpdateAt ?? 0);
-  const busy = h.status === "checking" || h.status === "activating";
+  const busy = h.status === "checking" || h.status === "activating" || !!h.switching;
   useEffect(() => {
     if (!busy) return;
     const t = window.setInterval(() => runOverdueOps(), 2500);
     return () => window.clearInterval(t);
   }, [busy]);
+
+  // Result toast for a command the customer gave here (toggle or button), once the mock finishes.
+  const pending = useRef<"on" | "off" | null>(null);
+  useEffect(() => {
+    const p = pending.current;
+    if (!p || h.switching) return;
+    const done = (fn: () => void) => {
+      pending.current = null;
+      fn();
+    };
+    if (p === "on") {
+      if (h.status === "active" && !h.pausedAt) done(() => toast.success("Hibrit İnternet aktif", { description: "Ana bağlantınız düzelene kadar yedek bağlantıyla internete bağlısınız." }));
+      else if (h.status === "failed") done(() => toast.error("Hibrit İnternet açılamadı", { description: "Yedek cihaz mobil ağa bağlanamadı. Tekrar deneyebilirsiniz." }));
+      else if (h.status === "no_coverage") done(() => toast.error("Hibrit İnternet şu an açılamıyor", { description: "Adresinizde yeterli mobil kapsama yok. Arıza takibiniz sürüyor." }));
+      else if (h.status === "no_device") done(() => toast.error("Uyumlu Hibrit Box bulunamadı", { description: "Yedek cihazı ücretsiz gönderebiliriz." }));
+    } else if (h.status !== "active" || h.pausedAt) {
+      done(() => toast("Hibrit İnternet kapatıldı", { description: "İstediğiniz zaman yeniden açabilirsiniz." }));
+    }
+  }, [h.status, h.pausedAt, h.switching]);
+
+  /** Toggle and big button share this one command. */
+  const change = (on: boolean) => {
+    if (setHybridOn(on)) pending.current = on ? "on" : "off";
+    else
+      toast.error(on ? "Hibrit Box şu an açılamıyor" : "Hibrit İnternet şu an kapatılamıyor", {
+        description: on ? "Kesinti 24 saati aştığında ya da aşması beklendiğinde açılabilir." : "Lütfen birkaç saniye sonra tekrar deneyin.",
+      });
+  };
+
   if (!o || o.dismissed) return null;
 
   if (o.restoredAt) {
