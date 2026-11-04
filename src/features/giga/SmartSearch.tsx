@@ -141,7 +141,7 @@ export function SmartSearchBar() {
               </div>
             ) : result ? (
               <div aria-live="polite">
-                <p className="mb-2 rounded-2xl bg-muted px-3 py-2 text-sm text-foreground">“{result.query}”</p>
+                <p className="mb-3 mr-8 rounded-2xl bg-muted px-3 py-2 text-sm text-foreground">“{result.query}”</p>
                 <div className="flex gap-2.5">
                   <GigaAvatar size={34} label={false} />
                   <div className="flex-1">
