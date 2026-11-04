@@ -349,4 +349,6 @@ export interface HybridService {
   activatedBy?: "auto" | "customer" | null | undefined;
   /** Customer tapped "Hibrit Box'ı Aç" while the eligibility check was still running. */
   openRequested?: boolean | undefined;
+  /** A customer on/off command for an already-activated backup is being applied (mock device command). */
+  switching?: "on" | "off" | null | undefined;
 }

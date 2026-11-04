@@ -174,7 +174,15 @@ export function activateHybrid(by: "auto" | "customer" = "customer"): boolean {
  */
 export function openHybridBox(): boolean {
   const h = W.getState().hybrid;
-  if (h.status === "active" && h.pausedAt) return resumeHybrid();
+  if (h.switching) return false;
+  if (h.status === "active" && h.pausedAt) {
+    const o = openOutage();
+    if (!o) return false;
+    patchHybrid({ switching: "on" });
+    schedule("hybrid.switched", o.wfId, 1200, "on");
+    return true;
+  }
+  if (h.status === "activating") return false;
   if (h.status === "ready" || h.status === "failed") return activateHybrid("customer");
   if (h.status === "checking") {
     patchHybrid({ openRequested: true });
@@ -300,6 +308,29 @@ registerOp("outage.verify", (id) => {
     summary: used ? "Kesinti giderildi; Hibrit İnternet ile bağlı kalındı" : "Kesinti giderildi, bağlantı doğrulandı",
     results: [`Kesinti süresi: yaklaşık ${hours} saat (demo)`, used ? `Hibrit İnternet kullanıldı · ${(usageMb / 1024).toFixed(1).replace(".", ",")} GB (demo)` : "Hibrit İnternet kullanılmadı", "Ana bağlantı 96 Mbps ile doğrulandı (demo)"],
   });
+});
+
+/** Customer turns the running backup off (toggle). Applied after a short mock device command. */
+export function closeHybridBox(): boolean {
+  const o = openOutage();
+  const h = W.getState().hybrid;
+  if (!o || h.status !== "active" || h.pausedAt || h.switching) return false;
+  patchHybrid({ switching: "off" });
+  schedule("hybrid.switched", o.wfId, 1200, "off");
+  return true;
+}
+
+/** The single on/off control behind the Hibrit İnternet toggle and the "Hibrit Box'ı Aç" button. */
+export function setHybridOn(on: boolean): boolean {
+  return on ? openHybridBox() : closeHybridBox();
+}
+
+registerOp("hybrid.switched", (_id, dir) => {
+  const h = W.getState().hybrid;
+  if (!h.switching) return;
+  patchHybrid({ switching: null });
+  if (dir === "off") pauseHybrid();
+  else resumeHybrid();
 });
 
 /** Customer switches the active backup off from the app; the service stays theirs to switch on again. */
