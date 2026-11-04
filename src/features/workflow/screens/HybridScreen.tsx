@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, CloudOff, Info, Loader2, Power, Router, Signal, Smartphone, TriangleAlert, Wifi } from "lucide-react";
+import { CheckCircle2, Clock, CloudOff, Info, Loader2, Power, Router, Signal, Smartphone, Timer, TriangleAlert, Wifi, Wrench } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
@@ -11,7 +11,7 @@ import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
 import { runOverdueOps } from "../engine";
-import { hybridView } from "../hybridView";
+import { hybridView, outageInfo } from "../hybridView";
 import { HYBRID_OFFER_AFTER_H, hybridOfferOpen, hybridUsageMb } from "../rules";
 import { checkHybrid, openHybridBox, outageHours, requestHybridDevice, setAutoFailover } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
@@ -34,6 +34,7 @@ export function HybridScreen() {
   const c = useWorkflowStore((s) => s.connectivity);
   const hasDevice = useWorkflowStore((s) => s.config.hybridDevice);
   const verify = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.steps.find((st) => st.key === "verify")?.status);
+  const regional = useWorkflowStore((s) => s.workflows.find((w) => w.id === s.outage?.wfId)?.data["outageType"] === "regional");
   const now = Math.max(useNow(5_000), o?.lastUpdateAt ?? 0);
   const wantOpen = !!h.openRequested;
 
@@ -80,6 +81,7 @@ export function HybridScreen() {
     hasDevice,
   });
   const { tone } = v;
+  const info = outageInfo({ fixed: c.fixed, outageOngoing: ongoing, regional, hours, etaH: o?.etaH });
 
   const rows: { icon: typeof Router; label: string; value: string; tone: "on" | "off" | "bad" }[] = [
     { icon: Wifi, label: "Ana internet", value: v.main, tone: v.main === "Bağlı" ? "on" : "bad" },
@@ -97,6 +99,35 @@ export function HybridScreen() {
           <p className="text-lg font-semibold leading-snug text-primary">İnternetin kesilse bile bağlantın devam etsin.</p>
           <FreeBadge className="mt-1.5" label="Ücretsiz · Aboneliğine dahil" />
         </div>
+
+        {info && (
+          <section className="rounded-card bg-card p-5 shadow-card" aria-labelledby="outage-info-title">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-destructive-soft text-destructive">
+                <CloudOff className="size-5" strokeWidth={1.75} />
+              </span>
+              <div className="min-w-0">
+                <p id="outage-info-title" className="font-semibold leading-snug text-primary">{regional ? "Bölgenizde internet kesintisi var" : "İnternet bağlantınızda kesinti var"}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Teknik ekibimiz çalışıyor; gelişmeleri size bildireceğiz.</p>
+              </div>
+            </div>
+            <dl className="mt-4 space-y-2.5 rounded-2xl bg-muted p-3.5 text-sm">
+              {[
+                { icon: TriangleAlert, k: "Arıza sebebi", v: info.cause },
+                { icon: Clock, k: "Tahmini çözüm", v: ongoing ? `${info.remaining} (demo)` : info.remaining },
+                ...(ongoing ? [{ icon: Timer, k: "Süre", v: `${fmtOngoing(hours)} sürüyor` }, { icon: Wrench, k: "Durum", v: o.repairNote }] : []),
+              ].map((r) => (
+                <div key={r.k} className="flex items-start gap-2.5">
+                  <r.icon className="mt-0.5 size-4 shrink-0 text-magenta" aria-hidden />
+                  <div className="min-w-0">
+                    <dt className="text-[11px] text-muted-foreground">{r.k}</dt>
+                    <dd className="font-semibold text-foreground">{r.v}</dd>
+                  </div>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
 
         <section className="rounded-card bg-card p-5 shadow-card" aria-live="polite">
           <div className={cn("flex items-start gap-2.5 rounded-2xl px-3 py-2.5", TONE[tone])}>
