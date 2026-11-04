@@ -3,6 +3,7 @@ import { ArrowLeft, Bell, Search } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { unreadCount, useAppStore } from "@/features/core/appStore";
+import { SmartSearchBar } from "@/features/giga/SmartSearch";
 
 export function TurknetLogo({ className }: { className?: string }) {
   return (
@@ -30,10 +31,7 @@ export function HomeTopBar() {
   return (
     <div className="sticky top-0 z-30 flex items-center gap-3 rounded-b-[28px] bg-card px-4 pb-3 pt-3 shadow-card">
       <TurknetLogo className="text-[2.6rem]" />
-      <Link to="/arama" className="flex h-12 flex-1 items-center gap-2.5 rounded-full border border-border bg-card px-4 text-muted-foreground shadow-sm">
-        <Search className="size-5 text-foreground" strokeWidth={1.75} />
-        <span className="text-[0.95rem]">İşlem veya Sayfa Ara</span>
-      </Link>
+      <SmartSearchBar />
       <BellButton />
     </div>
   );
