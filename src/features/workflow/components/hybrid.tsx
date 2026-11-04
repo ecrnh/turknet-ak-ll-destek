@@ -210,15 +210,6 @@ export function HybridSwitchCard({ sw, active, auto, note, action, onChange }: {
           {sw.busy === "opening" ? "Yedek bağlantınız açılıyor, birkaç saniye sürebilir." : "Yedek bağlantınız kapatılıyor."}
         </p>
       )}
-      {active && !sw.busy && (
-        <div className="mt-2.5 flex items-start gap-2 rounded-xl bg-success-soft px-3 py-2.5 text-success">
-          <CheckCircle2 className="mt-px size-4 shrink-0" aria-hidden />
-          <div className="text-xs">
-            <p className="font-semibold">{auto ? "Önceden verdiğiniz izinle devreye alındı." : "Hibrit İnternet devreye alındı."}</p>
-            <p className="mt-0.5 text-success/80">Yedek bağlantıyla internete bağlısınız; ana bağlantınız düzelince otomatik geri dönersiniz.</p>
-          </div>
-        </div>
-      )}
       {note && (
         <div className="mt-2.5 flex items-start gap-2 rounded-xl bg-muted px-3 py-2 text-xs text-foreground/80">
           <Clock className="mt-px size-3.5 shrink-0 text-muted-foreground" aria-hidden />
