@@ -174,8 +174,9 @@ export function OutageHomeCard() {
 
   const hours = outageHours(o, now);
   const after24 = hybridOfferOpen(hours, o.etaH);
-  const active = h.status === "active" && !h.pausedAt;
+  const active = h.status === "active" && !h.pausedAt && h.switching !== "off";
   const remaining = fmtRemaining(outageRemainingH(hours, o.etaH, regional));
+  const sw = hybridSwitchView({ status: h.status, paused: !!h.pausedAt, switching: h.switching, openRequested: h.openRequested, offerOpen: after24 });
 
   const title = active ? "İnternet kesintisi sürüyor · yedek bağlantı aktif" : regional ? "Bölgenizde internet kesintisi var" : "İnternet bağlantınızda kesinti var";
   const facts: [string, string][] = [
@@ -185,26 +186,16 @@ export function OutageHomeCard() {
     ["Durum", o.repairNote || "Teknik ekibimiz çalışıyor"],
   ];
 
-  // Hibrit İnternet: one line of state and, when allowed, the single open action.
-  let hybridLine: string;
-  let canOpen = false;
-  if (active) hybridLine = h.activatedBy === "auto" ? "Aktif · önceden verdiğiniz izinle otomatik açıldı" : "Aktif · yedek bağlantıyla internete bağlısınız";
-  else if (h.status === "activating" || (h.status === "checking" && h.openRequested)) hybridLine = "Hibrit Box açılıyor…";
-  else if (!after24) hybridLine = h.autoFailover ? "Kesinti 24 saati aşarsa otomatik açılacak" : "Kesinti 24 saati aşarsa ücretsiz açabilirsiniz";
-  else if (h.status === "no_coverage") hybridLine = "Adresinizde yedek bağlantı için yeterli mobil kapsama yok";
-  else if (h.status === "no_device") hybridLine = h.device ? `Yedek cihazınız · ${C.device[h.device.status]}` : "Evinizde uyumlu Hibrit Box bulunamadı";
-  else if (h.status === "checking") hybridLine = "Uygunluğunuz kontrol ediliyor…";
-  else {
-    hybridLine = h.status === "failed" ? "Açılamadı · tekrar deneyebilirsiniz" : "Ücretsiz açılabilir · aboneliğinize dahil";
-    canOpen = true;
-  }
-
-  const open = () => {
-    if (!openHybridBox()) toast("Hibrit Box şu an açılamıyor", { description: "Kesinti 24 saati aştığında ya da aşması beklendiğinde açılabilir." });
-  };
+  // Why the toggle can't be used right now (only when there is a reason to tell).
+  let hybridNote: string | null = null;
+  if (sw.busy || active) hybridNote = null;
+  else if (!after24) hybridNote = h.autoFailover ? "Kesinti 24 saati aşarsa otomatik açılacak." : "Kesinti 24 saati aşarsa ücretsiz açabilirsiniz.";
+  else if (h.status === "no_coverage") hybridNote = "Adresinizde yedek bağlantı için yeterli mobil kapsama yok.";
+  else if (h.status === "no_device") hybridNote = h.device ? `Yedek cihazınız · ${C.device[h.device.status]}` : "Evinizde uyumlu Hibrit Box bulunamadı.";
+  else if (h.status === "failed") hybridNote = "Son deneme başarısız oldu. Tekrar açmayı deneyebilirsiniz.";
 
   return (
-    <div className={cn("rounded-card bg-card p-5 shadow-card", canOpen && "border-gradient")} role="status" aria-live="polite">
+    <div className={cn("rounded-card bg-card p-5 shadow-card", sw.ctaEnabled && "border-gradient")} role="status" aria-live="polite">
       <div className="flex items-start gap-3">
         <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl", active ? "bg-orange-soft text-orange-deep" : "bg-destructive-soft text-destructive")}>
           {active ? <Smartphone className="size-6" /> : <CloudOff className="size-6" />}
@@ -224,19 +215,17 @@ export function OutageHomeCard() {
         ))}
       </dl>
 
-      <div className={cn("mt-3 flex items-center gap-3 rounded-2xl border p-3", active ? "border-orange-deep/30 bg-orange-soft" : "border-border")}>
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-icon-box text-primary">
-          {h.status === "activating" || h.status === "checking" ? <Loader2 className="size-4 animate-spin" /> : <Router className="size-4" />}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-primary">Hibrit İnternet</p>
-          <p className="text-xs text-muted-foreground">{hybridLine}</p>
-        </div>
-      </div>
+      <HybridSwitchCard sw={sw} active={active} auto={h.activatedBy === "auto"} note={hybridNote} onChange={change} />
 
-      {canOpen ? (
-        <button type="button" onClick={open} className={PRIMARY}>
-          <Power className="mr-2 size-4" /> {h.status === "failed" ? C.failed.cta : "Hibrit Box'ı Aç"}
+      {sw.cta ? (
+        <button
+          type="button"
+          onClick={() => change(true)}
+          disabled={!sw.ctaEnabled}
+          aria-busy={!!sw.busy}
+          className={cn(PRIMARY, "disabled:cursor-default", sw.on && !sw.busy && "bg-success-soft text-success shadow-none", sw.busy && "opacity-80")}
+        >
+          {sw.busy ? <Loader2 className="mr-2 size-4 animate-spin" /> : sw.on ? <CheckCircle2 className="mr-2 size-4" /> : <Power className="mr-2 size-4" />} {sw.cta}
         </button>
       ) : h.status === "no_device" && after24 && !h.device ? (
         <Link to="/hibrit" className={PRIMARY}>
