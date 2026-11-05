@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Check, Mic, Search, Sparkles, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { GigaAvatar } from "./GigaAvatar";
 import { useSearchCtx } from "./searchContext";
@@ -22,6 +22,13 @@ export function SmartSearchBar() {
   const rec = useRef<Rec | null>(null);
   const timer = useRef<number | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  const [hint, setHint] = useState(false);
+  useEffect(() => {
+    if (sessionStorage.getItem("tn-voice-hint")) return;
+    const show = window.setTimeout(() => { setHint(true); sessionStorage.setItem("tn-voice-hint", "1"); }, 1200);
+    const hide = window.setTimeout(() => setHint(false), 7200);
+    return () => { window.clearTimeout(show); window.clearTimeout(hide); };
+  }, []);
 
   const submit = (text = q) => {
     const t = text.trim();
@@ -79,7 +86,7 @@ export function SmartSearchBar() {
 
   return (
     <div className="relative flex-1">
-      <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="flex h-12 items-center gap-1.5 rounded-full border border-border bg-card pl-3 pr-1.5 shadow-sm">
+      <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="flex h-12 items-center gap-1.5 rounded-full border-2 border-primary/30 bg-card pl-3 ring-1 ring-primary/5 transition-colors focus-within:border-primary pr-1.5 shadow-sm">
         <button type="submit" aria-label="Ara" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-foreground">
           <Search className="size-5" strokeWidth={1.75} />
         </button>
@@ -93,10 +100,18 @@ export function SmartSearchBar() {
           enterKeyHint="search"
           className="h-full min-w-0 flex-1 bg-transparent text-[0.85rem] outline-none placeholder:text-muted-foreground"
         />
-        <button type="button" onClick={listening ? stopVoice : startVoice} aria-label={listening ? "Dinlemeyi durdur" : "Sesle anlat"} className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full", listening ? "bg-magenta text-magenta-foreground" : "bg-icon-box text-primary")}>
+        <button type="button" onClick={() => { setHint(false); listening ? stopVoice() : startVoice(); }} aria-label={listening ? "Dinlemeyi durdur" : "Sesle anlat"} className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full", listening ? "bg-magenta text-magenta-foreground" : "bg-icon-box text-primary")}>
           <Mic className="size-[18px]" strokeWidth={1.75} />
         </button>
       </form>
+      {hint && !open && (
+        <div role="status" className="absolute right-0 top-[54px] z-20 flex w-60 items-start gap-2 rounded-2xl bg-primary px-3 py-2.5 text-primary-foreground shadow-float animate-in fade-in slide-in-from-top-1">
+          <span aria-hidden className="absolute -top-1.5 right-4 h-3 w-3 rotate-45 bg-primary" />
+          <Mic className="mt-0.5 size-4 shrink-0" strokeWidth={1.75} />
+          <p className="flex-1 text-xs leading-snug">Sorununu sesli de söyleyebilirsin. Mikrofona dokunman yeter.</p>
+          <button onClick={() => setHint(false)} aria-label="Kapat" className="-mr-1 -mt-0.5 opacity-80"><X className="size-3.5" /></button>
+        </div>
+      )}
 
       {open && (
         <>
