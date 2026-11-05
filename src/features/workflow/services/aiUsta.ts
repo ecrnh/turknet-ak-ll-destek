@@ -589,7 +589,7 @@ function askFinalSupport(id: string, reason: string) {
   ask(id, {
     key: "usta_final_support",
     prompt: inBusinessHours ? "GIGA ile yaptığımız kontroller sorunu çözemedi. Canlı desteğe bağlanalım mı?" : "GIGA ile yaptığımız kontroller sorunu çözemedi.",
-    detail: inBusinessHours ? undefined : "Canlı destek hafta içi 09.00–18.00 arasında hizmet veriyor. Bu saatlerde bu süreçten bağlanabilirsin.",
+    ...(inBusinessHours ? {} : { detail: "Canlı destek hafta içi 09.00–18.00 arasında hizmet veriyor. Bu saatlerde bu süreçten bağlanabilirsin." }),
     options: inBusinessHours ? [{ id: "live", label: "Canlı destekle görüş", primary: true }] : [],
   }, reason, { push: false });
 }

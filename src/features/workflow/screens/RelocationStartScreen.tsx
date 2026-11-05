@@ -93,7 +93,7 @@ export function RelocationStartScreen() {
   const start = () => {
     if (mode === "move" && !validate()) return;
     useWorkflowStore.setState({ autoFollowUp: true });
-    const id = startRelocation({ address: { id: "ADR-NEW", line, district: addr.district.trim(), city: addr.city.trim() }, moveDate: date, wantsTemp: false, eligibility: result ?? undefined });
+    const id = startRelocation({ address: { id: "ADR-NEW", line, district: addr.district.trim(), city: addr.city.trim() }, moveDate: date, wantsTemp: false, ...(result ? { eligibility: result } : {}) });
     setStartedId(id);
     setStage("started");
   };

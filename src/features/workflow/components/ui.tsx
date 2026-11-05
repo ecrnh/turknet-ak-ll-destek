@@ -31,7 +31,7 @@ import { decide, WO_LABEL } from "../engine";
 import { STATUS_LABEL } from "../rules";
 import { customerAction, lastDoneStep, TYPE_LABEL } from "../copy";
 import { useWorkflowStore } from "../store";
-import type { Actor, AuditEvent, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
+import type { Actor, AuditEvent, Decision, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
 import { ModemInspectCard } from "./modem";
 
 export const TYPE_ICON: Record<WorkflowType, LucideIcon> = {
@@ -108,12 +108,12 @@ export function TechDetails({ title = "Teknik detayları gör", children, classN
 export function DecisionCard({ wf }: { wf: Workflow }) {
   const navigate = useNavigate();
   const stored = wf.decision;
-  const d = stored?.key === "usta_more"
-    ? { ...stored, prompt: "Sorunun hâlâ devam ediyor mu?", detail: undefined, options: [{ id: "yes", label: "Evet, devam ediyor", primary: true }, { id: "fixed", label: "Hayır, düzeldi" }] }
+  const d: Decision | null | undefined = stored?.key === "usta_more"
+    ? { ...stored, prompt: "Sorunun hâlâ devam ediyor mu?", detail: "", options: [{ id: "yes", label: "Evet, devam ediyor", primary: true }, { id: "fixed", label: "Hayır, düzeldi" }] }
     : stored?.key === "usta_support"
       ? { ...stored, prompt: "Bağlantı sorunun sürüyorsa birlikte deneyelim.", detail: "Modem kısa süreli takılmış olabilir. Bağlantıyı uzaktan yenilemek modemin yeniden ağa bağlanmasını sağlar; evindeki modemi kapatıp açmana gerek kalmaz.", options: [{ id: "restart", label: "Bağlantıyı uzaktan yenile", desc: "Modemini yeniden ağa bağlamayı deneyelim.", primary: true }, { id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek." }] }
       : stored?.key === "usta_remote_failed"
-        ? { ...stored, prompt: "Bağlantı sorunun sürüyor. Nasıl devam etmek istersin?", detail: undefined, options: [{ id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek.", primary: true }] }
+        ? { ...stored, prompt: "Bağlantı sorunun sürüyor. Nasıl devam etmek istersin?", detail: "", options: [{ id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek.", primary: true }] }
         : stored;
     if (!d) return null;
   if (d.key === "usta_final_support" && d.options.length === 0) return (

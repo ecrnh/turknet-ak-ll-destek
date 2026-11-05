@@ -46,11 +46,12 @@ export function startRelocation(input: RelocationInput): string {
   if (!created) return wf.id;
   step(wf.id, "context", "done", `${SUBSCRIPTION.packageName} · borç yok · taahhüt ${SUBSCRIPTION.commitmentEnd} · mevcut port ${CURRENT_ADDRESS.port}`, "Nakil öncesi abonelik, borç ve mevcut port bilgisi doğrulanır; müşteriden tekrar istenmez");
   const prechecked = input.eligibility && input.eligibility !== "no_response";
-  if (prechecked) {
+  const pre = input.eligibility;
+  if (pre && pre !== "no_response") {
     setData(wf.id, { eligibilityPrechecked: true });
     step(wf.id, "eligibility", "done", "Yeni adres uygunluğu taşınma başvurusundan önce kontrol edildi");
-    notify(wf.id, "Taşınma talebiniz alındı", input.eligibility === "no_port" ? "Yeni adresinizde boş port bulunmadığı için altyapı takibini başlatıyoruz." : "Adres uygunluk sonucu hazır; taşınma adımlarını başlatıyoruz.");
-    applyEligibility(wf.id, input.eligibility, input.eligibility === "no_port" ? "Yeni adreste şu an boş port yok" : "Adres uygunluğu önceden doğrulandı");
+    notify(wf.id, "Taşınma talebiniz alındı", pre === "no_port" ? "Yeni adresinizde boş port bulunmadığı için altyapı takibini başlatıyoruz." : "Adres uygunluk sonucu hazır; taşınma adımlarını başlatıyoruz.");
+    applyEligibility(wf.id, pre, pre === "no_port" ? "Yeni adreste şu an boş port yok" : "Adres uygunluğu önceden doğrulandı");
   } else {
     notify(wf.id, "Yeni adresiniz için altyapı kontrolü başladı", "Taşınma sürecinizi sizin için takip ediyoruz. Önemli bir gelişme olduğunda size haber vereceğiz.");
     checkEligibility(wf.id);

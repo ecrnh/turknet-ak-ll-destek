@@ -43,6 +43,7 @@ import { Route as GoruntuluDestekSonucRouteImport } from './routes/goruntulu-des
 import { Route as IslemSlugRouteImport } from './routes/islem.$slug'
 import { Route as QrIndexRouteImport } from './routes/qr.index'
 import { Route as QrAnalizRouteImport } from './routes/qr.analiz'
+import { Route as QrDestekRouteImport } from './routes/qr.destek'
 import { Route as QrTaraRouteImport } from './routes/qr.tara'
 import { Route as SurecIdRouteImport } from './routes/surec.$id'
 import { Route as QrTalepIdRouteImport } from './routes/qr.talep.$id'
@@ -217,6 +218,11 @@ const QrAnalizRoute = QrAnalizRouteImport.update({
   path: '/qr/analiz',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QrDestekRoute = QrDestekRouteImport.update({
+  id: '/qr/destek',
+  path: '/qr/destek',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QrTaraRoute = QrTaraRouteImport.update({
   id: '/qr/tara',
   path: '/qr/tara',
@@ -263,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
+  '/qr/destek': typeof QrDestekRoute
   '/qr/tara': typeof QrTaraRoute
   '/surec/$id': typeof SurecIdRoute
   '/aile/': typeof AileIndexRoute
@@ -302,6 +309,7 @@ export interface FileRoutesByTo {
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
+  '/qr/destek': typeof QrDestekRoute
   '/qr/tara': typeof QrTaraRoute
   '/surec/$id': typeof SurecIdRoute
   '/aile': typeof AileIndexRoute
@@ -342,6 +350,7 @@ export interface FileRoutesById {
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
+  '/qr/destek': typeof QrDestekRoute
   '/qr/tara': typeof QrTaraRoute
   '/surec/$id': typeof SurecIdRoute
   '/aile/': typeof AileIndexRoute
@@ -383,6 +392,7 @@ export interface FileRouteTypes {
     | '/goruntulu-destek/sonuc'
     | '/islem/$slug'
     | '/qr/analiz'
+    | '/qr/destek'
     | '/qr/tara'
     | '/surec/$id'
     | '/aile/'
@@ -422,6 +432,7 @@ export interface FileRouteTypes {
     | '/goruntulu-destek/sonuc'
     | '/islem/$slug'
     | '/qr/analiz'
+    | '/qr/destek'
     | '/qr/tara'
     | '/surec/$id'
     | '/aile'
@@ -461,6 +472,7 @@ export interface FileRouteTypes {
     | '/goruntulu-destek/sonuc'
     | '/islem/$slug'
     | '/qr/analiz'
+    | '/qr/destek'
     | '/qr/tara'
     | '/surec/$id'
     | '/aile/'
@@ -501,6 +513,7 @@ export interface RootRouteChildren {
   GoruntuluDestekSonucRoute: typeof GoruntuluDestekSonucRoute
   IslemSlugRoute: typeof IslemSlugRoute
   QrAnalizRoute: typeof QrAnalizRoute
+  QrDestekRoute: typeof QrDestekRoute
   QrTaraRoute: typeof QrTaraRoute
   SurecIdRoute: typeof SurecIdRoute
   AileIndexRoute: typeof AileIndexRoute
@@ -751,6 +764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QrAnalizRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/qr/destek': {
+      id: '/qr/destek'
+      path: '/qr/destek'
+      fullPath: '/qr/destek'
+      preLoaderRoute: typeof QrDestekRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/qr/tara': {
       id: '/qr/tara'
       path: '/qr/tara'
@@ -805,6 +825,7 @@ const rootRouteChildren: RootRouteChildren = {
   GoruntuluDestekSonucRoute: GoruntuluDestekSonucRoute,
   IslemSlugRoute: IslemSlugRoute,
   QrAnalizRoute: QrAnalizRoute,
+  QrDestekRoute: QrDestekRoute,
   QrTaraRoute: QrTaraRoute,
   SurecIdRoute: SurecIdRoute,
   AileIndexRoute: AileIndexRoute,
