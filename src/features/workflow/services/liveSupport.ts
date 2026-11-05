@@ -32,7 +32,18 @@ export function handoffSummary(wf: Workflow, connectivity: WorkflowState["connec
   const conn = connectivity.fixed === "up" ? "Ana bağlantı aktif" : connectivity.mobile === "active" ? "Ana bağlantı kesik · yedek bağlantı aktif" : "Ana bağlantı kesik";
   return [
     { label: "Sorun", value: String(wf.data["issue"] ?? wf.title) },
+    ...(wf.data["channel"] === "qr" ? [
+      { label: "Destek kanalı", value: "Modem üzerindeki kişisel QR etiketi" },
+      { label: "Modem", value: `${String(wf.data["modemModel"] ?? "Modem")} · ${String(wf.data["modemSerial"] ?? "seri numarası tanındı")}` },
+      { label: "Abonelik", value: String(wf.data["subscriberNo"] ?? "Abonelik eşleşti") },
+    ] : []),
     ...(wf.data["channel"] === "ivr" ? [{ label: "Telefon görüşmesi", value: note("ivr_check") ?? "Telefonda temsilci istendi" }] : []),
+    ...(wf.data["channel"] === "video" ? [
+      { label: "GIGA görüntülü inceleme", value: String(wf.data["finding"] ?? "Görüşme notları aktarıldı") },
+      { label: "Görüşmede uygulanan adımlar", value: String(wf.data["videoActions"] ?? "—").split(" | ").join(" → ") },
+      { label: "Son bağlantı testi", value: String(wf.data["connectionTest"] ?? "—") },
+      { label: "Görüşme süresi", value: `${String(wf.data["videoDuration"] ?? "—")} sn` },
+    ] : []),
     { label: "Dijital onarım", value: repairText },
     { label: "Tespit edilen sorun", value: wf.data["finding"] ? String(wf.data["finding"]) : "Bilinen bir arıza bulunmadı" },
     ...(step("remote")?.status === "done" ? [{ label: "Uzaktan düzeltme", value: `${note("remote") ?? ""} → ${note("verify") ?? "sonuç yok"}` }] : []),
@@ -62,8 +73,7 @@ export function openLiveChat(wfId: string): boolean {
         agent: LIVE_AGENT,
         startedAt: Date.now(),
         messages: [
-          msg("giga", "Yaptığımız kontrolleri temsilcine ilettim. Aynı şeyleri tekrar anlatmana gerek yok."),
-          msg("agent", "Merhaba, dijital onarım sonuçlarını ve yaptığın kontrolleri görebiliyorum. Aynı şeyleri tekrar anlatmana ya da adımları baştan yapmana gerek yok; kaldığımız yerden devam edelim."),
+          msg("agent", `Merhaba, ben Selin. “${String(wf.data["issue"] ?? wf.title)}” konusundaki talebini aldım; şimdi incelemeye başlıyorum. Sana yardımcı olmak için buradayım.`),
         ],
       },
     ],
@@ -112,3 +122,4 @@ export function declineFieldVisit(wfId: string) {
   push(wfId, msg("customer", "Şimdilik gerek yok."));
   push(wfId, msg("agent", "Anladım. Kaydın açık kalıyor; istediğin zaman buradan randevu isteyebilirsin."));
 }
+

@@ -11,14 +11,16 @@ export function useCamera(autoStart = false) {
     streamRef.current = null;
   }, []);
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (facing: "user" | "environment" = "user") => {
     if (!navigator.mediaDevices?.getUserMedia) {
       setStatus("unavailable");
       return;
     }
     setStatus("pending");
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: facing } }, audio: false });
       streamRef.current = s;
       if (videoRef.current) videoRef.current.srcObject = s;
       setStatus("live");
@@ -36,5 +38,10 @@ export function useCamera(autoStart = false) {
     if (status === "live" && videoRef.current && streamRef.current) videoRef.current.srcObject = streamRef.current;
   });
 
-  return { videoRef, status, start, stop };
+  const setEnabled = useCallback((enabled: boolean) => {
+    streamRef.current?.getVideoTracks().forEach((track) => { track.enabled = enabled; });
+  }, []);
+
+  return { videoRef, status, start, stop, setEnabled };
 }
+

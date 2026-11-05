@@ -13,12 +13,17 @@ import { useVideoStore } from "../store";
 import { fmtDuration } from "@/lib/format";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "@tanstack/react-router";
+import { finishGigaVideoSupport, handoffVideoSession } from "@/features/workflow/services/aiUsta";
 
 const SLOTS = ["09:00–12:00", "12:00–15:00", "15:00–18:00", "18:00–21:00"];
 const DAYS = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 
 export function VideoResultScreen() {
   const call = useVideoStore((s) => s.lastCall);
+  const workflowId = useVideoStore((s) => s.workflowId);
+  const setWorkflowId = useVideoStore((s) => s.setWorkflowId);
+  const navigate = useNavigate();
   const resolveLast = useVideoStore((s) => s.resolveLast);
   const addAppointment = useVideoStore((s) => s.addAppointment);
   const updateRecord = useAppStore((s) => s.updateRecord);
@@ -51,13 +56,21 @@ export function VideoResultScreen() {
 
   const answer = (v: boolean) => {
     resolveLast(v);
+    if (workflowId) {
+      finishGigaVideoSupport(workflowId, v);
+      setWorkflowId(null);
+      navigate({ to: "/surec/$id", params: { id: workflowId } });
+      return;
+    }
     if (v) {
       incSaved();
       updateRecord(call.recordId, { status: "Çözüldü", fieldVisitAvoided: true });
       track("flow_completed", "video_support", { resolved: true });
     } else {
-      updateRecord(call.recordId, { status: "Saha ekibi gerekli" });
+      updateRecord(call.recordId, { status: "Canlı teknik desteğe aktarıldı" });
       track("flow_completed", "video_support", { resolved: false });
+      const id = handoffVideoSession({ topic: call.topic, finding: call.finding ?? call.topic, actions: call.actions ?? call.steps, connectionTest: call.connectionTest ?? "Bağlantı sorunu sürüyor", durationSec: call.durationSec, recordId: call.recordId });
+      navigate({ to: "/canli-destek/$id", params: { id } });
     }
   };
 
@@ -171,3 +184,4 @@ export function VideoResultScreen() {
     </div>
   );
 }
+

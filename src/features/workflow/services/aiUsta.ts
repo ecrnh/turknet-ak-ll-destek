@@ -7,7 +7,7 @@
  * photo or manual light + cable answers) → one safe step at a time → verify →
  * escalate with full context. Live support can be chosen at every decision point.
  */
-import { AI_USTA_CABLE_STEP, AI_USTA_STEPS, CABLE_STATES, CUSTOMER, INTERNET_LIGHT_STATES, IVR_MENU, REPAIR_CHECKS, SUBSCRIPTION, TEAMS, USTA_ISSUES, type CableState, type InternetLight } from "@/data/mock";
+import { AI_USTA_CABLE_STEP, AI_USTA_STEPS, CABLE_STATES, CUSTOMER, INTERNET_LIGHT_STATES, IVR_MENU, REPAIR_CHECKS, SUBSCRIPTION, TEAMS, USER, USTA_ISSUES, type CableState, type InternetLight } from "@/data/mock";
 import { uid } from "@/lib/format";
 import { ask, chain, complete, createWorkflow, escalate, getWf, log, notify, registerDecision, registerOp, runOverdueOps, schedule, setData, step, stepStatus } from "../engine";
 import { MockNetworkAPI, MockVisionAPI } from "../mockServices";
@@ -16,11 +16,13 @@ import { useWorkflowStore as W } from "../store";
 import { setConnectivity } from "./connectivity";
 import { startOutage } from "./hybrid";
 import { openLiveChat } from "./liveSupport";
+import { useVideoStore } from "@/features/videoSupport/store";
 
 const USTA_STEPS = [
   { key: "repair", label: "Dijital onarım (uzaktan kontrol)" },
   { key: "remote", label: "Uzaktan düzeltme" },
   { key: "verify", label: "Uzaktan düzeltme sonrası kontrol" },
+  { key: "video", label: "GIGA ile görüntülü inceleme" },
   { key: "inspect", label: "Modem kontrolü (ön ve arka yüz)" },
   { key: "analysis", label: "Işık ve kablo değerlendirmesi (simülasyon)" },
   { key: "step1", label: "Adım 1: Kablo ve güç bağlantısı" },
@@ -40,20 +42,35 @@ export function ustaIssue(id: string) {
 }
 
 /** In-app start: "İnternetim çalışmıyor" asks what exactly first; "Modemimde sorun var" goes straight to digital repair. */
-export function startAiUsta(issue: "no_internet" | "modem" = "no_internet"): string {
+export function startAiUsta(issue: "no_internet" | "modem" = "no_internet", entry: { channel?: "app" | "qr"; modemSerial?: string } = {}): string {
   // The customer started this themselves: automatic checks run without presenter "Sonraki".
   W.setState({ autoFollowUp: true });
   setConnectivity({ fixed: "down" }, "Modem internet oturumu yok");
   const said = issue === "modem" ? "Modemimde sorun var" : "İnternetim çalışmıyor";
+  const baseDedupeKey = `usta:${SUBSCRIPTION.id}`;
+  const latestActive = W.getState().workflows
+    .filter((w) => w.type === "ai_usta" && w.status !== "completed" && w.status !== "failed")
+    .sort((a, b) => b.updatedAt - a.updatedAt)[0];
+  // An escalated workflow cannot resume its automated checks. A new customer request
+  // must start a fresh workflow instead of reusing the handoff and appearing stuck.
+  const dedupeKey = latestActive?.handoff
+    ? `${baseDedupeKey}:${uid()}`
+    : latestActive?.dedupeKey ?? baseDedupeKey;
   const { wf, created } = createWorkflow({
     type: "ai_usta",
     title: `Bağlantı sorunu · ${said}`,
-    dedupeKey: `usta:${SUBSCRIPTION.id}`,
+    dedupeKey,
     steps: [{ key: "report", label: "Sorun bildirimi" }, ...USTA_STEPS],
-    data: { channel: "app", issue: said, issueId: issue },
+    data: {
+      channel: entry.channel ?? "app",
+      issue: said,
+      issueId: issue,
+      ...(entry.channel === "qr" ? { source: "Modem QR etiketi", modemModel: USER.modemModel, modemSerial: entry.modemSerial ?? USER.modemSerial, subscriberNo: USER.subscriberNo } : {}),
+    },
     why: `Müşteri “${said}” dedi`,
   });
   if (!created) {
+    if (entry.channel === "qr") setData(wf.id, { channel: "qr", source: "Modem QR etiketi", modemModel: USER.modemModel, modemSerial: entry.modemSerial ?? USER.modemSerial, subscriberNo: USER.subscriberNo });
     resumeUsta(wf.id);
     return wf.id;
   }
@@ -285,9 +302,8 @@ function finishRepair(id: string, forced?: "incomplete") {
       id,
       {
         key: "usta_more",
-        prompt: "Bağlantını kontrol ettim. Şu anda sistemlerimizde bilinen bir arıza görünmüyor. Ancak internetine hâlâ erişemediğini söylüyorsun. Birlikte biraz daha detaylı inceleyelim mi?",
-        detail: "Kontrol sonuçları bu prototipte simülasyondur; gerçek TürkNet sistemlerine bağlanılmaz.",
-        options: [{ id: "yes", label: "Evet, inceleyelim", primary: true }, LIVE_OPTION],
+        prompt: "Sorunun hâlâ devam ediyor mu?",
+        options: [{ id: "yes", label: "Evet, devam ediyor", primary: true }, { id: "fixed", label: "Hayır, düzeldi" }],
       },
       "Kontroller normal görünse de sorun çözülmüş sayılmaz; müşteri tarafı incelenir",
       { push: false },
@@ -322,9 +338,8 @@ registerOp("usta.verify", (id) => {
     id,
     {
       key: "usta_remote_failed",
-      prompt: "Bağlantı sorunun devam ediyor. Seni yaptığımız kontrollerle birlikte teknik destek ekibimize aktarabilirim.",
-      detail: "İstersen önce modemini birlikte kontrol edebiliriz.",
-      options: [{ id: "handoff", label: "Teknik desteğe aktar", primary: true }, { id: "inspect", label: "Önce modemimi kontrol edelim" }, LIVE_OPTION],
+      prompt: "Bağlantı sorunun sürüyor. Nasıl devam etmek istersin?",
+      options: [{ id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek.", primary: true }],
     },
     "Uzaktan düzeltme sonuç vermedi; aktarım müşterinin seçimidir",
     { push: false },
@@ -333,8 +348,7 @@ registerOp("usta.verify", (id) => {
 
 registerDecision("usta_remote_failed", (id, opt) => {
   if (opt === "live") return goLive(id);
-  if (opt === "inspect") return askInspect(id);
-  escalate(id, TEAMS.tech, "Uzaktan düzeltme sonrası bağlantı gelmedi; dijital onarım sonuçları aktarıldı");
+  if (opt === "video") return startVideoSupport(id);
 });
 
 registerDecision("usta_incomplete", (id, opt) => {
@@ -350,10 +364,121 @@ registerDecision("usta_incomplete", (id, opt) => {
 
 registerDecision("usta_more", (id, opt) => {
   if (opt === "live") return goLive(id);
+  if (opt === "fixed") {
+    step(id, "confirm", "done", "Müşteri bağlantı sorununun düzeldiğini doğruladı");
+    setConnectivity({ fixed: "up" }, "Müşteri bağlantısının düzeldiğini doğruladı");
+    complete(id, { resolved: true, summary: "Bağlantı sorunu giderildi", results: ["Müşteri internetine yeniden erişebildi", "Destek kaydı açılmadı"] });
+    return;
+  }
+  askUstaSupport(id);
+});
+
+function askUstaSupport(id: string, includeRestart = true) {
+  ask(id, {
+    key: "usta_support",
+    prompt: "Bağlantı sorunun sürüyorsa birlikte deneyelim.",
+    detail: "Modem kısa süreli takılmış olabilir. Bağlantıyı uzaktan yenilemek modemin yeniden ağa bağlanmasını sağlar; evindeki modemi kapatıp açmana gerek kalmaz.",
+    options: [
+      ...(includeRestart ? [{ id: "restart", label: "Bağlantıyı uzaktan yenile", desc: "Modemini yeniden ağa bağlamayı deneyelim.", primary: true }] : []),
+      { id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek." },
+    ],
+  }, "Müşteri bağlantı sorunu sürüyorsa tercih ettiği destek yolunu seçer", { push: false });
+}
+
+function askUstaModemOptions(id: string) {
+  ask(id, {
+    key: "usta_modem_options",
+    prompt: "Modemini nasıl inceleyelim?",
+    detail: "İstersen modeminin fotoğrafını paylaşabilir veya GIGA ile görüntülü görüşebilirsin.",
+    options: [
+      { id: "photo", label: "Modem fotoğrafı gönder", primary: true },
+      { id: "video", label: "GIGA ile görüntülü görüş" },
+    ],
+  }, "Modemle ilgili destek yolunu müşteri seçer", { push: false });
+}
+
+registerDecision("usta_modem_options", (id, opt) => {
+  if (opt === "video") {
+    startVideoSupport(id);
+    return;
+  }
   askInspect(id);
 });
 
-/** Front + back of the modem: photos if the customer wants, manual light and cable answers otherwise. */
+registerDecision("usta_support", (id, opt) => {
+  if (opt === "video") return startVideoSupport(id);
+  if (opt === "restart") {
+    setData(id, { remoteRestart: true });
+    step(id, "recheck", "in_progress", "Modem bağlantısı uzaktan yenileniyor");
+    schedule("usta.remoteRestart", id, 1800);
+  }
+});
+
+function startVideoSupport(id: string) {
+  setData(id, { videoRequested: true });
+  step(id, "inspect", "skipped", "Görüntülü inceleme seçildi");
+  ["analysis", "step1", "step2", "reconnect"].forEach((key) => step(id, key, "skipped", "GIGA görüntülü incelemesi bu adımların yerine geçiyor"));
+  step(id, "recheck", "in_progress", "Görüntülü inceleme sonrası bağlantı doğrulanacak");
+  step(id, "video", "in_progress", "GIGA modemini görüntülü olarak inceliyor");
+  useVideoStore.getState().setWorkflowId(id);
+  useVideoStore.getState().setTopic("modem");
+}
+
+/** Called after the GIGA video experience asks whether the connection is back. */
+export function finishGigaVideoSupport(id: string, resolved: boolean) {
+  if (stepStatus(id, "video") !== "in_progress") return;
+  if (resolved) {
+    step(id, "video", "done", "GIGA görüntülü yönlendirmesiyle bağlantı düzeldi");
+    step(id, "recheck", "done", "Müşteri bağlantının düzeldiğini doğruladı");
+    setConnectivity({ fixed: "up", metric: { optic: -19.2, drops: 0, speed: 96 } }, "GIGA görüntülü kontrolden sonra müşteri bağlantıyı doğruladı");
+    complete(id, { resolved: true, summary: "Bağlantı GIGA ile görüntülü destek sırasında düzeldi", results: ["Modem görüntülü olarak incelendi", "Bağlantı yeniden doğrulandı", "Canlı destek kaydı açılmadı"] });
+    return;
+  }
+  step(id, "video", "failed", "GIGA görüntülü incelemesi sorunu çözemedi");
+  askFinalSupport(id, "Uzaktan yenileme ve GIGA görüntülü incelemesi sonuç vermedi");
+}
+
+/** Creates a contextual technical handoff for a standalone GIGA video session. */
+export function handoffVideoSession(input: { topic: string; finding: string; actions: string[]; connectionTest: string; durationSec: number; recordId: string }): string {
+  const { wf } = createWorkflow({
+    type: "ai_usta",
+    title: `GIGA görüntülü destek · ${input.topic}`,
+    dedupeKey: `video-handoff:${input.recordId}`,
+    steps: [
+      { key: "report", label: "Sorun bildirimi" },
+      { key: "video", label: "GIGA görüntülü incelemesi" },
+      { key: "recheck", label: "Bağlantı testi" },
+    ],
+    data: {
+      channel: "video",
+      issue: input.topic,
+      finding: input.finding,
+      videoActions: input.actions.join(" | "),
+      connectionTest: input.connectionTest,
+      videoDuration: input.durationSec,
+    },
+    why: "GIGA görüntülü incelemesi çözüme ulaşmadı; görüşme bağlamı teknik desteğe aktarılıyor",
+  });
+  step(wf.id, "report", "done", input.topic);
+  step(wf.id, "video", "failed", input.finding);
+  step(wf.id, "recheck", "failed", input.connectionTest);
+  goLive(wf.id);
+  return wf.id;
+}
+
+registerOp("usta.remoteRestart", (id) => {
+  if (stepStatus(id, "recheck") !== "in_progress") return;
+  if (MockNetworkAPI.connectionAfterSelfFix()) {
+    step(id, "recheck", "done", "Bağlantı uzaktan yenilendi");
+    setConnectivity({ fixed: "up", metric: { optic: -19.2, drops: 0, speed: 96 } }, "GIGA bağlantıyı uzaktan yeniledi");
+    askConfirm(id);
+    return;
+  }
+  step(id, "recheck", "failed", "Bağlantı uzaktan yenilendi ancak internet erişimi gelmedi");
+  askUstaModemOptions(id);
+});
+
+/** Ask for a modem photo only after the customer chooses modem troubleshooting. */
 export function askInspect(id: string) {
   if (stepStatus(id, "repair") !== "done" || stepStatus(id, "inspect") === "done") return;
   step(id, "inspect", "waiting");
@@ -361,9 +486,9 @@ export function askInspect(id: string) {
     id,
     {
       key: "usta_inspect",
-      prompt: "Modeminin ön ve arka yüzünün fotoğrafını paylaşabilir misin? Işıkları ve kablo bağlantılarını birlikte inceleyelim.",
-      detail: "Fotoğraf çekmek istemezsen ışık rengini ve kabloların durumunu aşağıdan seçebilirsin.",
-      options: [{ id: "done", label: "İncelemeyi gönder", primary: true }, LIVE_OPTION],
+      prompt: "Modeminin fotoğrafını paylaş; birlikte inceleyelim.",
+      detail: "Ön yüzünün ve ışıklarının göründüğü bir fotoğraf yeterli.",
+      options: [{ id: "done", label: "Fotoğrafı GIGA’ya gönder", primary: true }],
     },
     "Fotoğraf yalnızca dijital onarım sonrası, gerekli olduğunda istenir",
     { push: false },
@@ -382,13 +507,11 @@ export function setModemLight(id: string, light: InternetLight) {
 }
 
 registerDecision("usta_inspect", (id, opt) => {
-  if (opt === "live") return goLive(id);
   const d = getWf(id)?.data ?? {};
-  const light = INTERNET_LIGHT_STATES.find((x) => x.id === d["light"]) ?? INTERNET_LIGHT_STATES[0];
+  const light = INTERNET_LIGHT_STATES.find((x) => x.id === d["light"]) ?? INTERNET_LIGHT_STATES.find((x) => x.id === "green")!;
   const cable = CABLE_STATES.find((x) => x.id === d["cable"]) ?? CABLE_STATES[0];
   setData(id, { light: light.id, cable: cable.id });
-  const src = `${d["front"] ? "ön yüz fotoğrafı" : "ışık seçimi"} · ${d["back"] ? "arka yüz fotoğrafı" : "kablo seçimi"}`;
-  step(id, "inspect", "done", `Internet ışığı ${light.label.toLocaleLowerCase("tr-TR")} · ${cable.say} (${src})`);
+  step(id, "inspect", "done", "Müşteri modem fotoğrafını paylaştı");
   step(id, "analysis", "in_progress", MockVisionAPI.name);
   schedule("usta.analyzed", id, 1600);
 });
@@ -418,7 +541,7 @@ export function giveStep(id: string, n: 1 | 2) {
       key: `usta_step${n}`,
       prompt: s.title,
       detail: `${s.text} ${s.safe}`,
-      options: [{ id: "done", label: s.cta, primary: true }, LIVE_OPTION],
+      options: [{ id: "done", label: s.cta, primary: true }],
     },
     "Bir sonraki en güvenli ve geri alınabilir kontrol adımı",
     { push: false },
@@ -428,12 +551,10 @@ registerOp("usta.step1", (id) => giveStep(id, 1));
 registerOp("usta.step2", (id) => giveStep(id, 2));
 
 registerDecision("usta_step1", (id, opt) => {
-  if (opt === "live") return goLive(id);
   step(id, "step1", "done", getWf(id)?.data["cable"] === "ok" ? "Müşteri güç kablosunu kontrol etti" : "Müşteri kablo bağlantılarını yerine taktı");
   chain("usta.step2", id, 800);
 });
 registerDecision("usta_step2", (id, opt) => {
-  if (opt === "live") return goLive(id);
   step(id, "step2", "done", "Müşteri modemi kapatıp açtı");
   step(id, "reconnect", "in_progress", "Modem yeniden başlıyor, bağlantı kuruluyor");
   schedule("usta.reconnected", id, 2500);
@@ -455,8 +576,25 @@ registerOp("usta.recheck", (id) => {
     return;
   }
   step(id, "recheck", "failed", "Bağlantı hâlâ yok");
-  escalate(id, TEAMS.tech, `Dijital onarım ve ${AI_USTA_MAX_ATTEMPTS} güvenli adım denendi, bağlantı düzelmedi; uzman incelemesi gerekiyor`);
+  askFinalSupport(id, `Dijital onarım ve ${AI_USTA_MAX_ATTEMPTS} güvenli adım denendi, bağlantı düzelmedi`);
 });
+
+function askFinalSupport(id: string, reason: string) {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Istanbul", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
+  const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+  const inBusinessHours = ["Mon", "Tue", "Wed", "Thu", "Fri"].includes(weekday) && (hour > 9 || (hour === 9 && minute >= 0)) && hour < 18;
+  ask(id, {
+    key: "usta_final_support",
+    prompt: inBusinessHours ? "GIGA ile yaptığımız kontroller sorunu çözemedi. Canlı desteğe bağlanalım mı?" : "GIGA ile yaptığımız kontroller sorunu çözemedi.",
+    detail: inBusinessHours ? undefined : "Canlı destek hafta içi 09.00–18.00 arasında hizmet veriyor. Bu saatlerde bu süreçten bağlanabilirsin.",
+    options: inBusinessHours ? [{ id: "live", label: "Canlı destekle görüş", primary: true }] : [],
+  }, reason, { push: false });
+}
+
+registerDecision("usta_final_support", (id, opt) => { if (opt === "live") goLive(id); });
 
 export function askConfirm(id: string) {
   if (stepStatus(id, "confirm") !== "pending") return;
@@ -482,7 +620,7 @@ registerOp("usta.confirm", askConfirm);
 registerDecision("usta_confirm", (id, opt) => {
   if (opt === "no") {
     step(id, "confirm", "failed", "Müşteri sorunun sürdüğünü bildirdi");
-    escalate(id, TEAMS.tech, "Ölçüm düzelmiş görünse de müşteri sorunun sürdüğünü bildirdi");
+    askFinalSupport(id, "Ölçüm düzelmiş görünse de müşteri sorunun sürdüğünü bildirdi");
     return;
   }
   step(id, "confirm", "done", "Müşteri çözümü doğruladı");
@@ -532,14 +670,15 @@ export function resumeUsta(id: string) {
   else if (s("analysis") === "done" && s("step1") === "pending") schedule("usta.step1", id, 800);
   else if (s("step1") === "done" && s("step2") === "pending") schedule("usta.step2", id, 800);
   else if (s("reconnect") === "in_progress") schedule("usta.reconnected", id, 800);
-  else if (s("recheck") === "in_progress") schedule("usta.recheck", id, 800);
+  else if (s("recheck") === "in_progress") schedule(wf.data["remoteRestart"] ? "usta.remoteRestart" : "usta.recheck", id, 800);
   else if (s("confirm") === "pending") askConfirm(id);
 }
 
 /** Short satisfaction question after a verified fix. Does not reopen the workflow. */
-export function rateUsta(id: string, score: 1 | 2 | 3) {
+export function rateUsta(id: string, score: 1 | 2 | 3 | 4 | 5) {
   const wf = getWf(id);
   if (!wf || wf.status !== "completed" || wf.data["rating"]) return;
   setData(id, { rating: score });
-  log(id, "customer", "info", `Memnuniyet: ${score === 3 ? "Çok iyi" : score === 2 ? "İdare eder" : "Kötü"}`);
+  log(id, "customer", "info", `Memnuniyet: ${score}/5 yıldız`);
 }
+

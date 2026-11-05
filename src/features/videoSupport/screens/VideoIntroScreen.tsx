@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Camera, Check, Clock, Link2, MessageSquare, Mic, ShieldCheck, Truck, UserPlus, Video, Zap } from "lucide-react";
+import { Camera, Check, Eye, Link2, MessageSquare, Mic, ShieldCheck, UserPlus, Video, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
@@ -64,18 +64,18 @@ export function VideoIntroScreen() {
           <div className="relative overflow-hidden rounded-card bg-plum p-5 text-primary-foreground shadow-float">
             <motion.div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-magenta/40 blur-2xl" animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 4 }} />
             <Video className="relative size-9" strokeWidth={1.5} />
-            <p className="relative mt-3 text-2xl font-semibold leading-tight">Uzmanımız modemini görsün, birlikte çözelim</p>
+            <p className="relative mt-3 text-2xl font-semibold leading-tight">GIGA modemini görsün, birlikte çözelim</p>
             <span className="relative mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-sm font-semibold">
-              <Clock className="size-4" /> Ortalama bekleme: 2 dk
+              <Zap className="size-4" /> Bekleme süresi yok · hemen başlayabilirsin
             </span>
           </div>
 
           <div className="rounded-card bg-card p-5 shadow-card">
-            <p className="font-semibold text-primary">Neden görüntülü destek?</p>
+            <p className="font-semibold text-primary">GIGA ile görüntülü desteğin avantajları</p>
             <ul className="mt-3 space-y-2.5 text-sm">
-              <li className="flex gap-2.5"><Truck className="size-5 shrink-0 text-magenta" /> Saha ekibini beklemeden, bugün çözüm</li>
-              <li className="flex gap-2.5"><Zap className="size-5 shrink-0 text-magenta" /> Uzman ekranında işaretleyerek gösterir, sen sadece takip et</li>
-              <li className="flex gap-2.5"><UserPlus className="size-5 shrink-0 text-magenta" /> Annen, baban görüşmeye katılabilir — sen uzaktan yönet</li>
+              <li className="flex gap-2.5"><Eye className="size-5 shrink-0 text-magenta" /> GIGA modemini görerek sorunun kaynağını anlamaya çalışır.</li>
+              <li className="flex gap-2.5"><Zap className="size-5 shrink-0 text-magenta" /> Sana adım adım yol gösterir; çözümü birlikte denersiniz.</li>
+              <li className="flex gap-2.5"><UserPlus className="size-5 shrink-0 text-magenta" /> Yakınların görüşmeye katılabilir — görüşmeyi sen yönetirsin.</li>
             </ul>
           </div>
 
@@ -122,7 +122,7 @@ export function VideoIntroScreen() {
             </div>
           </div>
 
-          <Button size="xl" className="w-full rounded-full" disabled={!topic} onClick={() => setStep("perm")}>
+          <Button size="xl" className="w-full rounded-full" disabled={!topic} onClick={start}>
             Devam
           </Button>
           {!topic && <p className="text-center text-xs text-muted-foreground">Devam etmek için bir konu seç.</p>}
@@ -154,7 +154,7 @@ export function VideoIntroScreen() {
             </Banner>
           )}
           {cam.status !== "live" && cam.status !== "denied" && cam.status !== "unavailable" ? (
-            <Button size="xl" className="w-full rounded-full" onClick={cam.start} disabled={cam.status === "pending"}>
+            <Button size="xl" className="w-full rounded-full" onClick={() => void cam.start()} disabled={cam.status === "pending"}>
               <Camera /> İzin Ver ve Önizle
             </Button>
           ) : null}
@@ -166,3 +166,4 @@ export function VideoIntroScreen() {
     </div>
   );
 }
+
