@@ -1,5 +1,5 @@
 /**
- * DemoScenario definitions (A–F). Every step's status is *derived* from the real
+ * DemoScenario definitions (A–H). Every step's status is *derived* from the real
  * workflow state, and every `run` calls a real service function — the panel
  * never fakes progress by changing text.
  */
@@ -9,6 +9,7 @@ import {
   activateTemp,
   checkHybrid,
   analyzeSpeed,
+  applyWifiPlacement,
   applyBillingUpdate,
   askConfirm,
   assessScope,
@@ -22,6 +23,7 @@ import {
   hasOp,
   informBilling,
   injectAnomaly,
+  measureRoomSpeed,
   ivrCheck,
   openUstaSms,
   offerAppointment,
@@ -46,6 +48,7 @@ import {
   startRelocation,
   startTransfer,
   startUstaCall,
+  startSpeedCheck,
   tryRemoteFix,
   verifyProactive,
   verifyRelocation,
@@ -425,6 +428,28 @@ export const SCENARIOS: DemoScenario[] = [
       ...relocationTail(["first", "second"], detail),
     ],
   },
+  {
+    id: "H",
+    title: "İnternetim yavaş",
+    summary: "GIGA hızını ölçer, modemi uzaktan yeniden başlatıp ayarları yeniler. Hız düşük kalırsa modem konumunu ve ev içi Wi-Fi koşullarını müşteriyle adım adım iyileştirir; sorun sürerse canlı desteğe bağlar.",
+    features: ["Hız ölçümü", "Uzaktan iyileştirme", "Wi-Fi adımları", "Canlı destek"],
+    outcomes: [
+      { id: "remote", label: "Uzaktan iyileştirme yeterli", desc: "Hat ayarları ve Wi-Fi kanalı uzaktan yenilenir; hız artar.", config: { proactive: "remote_fix" }, choices: {} },
+      { id: "wifi", label: "Modem konumu düzenlenince odada hız artar", desc: "Modem daha açık ve merkezi bir yere alınır; sorun yaşanan odada hız yeniden ölçülür.", config: { proactive: "wifi_help" }, choices: {} },
+      { id: "wifi_live", label: "Ev içi adımlara rağmen hız düşük · canlı destek", desc: "Modem konumu düzenlenir ve sorun yaşanan odada hız yeniden ölçülür; düşük kalırsa canlı destek sunulur.", config: { proactive: "wifi_live" }, choices: { speed_live: "live" } },
+    ],
+    steps: [
+      { id: "measure", label: "Hız ölçümü başlatılır", why: "GIGA mevcut hızı ölçerek iyileşmeyi karşılaştırır", actor: "agent", status: wfStep(main, "measure"), run: () => setId("main", startSpeedCheck(false)), screen: detail },
+      { id: "speed", label: "Hat ve bağlantı kontrol edilir", why: "Paket hızıyla mevcut ölçüm karşılaştırılır", actor: "agent", status: wfStep(main, "speed"), run: (c) => c.main && analyzeSpeed(c.main.id), screen: detail },
+      { id: "remote", label: "Güvenli uzaktan iyileştirme denenir", why: "Hat ayarları ve Wi-Fi kanalı yenilenir", actor: "agent", status: wfStep(main, "remote"), run: (c) => c.main && tryRemoteFix(c.main.id) },
+      { id: "retest", label: "Hız yeniden ölçülür", why: "Uzaktan işlemin etkisi hız ölçümüyle doğrulanır", actor: "agent", status: wfStep(main, "retest"), run: (c) => c.main && retestSpeed(c.main.id), screen: detail },
+      { id: "placement", label: "Modem açık ve merkezi bir yere alınır", why: "Yerden yüksek, açık bir konum; kalın duvarlardan ve elektronik cihazlardan uzaklık kapsama alanını iyileştirebilir", actor: "customer", status: (c) => c.main?.data["wifiPlacementDone"] ? "done" : "pending", run: (c) => c.main && applyWifiPlacement(c.main.id), screen: detail, only: ["wifi", "wifi_live"] },
+      { id: "wifi_room_measure", label: "Sorun yaşanan odada hız tekrar ölçülür", why: "Modem konumu düzenlendikten sonra aynı odada alınan ölçüm Wi-Fi kapsamasındaki değişimi gösterir", actor: "agent", status: (c) => c.main?.data["roomSpeed"] != null ? "done" : "pending", run: (c) => c.main && measureRoomSpeed(c.main.id), screen: detail, only: ["wifi", "wifi_live"] },
+      { id: "live", label: "Hız düşük kaldıysa canlı desteğe bağlanılır", why: "Önce uzaktan ve ev içi Wi-Fi adımları denenir; yalnızca sonuç alınmazsa uzman desteği sunulur", actor: "customer", status: decisionState(main, "speed_live"), decisionKey: "speed_live", only: ["wifi_live"] },
+      { id: "verify", label: "Sonuç doğrulanır", why: "Uzaktan iyileşme sonrası hız yeniden ölçülür", actor: "system", status: wfStep(main, "verify"), run: (c) => c.main && verifyProactive(c.main.id), screen: detail, only: ["remote"] },
+    ],
+  },
 ];
 
 export const scenarioById = (id: string | null | undefined) => SCENARIOS.find((s) => s.id === id);
+

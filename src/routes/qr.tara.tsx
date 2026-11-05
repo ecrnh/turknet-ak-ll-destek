@@ -3,6 +3,16 @@ import { QrScanScreen } from "@/features/qrSupport/screens/QrScanScreen";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/qr/tara")({
-  head: () => pageHead("QR Tara", "Modemindeki QR etiketini okut, analiz başlasın."),
-  component: QrScanScreen,
+  validateSearch: (search: Record<string, unknown>) => ({
+    sub: typeof search.sub === "string" ? search.sub : "",
+    dev: typeof search.dev === "string" ? search.dev : "",
+  }),
+  head: () => pageHead("QR Tara", "Modemindeki QR etiketiyle GIGA bağlantı desteğini başlat."),
+  component: QrScanRoute,
 });
+
+function QrScanRoute() {
+  const { sub, dev } = Route.useSearch();
+  return <QrScanScreen deepLink={{ sub, dev }} />;
+}
+

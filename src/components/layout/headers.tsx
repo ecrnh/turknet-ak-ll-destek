@@ -3,7 +3,7 @@ import { ArrowLeft, Bell, Search } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { unreadCount, useAppStore } from "@/features/core/appStore";
-import { SmartSearchBar } from "@/features/giga/SmartSearch";
+import { SmartSearchBar } from "@/features/giga/SmartSearchBar";
 
 export function TurknetLogo({ className }: { className?: string }) {
   return (
@@ -67,3 +67,4 @@ export function PageHeader({ title, right, dark, className }: { title: ReactNode
     </div>
   );
 }
+

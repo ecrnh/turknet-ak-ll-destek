@@ -4,7 +4,7 @@
  * processes only. Refunds, debt deletion or record edits never happen without
  * customer consent and a finance-team approval.
  */
-import { BILLING_CHECKS, BILLING_SEED, TEAMS } from "@/data/mock";
+import { BILLING_CHECKS, BILLING_REVIEW_ISSUES, BILLING_SEED, TEAMS, type BillingReviewIssueId } from "@/data/mock";
 import { fmtTL } from "@/lib/format";
 import { ask, chain, choiceOf, complete, createWorkflow, decide, escalate, getWf, log, notify, registerDecision, registerOp, schedule, setData, setStatus, step, stepStatus, teamResolve, workOrder } from "../engine";
 import { MockBillingAPI } from "../mockServices";
@@ -53,6 +53,47 @@ export function runBillingShield(): { wfId: string | null; findings: number } {
   notify(wf.id, "Faturanızı kontrol ettik", "Son ödemeniz ile borç bilginiz arasında güncelleme gerektiren bir farklılık olabilir.", "quiet");
   chain("billing.explain", wf.id, 1200);
   return { wfId: wf.id, findings: findings.length };
+}
+
+/** A direct customer request for human review, even when automated checks find no mismatch. */
+export function requestBillingReview(issueId: BillingReviewIssueId, notes = ""): { wfId: string; findings: number; summary: string } {
+  const { bills, payments } = W.getState();
+  const bill = bills[0]!;
+  const selectedIssue = BILLING_REVIEW_ISSUES.find((issue) => issue.id === issueId)!;
+  const findings = compareBilling(bill, payments);
+  const summary = findings.length
+    ? findings.map((finding) => finding.detail).join(" · ")
+    : `${BILLING_CHECKS.length} otomatik kontrol uyumlu; müşteri yine de fatura incelemesi istedi`;
+  const { wf, created } = createWorkflow({
+    type: "billing_check",
+    title: `Fatura inceleme talebi · ${bill.period}`,
+    dedupeKey: `billing-review:${bill.id}`,
+    steps: [
+      { key: "match", label: "Fatura ve ödeme bilgileri karşılaştırıldı" },
+      { key: "detect", label: "Otomatik kontrollerin sonucu hazırlandı" },
+      { key: "review", label: "Finans ekibi incelemesi" },
+    ],
+    data: {
+      billId: bill.id,
+      findings: findings.map((finding) => finding.code).join(","),
+      findingsCount: findings.length,
+      findingsSummary: summary,
+      customerReviewRequested: true,
+      requestType: issueId,
+      customerDescription: selectedIssue.label,
+      customerNotes: notes.trim(),
+    },
+    why: `Müşteri fatura incelemesi istedi: ${selectedIssue.label}${notes.trim() ? ` · ${notes.trim()}` : ""}`,
+  });
+  if (!created) return { wfId: wf.id, findings: findings.length, summary: String(wf.data["findingsSummary"] ?? summary) };
+
+  step(wf.id, "match", "done", `${bill.period} faturası ${fmtTL(bill.amount)} · ödeme toplamı ${fmtTL(payments.filter((payment) => payment.billId === bill.id && payment.status !== "pending").reduce((total, payment) => total + payment.amount, 0))}`);
+  step(wf.id, "detect", "done", findings.length ? `${findings.length} olası farklılık: ${summary}` : `${BILLING_CHECKS.length} kontrolde tutarsızlık görünmedi`);
+  step(wf.id, "review", "in_progress", "Müşterinin inceleme talebi yetkili ekibe iletiliyor");
+  workOrder(wf.id, { kind: "billing_review", title: `Fatura inceleme · ${bill.period}`, team: TEAMS.finance }, "Müşteri talebiyle yetkili finans ekibinin kontrolü gerekiyor");
+  setStatus(wf.id, wf.status, { eta: "İlk değerlendirme hedefi: 1 iş günü içinde (demo)" });
+  escalate(wf.id, TEAMS.finance, `Müşteri fatura incelemesi istedi: ${selectedIssue.label}${notes.trim() ? ` · ${notes.trim()}` : ""}. Otomatik kontrol özeti: ${summary}`);
+  return { wfId: wf.id, findings: findings.length, summary };
 }
 
 export function explainBilling(id: string) {
@@ -179,6 +220,21 @@ registerOp("billing.inform", informBilling);
 export function financeResolve(id: string) {
   const wf = getWf(id);
   if (!wf || wf.status !== "escalated") return;
+  if (wf.data["customerReviewRequested"] === true) {
+    setWorkOrder(id, "billing_review", "done");
+    const hasFindings = Number(wf.data["findingsCount"] ?? 0) > 0;
+    teamResolve(id, {
+      resolved: true,
+      summary: "Finans ekibi fatura incelemesini tamamladı",
+      results: [
+        hasFindings ? `Otomatik kontrolde görülen bulgular değerlendirildi: ${String(wf.data["findingsSummary"] ?? "")}` : "Ön kontrollerde belirgin bir tutarsızlık görülmedi; müşteri talebi finans ekibince ayrıca incelendi",
+        "Fatura ve ödeme kayıtlarında müşteri onayı olmadan değişiklik yapılmadı",
+        "Gerekli bir düzeltme bulunursa ayrıca müşteri onayı istenir",
+      ],
+    });
+    notify(id, "Fatura incelemen tamamlandı", "Finans ekibinin değerlendirmesini işlem detaylarında görebilirsin.");
+    return;
+  }
   const choice = wf.decisions.find((d) => d.key === "billing_refund");
   teamResolve(id, {
     resolved: true,
@@ -200,3 +256,4 @@ export function consentBillingReview(id: string): boolean {
   if (getWf(id)?.decision?.key !== "billing_start") return false;
   return decide(id, "start", "customer");
 }
+

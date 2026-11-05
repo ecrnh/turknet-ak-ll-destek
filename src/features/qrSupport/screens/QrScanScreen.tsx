@@ -1,35 +1,67 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowLeft, Keyboard, QrCode, Smartphone } from "lucide-react";
-import { useState } from "react";
-import { BottomSheet } from "@/components/tn/Sheet";
-import { Banner } from "@/components/tn/primitives";
+import { ArrowLeft, QrCode, Smartphone } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useCamera } from "@/features/videoSupport/useCamera";
+import { USER } from "@/data/mock";
 import { useQrStore } from "../store";
-import { isValidCode } from "../qr";
+import { matchesSupportQr } from "../qr";
+import { startQrGigaSupport } from "../startQrSupport";
 import { track, useFlow } from "@/lib/analytics";
 
-export function QrScanScreen() {
+export function QrScanScreen({ deepLink }: { deepLink?: { sub: string; dev: string } }) {
   useFlow("qr_scan");
   const navigate = useNavigate();
   const router = useRouter();
   const serial = useQrStore((s) => s.serial);
-  const cam = useCamera(true);
-  const [manual, setManual] = useState(false);
-  const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const hasValidLink = deepLink?.sub === USER.subscriberNo && deepLink.dev === serial;
+  const cam = useCamera(!hasValidLink);
   const [found, setFound] = useState(false);
+  const foundRef = useRef(false);
 
   const go = (via: string) => {
+    if (foundRef.current) return;
+    foundRef.current = true;
     setFound(true);
-    track("flow_started", "qr_support", { via });
-    setTimeout(() => {
+    track("flow_started", "qr_support", { via, modem: serial });
+    window.setTimeout(() => {
       cam.stop();
-      navigate({ to: "/qr/analiz" });
-    }, 900);
+      startQrGigaSupport();
+      navigate({ to: "/ajanlar" });
+    }, 550);
   };
+
+  useEffect(() => {
+    if (hasValidLink) go("personal_qr_link");
+    // Run once for each route's validated QR identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasValidLink]);
+
+  useEffect(() => {
+    if (cam.status !== "live") return;
+    type Code = { rawValue: string };
+    type Detector = { detect: (source: HTMLVideoElement) => Promise<Code[]> };
+    type DetectorCtor = new (options: { formats: string[] }) => Detector;
+    const DetectorClass = (window as Window & { BarcodeDetector?: DetectorCtor }).BarcodeDetector;
+    if (!DetectorClass) return;
+    const detector = new DetectorClass({ formats: ["qr_code"] });
+    let scanning = false;
+    const timer = window.setInterval(async () => {
+      const video = cam.videoRef.current;
+      if (!video || video.readyState < 2 || scanning || foundRef.current) return;
+      scanning = true;
+      try {
+        const codes = await detector.detect(video);
+        if (codes.some((code) => matchesSupportQr(code.rawValue, serial))) go("camera");
+      } catch {
+        // Browser QR decoding is optional; the demo action below remains usable.
+      } finally {
+        scanning = false;
+      }
+    }, 450);
+    return () => window.clearInterval(timer);
+  }, [cam.status, cam.videoRef, serial]);
 
   return (
     <div className="relative flex h-full min-h-full flex-col bg-call text-call-foreground">
@@ -46,7 +78,7 @@ export function QrScanScreen() {
         </button>
         <h1 className="text-xl font-semibold">QR Tara</h1>
       </div>
-      <p className="relative z-10 mt-6 px-8 text-center text-lg">Modeminin üstündeki Turknet QR etiketini çerçeveye getir</p>
+      <p className="relative z-10 mt-6 px-8 text-center text-lg">Modeminin üzerindeki TürkNet QR etiketini çerçeveye getir</p>
 
       <div className="relative z-10 mx-auto mt-8 h-64 w-64">
         {["left-0 top-0 border-l-4 border-t-4 rounded-tl-3xl", "right-0 top-0 border-r-4 border-t-4 rounded-tr-3xl", "left-0 bottom-0 border-l-4 border-b-4 rounded-bl-3xl", "right-0 bottom-0 border-r-4 border-b-4 rounded-br-3xl"].map((c) => (
@@ -57,7 +89,7 @@ export function QrScanScreen() {
         ) : (
           <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="absolute inset-0 flex flex-col items-center justify-center">
             <QrCode className="size-20 text-success" />
-            <p className="mt-2 font-semibold">{serial} bulundu</p>
+            <p className="mt-2 font-semibold">{serial} bulundu · GIGA açılıyor</p>
           </motion.div>
         )}
         {cam.status !== "live" && !found && <QrCode className="absolute inset-0 m-auto size-24 text-call-foreground/15" />}
@@ -66,38 +98,16 @@ export function QrScanScreen() {
       <div className="flex-1" />
       <div className="relative z-10 space-y-3 px-5 pb-6">
         {(cam.status === "denied" || cam.status === "unavailable") && (
-          <p className="text-center text-xs text-call-foreground/70">Kamera açılamadı — demo taraması veya manuel kod kullanabilirsin.</p>
+          <p className="text-center text-xs text-call-foreground/70">Kamera açılamadı. GIGA destek akışını demo olarak başlatabilirsin.</p>
         )}
         <Button size="xl" variant="magenta" className="w-full rounded-full" onClick={() => go("demo")} disabled={found}>
-          <QrCode /> Demo QR'ı Tara
-        </Button>
-        <Button size="lg" variant="glass" className="w-full" onClick={() => setManual(true)} disabled={found}>
-          <Keyboard /> Kodu manuel gir
+          <QrCode /> QR ile Destek Akışını Dene
         </Button>
         <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-call-foreground/70">
-          <Smartphone className="mt-0.5 size-3.5 shrink-0" /> Telefonunun kendi kamerasıyla okutursan Turknet uygulaması bu ekranla açılır.
+          <Smartphone className="mt-0.5 size-3.5 shrink-0" /> QR kodun modemini ve aboneliğini tanır; GIGA bağlantı kontrollerini başlatır.
         </p>
       </div>
-
-      <BottomSheet open={manual} onClose={() => setManual(false)} title="Kodu manuel gir">
-        <p className="text-sm text-muted-foreground">Etiketin altında yazan modem kodunu gir (ör. {serial}).</p>
-        <Input value={code} onChange={(e) => { setCode(e.target.value); setError(null); }} placeholder="MOD-XXXXXX" className="mt-3 h-12 rounded-xl font-mono uppercase" aria-label="Modem kodu" />
-        {error && <Banner tone="error" className="mt-3">{error}</Banner>}
-        <Button
-          size="lg"
-          className="mt-4 w-full"
-          onClick={() => {
-            if (!isValidCode(code, serial)) return setError("Kod tanınmadı. MOD- ile başlayan 6 karakterli kodu kontrol et.");
-            setManual(false);
-            go("manual");
-          }}
-        >
-          Analizi Başlat
-        </Button>
-        <button className="mt-2 w-full text-sm font-semibold text-magenta" onClick={() => setCode(serial)}>
-          Kendi kodumu doldur
-        </button>
-      </BottomSheet>
     </div>
   );
 }
+

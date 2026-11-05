@@ -63,7 +63,7 @@ const RULES: Record<Exclude<GigaTopic, "track" | "yes" | "no" | "greeting" | "th
   refund: [["iade", 4], ["param geri", 4], ["geri odeme", 4]],
   payment: [["nasil ode", 4], ["odeme yap", 3], ["otomatik odeme", 4], ["talimat", 3], ["son odeme", 3], ["kartla", 2], ["kredi karti", 2], ["ode", 1]],
   speed: [["yavas", 4], ["hiz dus", 4], ["hizim", 3], ["dusuk hiz", 4], ["hiz sorun", 4], ["donuyor", 3], ["kasiyor", 3], ["takiliyor", 3], ["gecikme", 3], ["ping", 2], ["lag", 2], ["yuklenmiyor", 2], ["hizi dusuk", 4], ["mbps", 2]],
-  outage: [["calismiyor", 4], ["kesildi", 4], ["kesinti", 4], ["internet kesik", 4], ["hat kesik", 4], ["internet yok", 4], ["baglanti yok", 4], ["kopuyor", 3], ["koptu", 3], ["baglanamiyorum", 4], ["baglanmiyor", 4], ["gitti", 2], ["girmiyor", 3], ["acilmiyor", 2], ["cokmus", 3], ["cekmiyor", 1]],
+  outage: [["calismiyor", 4], ["kesildi", 4], ["kesil", 4], ["kesinti", 4], ["internet kesik", 4], ["hat kesik", 4], ["internet yok", 4], ["baglanti yok", 4], ["kopuyor", 3], ["koptu", 3], ["baglanamiyorum", 4], ["baglanmiyor", 4], ["gitti", 2], ["girmiyor", 3], ["acilmiyor", 2], ["cokmus", 3], ["cekmiyor", 1]],
   modem: [["modem", 3], ["isik", 3], ["led", 2], ["kirmizi", 3], ["yanip son", 3], ["router", 3], ["fotograf", 2]],
   wifi: [["wifi", 4], ["wi-fi", 4], ["kablosuz", 4], ["sinyal", 3], ["cekmiyor", 2], ["kapsama", 2], ["odada", 1], ["qr", 3]],
   internet: [["internet", 1], ["sorun", 1], ["problem", 1], ["ariza", 2], ["teknik", 1], ["baglanti", 1]],
@@ -163,7 +163,7 @@ export function understand(input: string): Understanding {
   let ustaIssue: UstaIssueId | null = null;
   if (top === "outage" || top === "modem" || top === "wifi" || top === "internet") {
     if (scores.wifi) ustaIssue = "wifi";
-    else if (["kopuyor", "koptu", "gidip geliyor"].some((s) => matches(text, tokens, s))) ustaIssue = "drops";
+    else if (["kopuyor", "koptu", "gidip geliyor", "sik sik kes"].some((s) => matches(text, tokens, s))) ustaIssue = "drops";
     else if (scores.outage) ustaIssue = "no_connect";
   }
 
@@ -176,3 +176,4 @@ export function understand(input: string): Understanding {
     scores,
   };
 }
+

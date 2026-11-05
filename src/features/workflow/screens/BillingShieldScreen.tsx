@@ -5,12 +5,14 @@ import { CalendarClock, CheckCircle2, ChevronRight, CreditCard, Loader2, Receipt
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { Button } from "@/components/ui/button";
-import { BILL_DISCOUNTS, BILLING_CHECKS, SUBSCRIPTION } from "@/data/mock";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+import { BILL_DISCOUNTS, BILLING_CHECKS, BILLING_REVIEW_ISSUES, SUBSCRIPTION, type BillingReviewIssueId } from "@/data/mock";
 import { GigaNote } from "@/features/giga/GigaAvatar";
 import { fmtTL } from "@/lib/format";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
-import { consentBillingReview, runBillingShield, seedPaidButDebt, useWorkflowStore } from "@/features/workflow";
+import { consentBillingReview, requestBillingReview, runBillingShield, seedPaidButDebt, useWorkflowStore } from "@/features/workflow";
 import { compareBilling, isActive } from "../rules";
 import { DemoNote, StatusPill } from "../components/ui";
 
@@ -28,11 +30,15 @@ export function BillingShieldScreen() {
   const [phase, setPhase] = useState<"idle" | "checking" | "done">(byGiga ? "done" : "idle");
   const [wfId, setWfId] = useState<string | null>(null);
   const [step, setStep] = useState(0);
+  const [showIssueForm, setShowIssueForm] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<BillingReviewIssueId | "">("");
+  const [issueNotes, setIssueNotes] = useState("");
   const bill = bills[0]!;
   const findings = compareBilling(bill, payments);
   const active = wfs.find(isActive);
   const current = wfs.find((w) => w.id === wfId) ?? active;
   const reviewStarted = !!current && (current.steps.find((s) => s.key === "consent")?.status === "done");
+  const customerReviewRequested = current?.data["customerReviewRequested"] === true;
   const paid = payments.filter((p) => p.billId === bill.id && p.status !== "pending").reduce((a, p) => a + p.amount, 0);
 
   const check = () => {
@@ -44,6 +50,14 @@ export function BillingShieldScreen() {
       setWfId(r.wfId);
       setPhase("done");
     }, 450 * (COMPARE.length + 1));
+  };
+
+  const submitReview = () => {
+    if (!selectedIssue) return;
+    const r = requestBillingReview(selectedIssue, issueNotes);
+    setWfId(r.wfId);
+    setShowIssueForm(false);
+    setPhase("done");
   };
 
   return (
@@ -100,13 +114,40 @@ export function BillingShieldScreen() {
           </div>
         )}
 
-        {(phase === "done" || active) && (findings.length === 0 && !active ? (
+        {(phase === "done" || active) && (customerReviewRequested && current ? (
+          <div className="rounded-card border border-primary/15 bg-card p-5 shadow-card" aria-live="polite">
+            <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
+              <CheckCircle2 className="size-5 shrink-0 text-success" /> İnceleme talebini aldık, sonuç için seni bilgilendireceğiz.
+            </p>
+          </div>
+        ) : findings.length === 0 && !active ? (
           <div className="rounded-card bg-success-soft p-5">
             <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
-              <CheckCircle2 className="size-5 text-success" /> Her şey yolunda.
+              <CheckCircle2 className="size-5 text-success" /> Faturanda herhangi bir tutarsızlık görünmüyor.
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">Faturanda dikkat etmemiz gereken bir durum görünmüyor. {BILLING_CHECKS.length} kontrolün hepsi uyumlu.</p>
-            <Button variant="outline" className="mt-4 w-full" onClick={check}>Tekrar kontrol et</Button>
+            <p className="mt-1 text-sm text-muted-foreground">Fatura tutarını, ödemelerini, kampanya ve abonelik bilgilerini karşılaştırdım. {BILLING_CHECKS.length} kontrolün hepsi uyumlu.</p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {BILL_DISCOUNTS.map((discount) => <span key={discount} className="rounded-full bg-background/80 px-2.5 py-1 text-[11px] font-semibold text-primary">{discount}</span>)}
+            </div>
+            <p className="mt-4 text-sm text-foreground">Hâlâ sorun yaşıyorsan, faturanla ilgili problemi seçip inceleme talebinde bulunabilirsin.</p>
+            {!showIssueForm ? (
+              <Button variant="outline" className="mt-3 w-full whitespace-normal text-center" onClick={() => setShowIssueForm(true)}>İnceleme talebinde bulun</Button>
+            ) : (
+              <div className="mt-4 rounded-2xl border border-primary/15 bg-card p-4">
+                <p className="text-sm font-semibold text-primary">Faturanla ilgili problemi en iyi anlatan seçeneği işaretle.</p>
+                <RadioGroup value={selectedIssue} onValueChange={(value) => setSelectedIssue(value as BillingReviewIssueId)} className="mt-3 gap-2">
+                  {BILLING_REVIEW_ISSUES.map((issue) => (
+                    <label key={issue.id} htmlFor={`billing-issue-${issue.id}`} className={cn("flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 text-sm", selectedIssue === issue.id ? "border-primary bg-icon-box" : "border-border bg-background")}>
+                      <RadioGroupItem id={`billing-issue-${issue.id}`} value={issue.id} className="mt-0.5" />
+                      <span>{issue.label}</span>
+                    </label>
+                  ))}
+                </RadioGroup>
+                <Textarea value={issueNotes} onChange={(event) => setIssueNotes(event.target.value)} placeholder="İstersen durumu kısaca anlatabilirsin." className="mt-3 min-h-20 rounded-xl" aria-label="Fatura inceleme talebi için ek açıklama" />
+                <Button size="xl" className="mt-3 w-full" disabled={!selectedIssue} onClick={submitReview}>İnceleme talebi oluştur</Button>
+              </div>
+            )}
+            {phase === "done" && !active && <Button variant="ghost" className="mt-2 w-full" onClick={check}>Tekrar kontrol et</Button>}
           </div>
         ) : current ? (
           <div className="rounded-card border-2 border-warning/30 bg-card p-5 shadow-card">
@@ -161,3 +202,4 @@ export function BillingShieldScreen() {
     </div>
   );
 }
+

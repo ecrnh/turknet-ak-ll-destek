@@ -1,20 +1,18 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, HeartPulse, QrCode, ScanEye, Video, Wifi } from "lucide-react";
+import { ChevronRight, HeartPulse, QrCode } from "lucide-react";
 import modemImg from "@/assets/modem.png";
 import { PageHeader } from "@/components/layout/headers";
 import { FeedbackButton } from "@/components/tn/FeedbackButton";
 import { iconFor } from "@/components/tn/icons";
-import { NewBadge } from "@/components/tn/primitives";
-import { HELP_CATEGORIES } from "@/data/mock";
-import { useAppStore } from "@/features/core/appStore";
+import { NewBadge, SectionTitle } from "@/components/tn/primitives";
+import { HELP_CATEGORIES, HELP_FEATURES } from "@/data/mock";
 
 export function HelpScreen() {
-  const openHelp = useAppStore((s) => s.openHelp);
   return (
     <div>
-      <PageHeader title="Yardım" />
+      <PageHeader title="Yardım & Destek" />
       <div className="space-y-4 px-4 pt-2">
-        <div className="rounded-card border-gradient p-5 shadow-card">
+        <div className="mx-1 rounded-card border-gradient p-4 shadow-card">
           <div className="flex items-center gap-4">
             <img src={modemImg} alt="Modem" width={816} height={816} loading="lazy" className="h-24 w-24 object-contain" />
             <h2 className="text-[1.35rem] font-bold leading-tight text-primary">İnternet Sağlığınızı Kontrol Edin</h2>
@@ -25,44 +23,28 @@ export function HelpScreen() {
           </Link>
         </div>
 
-        <div className="rounded-card bg-card p-5 shadow-card">
-          <h2 className="text-[1.25rem] font-semibold text-primary">Teknik Destek</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Link to="/ai-usta" className="relative flex min-h-[112px] flex-col justify-between rounded-2xl bg-plum p-4 text-primary-foreground">
-              <NewBadge className="absolute right-3 top-3" />
-              <ScanEye className="size-7" strokeWidth={1.5} />
-              <span className="font-semibold leading-tight">GIGA Teknik ile Çöz</span>
-            </Link>
-            <Link to="/baglanti" className="flex min-h-[112px] flex-col justify-between rounded-2xl border border-border p-4 text-primary">
-              <Wifi className="size-7" strokeWidth={1.5} />
-              <span className="font-semibold leading-tight">Bağlantım</span>
-            </Link>
-          </div>
-        </div>
+        <Link to={HELP_FEATURES.qr.to as "/"} className="mx-1 flex items-center gap-3 rounded-2xl border border-magenta/20 bg-magenta-soft p-3 text-primary">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-magenta"><QrCode className="size-5" strokeWidth={1.7} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2 text-sm font-semibold">{HELP_FEATURES.qr.title} <NewBadge /></span>
+            <span className="mt-1 block text-[11px] leading-snug text-muted-foreground">{HELP_FEATURES.qr.desc}</span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-magenta" />
+        </Link>
 
-        <div className="rounded-card bg-card p-5 shadow-card">
-          <h2 className="text-[1.25rem] font-semibold text-primary">Size nasıl yardımcı olabiliriz?</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Link to="/goruntulu-destek" className="relative flex min-h-[112px] flex-col justify-between rounded-2xl bg-plum p-4 text-primary-foreground">
-              <NewBadge className="absolute right-3 top-3" />
-              <Video className="size-7" strokeWidth={1.5} />
-              <span className="font-semibold leading-tight">Görüntülü Destek</span>
-            </Link>
-            <Link to="/qr" className="relative flex min-h-[112px] flex-col justify-between rounded-2xl bg-magenta-grad p-4 text-primary-foreground">
-              <NewBadge className="absolute right-3 top-3 bg-card text-magenta" />
-              <QrCode className="size-7" strokeWidth={1.5} />
-              <span className="font-semibold leading-tight">QR ile Destek Talebi</span>
-            </Link>
-          </div>
-          <div className="mt-3 space-y-3">
-            {HELP_CATEGORIES.map((c) => {
-              const Icon = iconFor(c.icon);
+        <div>
+          <SectionTitle className="mt-2">Size nasıl yardımcı olabiliriz?</SectionTitle>
+          <div className="space-y-1">
+            {HELP_CATEGORIES.map((category) => {
+              const Icon = iconFor(category.icon);
               return (
-                <button key={c.title} onClick={() => openHelp(c.prompt)} className="flex min-h-[60px] w-full items-center gap-4 rounded-xl border border-border px-4 text-left">
-                  <Icon className="size-7 text-primary" strokeWidth={1.25} />
-                  <span className="flex-1 font-medium text-foreground">{c.title}</span>
-                  <ChevronRight className="size-4 text-muted-foreground" />
-                </button>
+                <div key={category.title}>
+                  <Link to={category.to as "/"} className="flex min-h-[52px] w-full items-center gap-3 rounded-xl bg-card px-4 py-3 text-left shadow-sm">
+                    <Icon className="size-5 shrink-0 text-primary" strokeWidth={1.6} />
+                    <span className="flex-1 text-sm font-medium text-foreground">{category.title}</span>
+                    <ChevronRight className="size-4 text-muted-foreground" />
+                  </Link>
+                </div>
               );
             })}
           </div>
@@ -76,3 +58,4 @@ export function HelpScreen() {
     </div>
   );
 }
+

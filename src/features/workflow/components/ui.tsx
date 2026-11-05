@@ -73,7 +73,8 @@ export function StepIcon({ status, className }: { status: StepStatus | "running"
 
 /** Simple mode (default) shows only meaningful stages; `detailed` adds skipped steps and technical notes. */
 export function StepTimeline({ wf, detailed }: { wf: Workflow; detailed?: boolean }) {
-  const steps = detailed ? wf.steps : wf.steps.filter((s) => s.status !== "skipped");
+  const visible = wf.data["eligibilityPrechecked"] === true ? wf.steps.filter((s) => s.key !== "eligibility") : wf.steps;
+  const steps = detailed ? visible : visible.filter((s) => s.status !== "skipped");
   return (
     <ol className="space-y-0">
       {steps.map((s, i) => (
@@ -106,8 +107,22 @@ export function TechDetails({ title = "Teknik detayları gör", children, classN
 
 export function DecisionCard({ wf }: { wf: Workflow }) {
   const navigate = useNavigate();
-  const d = wf.decision;
+  const stored = wf.decision;
+  const d = stored?.key === "usta_more"
+    ? { ...stored, prompt: "Sorunun hâlâ devam ediyor mu?", detail: undefined, options: [{ id: "yes", label: "Evet, devam ediyor", primary: true }, { id: "fixed", label: "Hayır, düzeldi" }] }
+    : stored?.key === "usta_support"
+      ? { ...stored, prompt: "Bağlantı sorunun sürüyorsa birlikte deneyelim.", detail: "Modem kısa süreli takılmış olabilir. Bağlantıyı uzaktan yenilemek modemin yeniden ağa bağlanmasını sağlar; evindeki modemi kapatıp açmana gerek kalmaz.", options: [{ id: "restart", label: "Bağlantıyı uzaktan yenile", desc: "Modemini yeniden ağa bağlamayı deneyelim.", primary: true }, { id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek." }] }
+      : stored?.key === "usta_remote_failed"
+        ? { ...stored, prompt: "Bağlantı sorunun sürüyor. Nasıl devam etmek istersin?", detail: undefined, options: [{ id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek.", primary: true }] }
+        : stored;
     if (!d) return null;
+  if (d.key === "usta_final_support" && d.options.length === 0) return (
+    <div className="rounded-card border-2 border-magenta/30 bg-card p-5 shadow-card">
+      <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Sonraki adım</p>
+      <h3 className="mt-1 text-lg font-semibold leading-snug text-primary">{d.prompt}</h3>
+      {d.detail && <p className="mt-1.5 text-sm text-muted-foreground">{d.detail}</p>}
+    </div>
+  );
   if (d.key === "usta_inspect") return <ModemInspectCard wf={wf} />;
   const options = d.options;
   return (
@@ -123,7 +138,8 @@ export function DecisionCard({ wf }: { wf: Workflow }) {
             onClick={() => {
               decide(wf.id, o.id, "customer");
               // "Canlı destekle görüşmek istiyorum" opens the live chat that the handover created.
-              if (o.id === "live" && wf.type === "ai_usta") navigate({ to: "/canli-destek/$id", params: { id: wf.id } });
+              if (o.id === "live" && (wf.type === "ai_usta" || wf.type === "speed_optimize")) navigate({ to: "/canli-destek/$id", params: { id: wf.id } });
+              if (o.id === "video" && wf.type === "ai_usta") navigate({ to: "/goruntulu-destek" });
             }}
             className={cn(
               "w-full rounded-2xl border p-3.5 text-left transition-transform active:scale-[0.99]",
@@ -351,3 +367,4 @@ export function DemoNote({ className, children }: { className?: string; children
     </p>
   );
 }
+

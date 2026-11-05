@@ -59,6 +59,16 @@ export const defaultScopes = (): Record<ScopeKey, boolean> => Object.fromEntries
 export const RELATIONS = ["Anne", "Baba", "Eş", "Çocuk", "Diğer"] as const;
 
 export const HERO_SLIDES = [
+  {
+    id: "agents",
+    kind: "feature" as const,
+    eyebrow: "YENİ · TÜRKNET MOBİL'DE",
+    title: "GIGA, her şartta seninle.",
+    text: "Bağlantı sorunlarında çözüm adımlarını seninle yürüten yapay zekâ destekli yardımcın.",
+    cta: "Destek süreçlerini keşfet",
+    to: "/yardim",
+    icon: "bot",
+  },
   { id: "campaign", kind: "campaign" as const },
   {
     id: "video",
@@ -89,16 +99,6 @@ export const HERO_SLIDES = [
     cta: "Nasıl Çalışır?",
     to: "/hibrit",
     icon: "router",
-  },
-  {
-    id: "agents",
-    kind: "feature" as const,
-    eyebrow: "GIGA",
-    title: "Sorun mu Var? Birlikte Çözelim",
-    text: "Bağlantınla ilgili bir sorun yaşarsan GIGA ile birkaç basit kontrolle çoğu sorunu dakikalar içinde çözebilirsin.",
-    cta: "GIGA ile Tanış",
-    to: "/ajanlar",
-    icon: "bot",
   },
   {
     id: "fiber",
@@ -136,6 +136,7 @@ export const SUBSCRIPTION_OPS: OpItem[] = [
   { slug: "dondur", title: "Hizmeti Dondur", icon: "freeze", to: "/islem/dondur" },
   { slug: "tasi", title: "İnternetini Taşı", icon: "move", to: "/tasinma", isNew: true },
   { slug: "iptal", title: "Aboneliğini İptal Et", icon: "cancel", to: "/islem/iptal" },
+  { slug: "yeni-abonelik", title: "Yeni Abonelik", icon: "user-plus", to: "/islem/yeni-abonelik" },
 ];
 
 export const INTERNET_OPS: OpItem[] = [
@@ -144,18 +145,7 @@ export const INTERNET_OPS: OpItem[] = [
   { slug: "ping", title: "Ping Testi", icon: "ping", to: "/islem/ping" },
 ];
 
-export const SUPPORT_OPS: OpItem[] = [
-  { slug: "takip", title: "Benim İçin Takip Et", icon: "track", to: "/takip", isNew: true },
-  { slug: "ai-usta", title: "GIGA Teknik", icon: "usta", to: "/ai-usta", isNew: true },
-  { slug: "fatura-kalkani", title: "Fatura Kalkanı", icon: "shield", to: "/fatura-kalkani", isNew: true },
-  { slug: "baglanti", title: "Bağlantım", icon: "network", to: "/baglanti", isNew: true },
-  { slug: "video", title: "Görüntülü Destek", icon: "video", to: "/goruntulu-destek", isNew: true },
-  { slug: "qr", title: "QR ile Destek", icon: "qr", to: "/qr", isNew: true },
-  { slug: "hibrit", title: "Hibrit İnternet", icon: "router", to: "/hibrit", isNew: true },
-];
-
 export const OPS_LIST = [
-  { title: "Yardım & Destek", to: "/yardim" },
   { title: "Modem Şifre Bilgisi", to: "/islem/modem-sifre" },
   { title: "Statik IP", to: "/islem/statik-ip" },
   { title: "Teknik Bilgiler", to: "/islem/teknik-bilgiler" },
@@ -163,7 +153,7 @@ export const OPS_LIST = [
   { title: "Güvenli İnternet", to: "/islem/guvenli-internet" },
 ];
 
-export const GENERIC_OPS: Record<string, { title: string; desc: string; cta?: string; facts?: [string, string][] }> = {
+export const GENERIC_OPS: Record<string, { title: string; desc: string; cta?: string; facts?: [string, string][]; usage?: { total: string; download: string; upload: string; dailyAverage: string } }> = {
   "hiz-yukseltme": {
     title: "Hız Yükseltme",
     desc: "Adresinde 1.000 Mbps'e kadar fiber altyapı mevcut. Mevcut paketin: Fiber 100 Mbps.",
@@ -179,7 +169,7 @@ export const GENERIC_OPS: Record<string, { title: string; desc: string; cta?: st
   dondur: { title: "Hizmeti Dondur", desc: "Hizmetini 1-3 ay arası dondurabilirsin. Dondurma süresince ücret alınmaz.", cta: "Dondurma Talebi Oluştur" },
   tasi: { title: "İnternetini Taşı", desc: "Yeni adresini gir, altyapı kontrolünü hemen yapalım.", cta: "Adres Kontrolü Yap" },
   iptal: { title: "Aboneliğini İptal Et", desc: "Gitmeden önce: 12 ay peşin ödemede kalan aylar iade edilir. İptal talebi için kimlik doğrulaması gerekir.", cta: "İptal Talebi Başlat" },
-  kullanim: { title: "Kullanımını Gör", desc: "Bu ay toplam 412 GB kullandın. Limitsiz paketindesin.", facts: [["İndirme", "387 GB"], ["Yükleme", "25 GB"], ["Günlük ort.", "19,6 GB"]] },
+  kullanim: { title: "Kullanımını Gör", desc: "Bu ay toplam 412 GB kullandın. Limitsiz paketindesin.", facts: [["İndirme", "387 GB"], ["Yükleme", "25 GB"], ["Günlük ort.", "19,6 GB"]], usage: { total: "412 GB", download: "387 GB", upload: "25 GB", dailyAverage: "19,6 GB" } },
   ping: { title: "Ping Testi", desc: "Gecikme değerin oyun ve görüntülü görüşme için ideal seviyede.", facts: [["Ping", "8 ms"], ["Jitter", "1 ms"], ["Paket kaybı", "%0"]] },
   "modem-sifre": { title: "Modem Şifre Bilgisi", desc: "Modem arayüz şifren güvenlik nedeniyle SMS ile gönderilir.", cta: "SMS ile Gönder" },
   "statik-ip": { title: "Statik IP", desc: "Sabit IP adresi ile uzaktan erişim ve sunucu hizmetleri kullanabilirsin.", cta: "Statik IP Talep Et", facts: [["Aylık", "₺49,90"]] },
@@ -198,12 +188,20 @@ export const GENERIC_OPS: Record<string, { title: string; desc: string; cta?: st
 };
 
 export const HELP_CATEGORIES = [
-  { title: "İnternet Bağlantı Sorunları", icon: "router", prompt: "İnternetim çalışmıyor" },
-  { title: "Fatura ve Ödeme İşlemleri", icon: "receipt", prompt: "Faturamı nasıl öderim?" },
-  { title: "Hizmet & Ürünler", icon: "hand", prompt: "Hangi paketler var?" },
-  { title: "İptal İşlemleri", icon: "target", prompt: "Aboneliğimi iptal etmek istiyorum" },
-  { title: "Bilgi", icon: "info", prompt: "Modem ışıkları ne anlama geliyor?" },
+  { title: "İnternet Bağlantı Sorunları", icon: "router", to: "/ai-usta" },
+  { title: "Fatura ve Ödeme İşlemleri", icon: "receipt", to: "/faturalar" },
+  { title: "Hizmet & Ürünler", icon: "hand", to: "/islemler" },
+  { title: "İptal İşlemleri", icon: "target", to: "/islem/iptal" },
+  { title: "Bilgi", icon: "info", to: "/islem/teknik-bilgiler" },
+  { title: "Şikayet", icon: "info", to: "/destek-kayitlari" },
+  { title: "Abonelik İşlemleri", icon: "track", to: "/islemler" },
+  { title: "Modem Kurulum Rehberi", icon: "router", to: "/ai-usta" },
+  { title: "Hibrit İnternet", icon: "router", to: "/hibrit" },
 ];
+
+export const HELP_FEATURES = {
+  qr: { title: "Modemin için kişisel QR etiketin", desc: "Daha hızlı destek için sana özel QR kodunu modemine yapıştır. Okuttuğunda cihazın tanınsın, destek adımları hemen başlasın.", icon: "qr", to: "/qr" },
+};
 
 export const CHAT_TOPICS = [
   {
@@ -389,6 +387,13 @@ export const DEMO_NEW_ADDRESS_PARTS = { city: "İstanbul", district: "Kadıköy"
 
 export const DEMO_MOVE_DATE = "2026-11-10";
 
+export const RELOCATION_GUIDANCE = {
+  firstMove: "Aynı yıl içindeki ilk internet taşıma işlemi ücretsizdir.",
+  repeatMove: "Aynı yıl içindeki sonraki taşıma işlemleri 1.600 TL olarak ücretlendirilir.",
+  setupWindow: "GIGA, yeni adresindeki port ve altyapı adımlarını senin için takip ediyor. Port uygun hale gelip kurulum planlandığında randevu için seni 444 88 75 (TURK) numarasından arayacağız. Kurulum günü kendine ait VDSL / ADSL modemini hazır bulundur; modem hazır değilse ev içi kurulum tamamlanamayabilir.",
+  modem: "Mevcut modemin yeni adresindeki altyapıya uygun değil. Modem ücreti ödememek için mevcut modemini bize iade etmelisin. Ücretsiz kargo bilgilerini sana SMS ile ileteceğiz. Yeni adresinde kendine ait bir VDSL / ADSL modem kullanman gerekiyor.",
+};
+
 export const APPOINTMENT_SLOTS = [
   { id: "slot-1", label: "3 Kas Salı · 16:00–18:00" },
   { id: "slot-2", label: "4 Kas Çarşamba · 09:00–12:00" },
@@ -449,6 +454,18 @@ export const BILLING_CHECKS = [
   { code: "equipment", label: "Cihaz / ekipman bedeli" },
   { code: "app_vs_detail", label: "Uygulama tutarı ile fatura detayı" },
 ] as const;
+
+export const BILLING_REVIEW_ISSUES = [
+  { id: "prepaid_12m", label: "12 ay peşin ödeme sonrası yaşanan sorun" },
+  { id: "paid_but_unpaid", label: "Ödediğim fatura ödenmemiş görünüyor" },
+  { id: "excessive_amount", label: "Faturam olması gerekenden fazla görünüyor" },
+  { id: "cancel_unused_refund", label: "Abonelik iptalinden sonra kullanılmayan günlerin ücreti iade edilmedi" },
+  { id: "duplicate_payment", label: "Aynı fatura için iki defa ödeme alındı" },
+  { id: "campaign_discount_missing", label: "Kampanya koşullarını sağladığım hâlde indirim faturama yansımadı" },
+  { id: "freeze_charge", label: "Dondurma veya benzeri bir işlemden sonra yanlış ücret çıkarıldı" },
+  { id: "relocation_setup_fee", label: "Nakil veya kurulum ücretine itirazım var" },
+] as const;
+export type BillingReviewIssueId = (typeof BILLING_REVIEW_ISSUES)[number]["id"];
 
 export const AI_USTA_STEPS = [
   {
@@ -546,7 +563,7 @@ export const GIGA = {
   /** Home page GIGA area. */
   homeGreeting: "Destek almak veya soru sorman için yanındayım!",
   /** Suggestions only, never a required menu: the customer can always write their own sentence. */
-  starters: ["İnternetimle ilgili sorun var.", "Faturamı kontrol et.", "Taşınmak istiyorum.", "İşlemimin durumunu öğren."],
+  starters: ["İnternetimle ilgili destek almak istiyorum", "Fatura borcum ne kadar?", "İnternetimi başka adrese taşıma işlemini nasıl gerçekleştiririm?", "İnternet hizmetini belli bir süre nasıl dondurabilirim?"],
   placeholder: "İhtiyacını yaz ya da söyle…",
   /** One assistant, six capabilities; the home page has no shortcuts for these, so the chat is the way in. `prompt` is what tapping the capability says to GIGA. */
   capabilities: [
@@ -567,3 +584,4 @@ export const GIGA = {
   needsApproval: ["Fatura incelemesi başlatmak, iade veya borç düzeltmesi", "Nakil başvurusu ve randevu oluşturmak", "Hibrit İnternet ve TürkNet Box'ı etkinleştirmek", "Otomatik ödeme talimatı vermek"],
 } as const;
 export const HYBRID_BACKUP_QUOTA_MB = 50 * 1024; // demo allowance of the backup SIM
+

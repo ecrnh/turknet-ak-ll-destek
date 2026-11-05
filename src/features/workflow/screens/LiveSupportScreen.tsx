@@ -62,7 +62,7 @@ export function LiveSupportScreen({ id }: { id: string }) {
   return (
     <div className="flex min-h-full flex-col">
       <PageHeader title="Canlı Destek" />
-      <div className="flex-1 space-y-4 px-4 pb-4">
+      <div className={cn("flex-1 space-y-4 px-4", chat ? "pb-32" : "pb-4")}>
         {!chat ? (
           <>
             <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
@@ -118,7 +118,7 @@ export function LiveSupportScreen({ id }: { id: string }) {
                 e.preventDefault();
                 send();
               }}
-              className="sticky bottom-24"
+              className="fixed inset-x-0 bottom-[80px] z-30 bg-gradient-to-t from-background via-background to-transparent px-4 pb-2 pt-3"
             >
               <div className="flex items-center gap-2 rounded-full border border-border bg-card p-1.5 shadow-card">
                 <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Mesajını yaz…" aria-label="Temsilciye mesaj" aria-invalid={!!error} className="h-11 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground" />
@@ -135,3 +135,4 @@ export function LiveSupportScreen({ id }: { id: string }) {
     </div>
   );
 }
+

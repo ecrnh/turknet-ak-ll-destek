@@ -1,21 +1,21 @@
-import { Link } from "@tanstack/react-router";
-import { Download, Info, Package, ScanLine, Smartphone } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Download, Info, Package, Printer, ScanLine } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import modemImg from "@/assets/modem.png";
 import { PageHeader } from "@/components/layout/headers";
 import { TurknetLogo } from "@/components/layout/headers";
-import { Banner } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { USER } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
 import { useQrStore } from "../store";
 import { makeQr, qrPayload } from "../qr";
+import { startQrGigaSupport } from "../startQrSupport";
 import { useFlow } from "@/lib/analytics";
 
 export function QrLabelScreen() {
   useFlow("qr_label");
+  const navigate = useNavigate();
   const serial = useQrStore((s) => s.serial);
   const ordered = useQrStore((s) => s.labelOrdered);
   const orderLabel = useQrStore((s) => s.orderLabel);
@@ -36,10 +36,30 @@ export function QrLabelScreen() {
     toast.success("Etiket indirildi", { description: "Yazdırıp modeminin üstüne yapıştırabilirsin." });
   };
 
+  const print = () => {
+    if (!src) return;
+    const win = window.open("", "_blank", "width=480,height=640");
+    if (!win) {
+      toast.error("Yazdırma penceresi açılamadı", { description: "Tarayıcı açılır pencerelere izin vermiyor." });
+      return;
+    }
+    win.document.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>TürkNet destek QR etiketi</title><style>body{font-family:Arial,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;color:#4a0a5e}.label{width:320px;padding:24px;border:2px dashed #d82eaa;border-radius:24px;text-align:center}.label img{width:100%;display:block;margin:18px auto}.brand{font-size:24px;font-weight:700}.hint{font-size:12px;font-weight:700;color:#d82eaa}.serial{font-family:monospace;font-size:12px;color:#666}</style></head><body><main class="label"><div class="brand">TürkNet</div><div class="hint">DESTEK İÇİN OKUT</div><img src="${src}" alt="Kişisel destek QR kodu"><p class="serial">${serial} · Abone ${USER.subscriberNo}</p></main><script>window.onload=()=>{window.print();window.close()}</script></body></html>`);
+    win.document.close();
+  };
+
+  const tryQr = () => {
+    startQrGigaSupport();
+    navigate({ to: "/ajanlar" });
+  };
+
   return (
     <div>
       <PageHeader title="QR Etiketim" />
       <div className="space-y-4 px-4">
+        <section className="rounded-card border border-magenta/15 bg-magenta-soft p-5 shadow-card">
+          <h2 className="text-xl font-semibold leading-snug text-primary">Modeminden GIGA'ya, tek bir QR ile.</h2>
+          <p className="mt-2 text-sm leading-relaxed text-foreground">İnternetinde bir sorun mu var? Modeminin üzerindeki QR kodu okut. GIGA modemini ve bağlantını otomatik kontrol etsin, sorununun çözümü için seni doğrudan yönlendirsin.</p>
+        </section>
         <div className="rounded-card bg-card p-5 shadow-card">
           <div className="mx-auto w-64 rounded-[28px] border-2 border-dashed border-magenta/40 bg-card p-4">
             <div className="flex items-center justify-between">
@@ -63,56 +83,36 @@ export function QrLabelScreen() {
               {serial} · Abone {USER.subscriberNo}
             </p>
           </div>
-          <p className="mt-4 text-center text-sm text-muted-foreground">Bu QR sana özel. Modeminin üstüne yapıştır; arıza olduğunda okutman yeterli.</p>
+          <p className="mt-4 text-center text-sm text-muted-foreground">Bu QR modemine ve aboneliğine özel. Okutulduğunda bilgiler otomatik tanınır; modem modelini, cihaz kodunu veya abonelik numaranı tekrar girmen gerekmez.</p>
         </div>
 
-        <div className="rounded-card bg-card p-5 shadow-card">
-          <p className="font-semibold text-primary">Nereye yapıştırmalıyım?</p>
-          <div className="relative mx-auto mt-2 w-56">
-            <img src={modemImg} alt="Modem üzerinde QR etiketinin yeri" width={816} height={816} loading="lazy" className="w-full" />
-            <div className="absolute left-[44%] top-[52%] flex h-10 w-10 -translate-x-1/2 -rotate-6 items-center justify-center rounded-md border-2 border-magenta bg-card shadow-float">
-              <ScanLine className="size-6 text-primary" />
-            </div>
-            <span className="absolute left-[60%] top-[42%] rounded-full bg-magenta px-2 py-0.5 text-[10px] font-bold text-magenta-foreground">Üst yüzey</span>
-          </div>
-          <p className="text-center text-xs text-muted-foreground">
-            Modem: {USER.modemModel} · Seri No {serial}
-          </p>
+        <div className="rounded-card border border-primary/10 bg-card p-4 shadow-card">
+          <p className="flex items-center gap-2 font-semibold text-primary"><Info className="size-4 text-magenta" /> Modeminde QR etiketi yok mu?</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">Etiketini bu sayfadan oluşturabilir, indirebilir ve yazdırabilirsin. Modeminin üzerine ya da kolayca görebileceğin başka bir yere yapıştırman yeterli; etiketin fiziksel olarak modem üzerinde olması şart değil.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Button variant="outline" size="lg" onClick={download} disabled={!src}>
-            <Download /> İndir / Yazdır
+            <Download /> QR Etiketini İndir
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={ordered}
-            onClick={() => {
-              orderLabel();
-              addHistory("QR etiket kargo talebi", "Adresine 2-3 iş gününde ulaşacak");
-              toast.success("Etiketin kargoya verilecek", { description: "2-3 iş günü içinde adresinde." });
-            }}
-          >
-            <Package /> {ordered ? "İstendi" : "Kargoyla İste"}
+          <Button variant="outline" size="lg" onClick={print} disabled={!src}>
+            <Printer /> Yazdır
           </Button>
         </div>
 
-        <Button asChild size="xl" className="w-full rounded-full">
-          <Link to="/qr/tara">
-            <ScanLine /> QR Tara ve Analiz Et
-          </Link>
+        <Button variant="outline" size="lg" className="w-full" disabled={ordered} onClick={() => {
+          orderLabel();
+          addHistory("QR etiket kargo talebi", "Adresine 2-3 iş gününde ulaşacak");
+          toast.success("Etiketin kargoya verilecek", { description: "2-3 iş günü içinde adresinde." });
+        }}>
+          <Package /> {ordered ? "QR etiketi istendi" : "QR Etiketini Kargoyla İste"}
         </Button>
 
-        <Banner tone="info" title="Uygulama dışından da çalışır">
-          <span className="inline-flex items-start gap-1">
-            <Smartphone className="mt-0.5 size-3.5 shrink-0" /> Telefonunun kendi kamerasıyla okutursan Turknet uygulaması otomatik açılır ve analiz başlar (deep link).
-          </span>
-        </Banner>
-        <p className="flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground">
-          <Info className="size-3" /> İçerik: {qrPayload(serial)}
-        </p>
+        <Button size="xl" className="w-full rounded-full" onClick={tryQr}>
+          <ScanLine /> QR ile Destek Akışını Dene
+        </Button>
       </div>
     </div>
   );
 }
+

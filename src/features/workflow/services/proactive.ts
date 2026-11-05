@@ -6,10 +6,11 @@
  * Never claims a speed above the physical line capacity.
  */
 import { SUBSCRIPTION, TEAMS } from "@/data/mock";
-import { chain, complete, createWorkflow, getWf, log, notify, registerOp, schedule, setData, setStatus, setWorkOrder, step, stepStatus, workOrder } from "../engine";
+import { ask, chain, complete, createWorkflow, getWf, hasOp, log, notify, registerDecision, registerOp, runOverdueOps, schedule, setData, setStatus, setWorkOrder, step, stepStatus, workOrder } from "../engine";
 import { MockNetworkAPI } from "../mockServices";
 import { useWorkflowStore as W } from "../store";
 import { setConnectivity } from "./connectivity";
+import { goLive } from "./aiUsta";
 
 export const NORMAL = { optic: -19.2, drops: 0 };
 export const isAnomalous = (m: { optic: number; drops: number }) => m.optic < -26 || m.drops > 5;
@@ -21,6 +22,7 @@ const SPEED_STEPS = [
   { key: "speed", label: "Hız ve bağlantı analizi" },
   { key: "remote", label: "Güvenli uzaktan iyileştirme" },
   { key: "retest", label: "Yeniden hız ölçümü" },
+  { key: "wifi", label: "Wi-Fi yerleşim desteği" },
   { key: "field", label: "Teknik ekip müdahalesi" },
   { key: "verify", label: "Sonuç doğrulaması" },
 ];
@@ -51,7 +53,8 @@ export function detectAnomaly(): string | null {
 registerOp("proactive.detect", () => detectAnomaly());
 
 /** Customer says "İnternetim çok yavaş": the Speed Optimisation Agent starts with a measurement. */
-export function startSpeedCheck(): string {
+export function startSpeedCheck(autonomous = true): string {
+  if (autonomous) W.setState({ autoFollowUp: true });
   const measured = 20;
   setConnectivity({ fixed: "degraded", metric: { optic: -27.1, drops: 3, speed: measured } }, `Hız ölçümü: ${measured} Mbps`);
   const { wf, created } = createWorkflow({
@@ -59,15 +62,36 @@ export function startSpeedCheck(): string {
     title: "İnternet hızı kontrolü",
     dedupeKey: `speed:${SUBSCRIPTION.id}`,
     steps: [{ key: "measure", label: "Hız ölçümü" }, ...SPEED_STEPS],
-    data: { pkg: SUBSCRIPTION.speed },
+    data: { pkg: SUBSCRIPTION.speed, autonomous },
     why: "Müşteri internetinin yavaş olduğunu bildirdi",
   });
-  if (!created) return wf.id;
+  if (!created) {
+    if (autonomous && wf.data["autonomous"] === false) {
+      setData(wf.id, { autonomous: true });
+      resumeSpeedCheck(wf.id);
+    }
+    return wf.id;
+  }
   setData(wf.id, { speedBefore: measured });
   step(wf.id, "measure", "done", `Paketiniz ${SUBSCRIPTION.speed} Mbps · ölçülen ${measured} Mbps (demo ölçüm)`, "Ölçülen hız paketin %60'ının altında: anlamlı fark");
   notify(wf.id, "Hızınızdaki düşüşü inceliyoruz", "Sorunun kaynağını anlayabilmek için bağlantınızla ilgili gerekli kontrolleri yapıyoruz. Sonuçlandığında size haber vereceğiz.");
   chain("proactive.speed", wf.id, 1200);
   return wf.id;
+}
+
+/** Resumes a user-started speed workflow if its persisted op queue was interrupted. */
+export function resumeSpeedCheck(id: string) {
+  const wf = getWf(id);
+  if (!wf || wf.type !== "speed_optimize" || wf.status === "completed" || wf.status === "failed" || wf.data["autonomous"] === false) return;
+  W.setState({ autoFollowUp: true });
+  runOverdueOps();
+  if (hasOp(id) || wf.decision) return;
+  if (stepStatus(id, "speed") === "pending") schedule("proactive.speed", id, 250);
+  else if (stepStatus(id, "speed") === "in_progress") schedule("proactive.speeded", id, 250);
+  else if (stepStatus(id, "remote") === "pending" && stepStatus(id, "speed") === "done") schedule("proactive.remote", id, 250);
+  else if (stepStatus(id, "remote") === "in_progress") schedule("proactive.remoted", id, 250);
+  else if (stepStatus(id, "retest") === "pending" && stepStatus(id, "remote") === "done") schedule("proactive.retest", id, 250);
+  else if (stepStatus(id, "retest") === "in_progress") schedule("proactive.retested", id, 250);
 }
 
 export function assessScope(id: string) {
@@ -129,13 +153,19 @@ registerOp("proactive.retested", (id) => {
     setConnectivity({ fixed: "up", metric: { optic: -19.3, drops: 0, speed: after } }, `Uzaktan iyileştirme sonrası ${after} Mbps`);
     chain("proactive.verify", id, 1200);
   } else {
-    step(id, "retest", "done", `${before} → ${after} Mbps · uzaktan iyileşme sağlanamadı`, "Hız, fiziksel hat sorunu giderilmeden artırılamaz");
+    step(id, "retest", "done", `${before} → ${after} Mbps · Wi-Fi konum kontrolüne geçiliyor`);
+    if (W.getState().config.proactive === "wifi_help" || W.getState().config.proactive === "wifi_live") {
+      step(id, "wifi", "waiting", "Modem konumunu düzenleyip sorun yaşadığın odada ölçüm bekleniyor");
+      setData(id, { wifiHelp: true });
+      return;
+    }
     chain("proactive.field", id, 1200);
   }
 });
 
 export function openFieldOrder(id: string) {
   if (stepStatus(id, "field") !== "pending") return;
+  if (stepStatus(id, "wifi") === "waiting") step(id, "wifi", "done", "Modemin yanında da hız düşük görüldü; hat için teknik destek istendi");
   const wo = workOrder(id, { kind: "field_repair", title: "Optik sinyal zayıflığı · saha kontrolü", team: TEAMS.field }, "Uzaktan çözüm başarısız; fiziksel kablo/konnektör kontrolü gerekiyor");
   setWorkOrder(id, "field_repair", "in_progress");
   step(id, "field", "in_progress", `${wo.id} · tahmini ziyaret yarın 09:00–12:00 (demo)`);
@@ -159,6 +189,7 @@ export function verifyProactive(id: string) {
   const wf = getWf(id);
   if (!wf || stepStatus(id, "verify") !== "pending" || W.getState().connectivity.fixed !== "up") return;
   const after = Number(wf.data["speedAfter"] ?? 94);
+  if (stepStatus(id, "wifi") === "pending") step(id, "wifi", "skipped", "Wi-Fi konum desteğine gerek kalmadı");
   step(id, "verify", "done", `30 dk bağlantı kararlılığı kontrolü: kopma yok, ${after} Mbps (demo)`);
   notify(id, "Bağlantı sorununuz giderildi", wf.data["remoteOk"] ? "Bağlantınızdaki dalgalanmayı uzaktan giderdik. Şu anda bağlantınız normal görünüyor." : "Teknik ekibimiz onarımı tamamladı, bağlantınızı doğruladık.");
   complete(id, {
@@ -173,16 +204,50 @@ export function verifyProactive(id: string) {
 }
 registerOp("proactive.verify", verifyProactive);
 
-/**
- * Customer-run diagnostic: "Modeminin yanına yaklaşarak tekrar ölçüm yapalım."
- * Separates Wi-Fi coverage from line performance. Never changes the plan or claims a fix.
- */
+/** Customer confirms a simple placement adjustment; GIGA then measures from the problem room. */
+export function applyWifiPlacement(id: string) {
+  const wf = getWf(id);
+  if (!wf || wf.type !== "speed_optimize" || wf.data["wifiHelp"] !== true || wf.data["wifiPlacementDone"] === true) return;
+  setData(id, { wifiPlacementDone: true });
+  step(id, "wifi", "in_progress", "Müşteri modem konumunu düzenledi; sorun yaşanan odada hız ölçümü bekleniyor");
+}
+
+/** Optional modem-side check used by the separate proactive fault diagnosis. */
 export function measureNearModem(id: string): number | null {
   const wf = getWf(id);
-  if (!wf || (wf.type !== "speed_optimize" && wf.type !== "proactive_fault") || wf.data["nearSpeed"] != null) return null;
-  const before = Number(wf.data["speedBefore"] ?? 20);
-  const near = before + 3; // demo: nearly the same speed next to the modem → not a Wi-Fi coverage problem
+  if (!wf || wf.type !== "proactive_fault" || wf.data["nearSpeed"] != null) return null;
+  const near = Number(wf.data["speedBefore"] ?? 20) + 3;
   setData(id, { nearSpeed: near });
-  log(id, "customer", "info", `Modemin yanında ölçüm: ${near} Mbps (demo)`, "Modem yanında da düşükse sorun Wi-Fi kapsaması değil, hat veya modem tarafındadır");
+  step(id, "wifi", "in_progress", "Modemin yanındaki hız ölçülüyor");
+  log(id, "customer", "info", `Modemin yanında ölçüm: ${near} Mbps (demo)`);
+  step(id, "wifi", "waiting", "Modem konumu için öneri bekleniyor");
   return near;
 }
+
+/** Re-measure in the room where the customer originally noticed weak speed. */
+export function measureRoomSpeed(id: string) {
+  const wf = getWf(id);
+  if (!wf || wf.type !== "speed_optimize" || wf.data["wifiPlacementDone"] !== true || wf.data["roomSpeed"] != null || stepStatus(id, "wifi") !== "in_progress") return;
+  const pkg = Number(wf.data["pkg"] ?? SUBSCRIPTION.speed);
+  const stillLow = W.getState().config.proactive === "wifi_live";
+  const after = stillLow ? 23 : Math.min(pkg - 5, 88);
+  setData(id, { roomSpeed: after });
+  log(id, "customer", "info", `Sorun yaşanan odada yeni ölçüm: ${after} Mbps (demo)`, "Modem konumu düzenlendikten sonra odadaki Wi-Fi hızını karşılaştırdık");
+  step(id, "wifi", "done", stillLow ? `Sorun yaşanan odada ${after} Mbps ölçüldü; hız hâlâ düşük` : `Sorun yaşanan odada ${after} Mbps ölçüldü; hız iyileşti`);
+  step(id, "field", "skipped", "Canlı destek kararı bekleniyor");
+  setData(id, { speedAfter: after, wifiStepsTried: true });
+  setConnectivity({ fixed: stillLow ? "degraded" : "up", metric: { optic: stillLow ? -27.1 : -19.3, drops: stillLow ? 3 : 0, speed: after } }, `Wi-Fi adımları sonrası ${after} Mbps`);
+  if (stillLow) {
+    ask(id, {
+      key: "speed_live",
+      prompt: "Modem konumunu düzenledikten sonra da bu odadaki hız düşük kaldı. Canlı destekle birlikte inceleyelim mi?",
+      options: [{ id: "live", label: "Canlı desteğe bağlan", primary: true }],
+    }, "Ev içi adımlardan sonra sorun yaşanan odada hız düşük ölçüldü", { push: false });
+    return;
+  }
+  step(id, "verify", "done", `${after} Mbps · Wi-Fi adımları sonrası ölçüm`);
+  complete(id, { resolved: true, summary: "Modem konumu düzenlendi, sorun yaşanan odada hız tekrar ölçüldü", results: [`Sorun yaşanan odadaki güncel hız ${after} Mbps`, "Modem daha açık ve merkezi bir konuma alındı"] });
+}
+
+registerDecision("speed_live", (id) => goLive(id));
+

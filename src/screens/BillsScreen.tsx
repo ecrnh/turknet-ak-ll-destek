@@ -1,9 +1,9 @@
-import { ArrowRight, Building2, CreditCard, Info, Lock, ReceiptText } from "lucide-react";
+import { ArrowRight, Building2, ChevronRight, CreditCard, Info, Lock, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import billImg from "@/assets/bill-empty.png";
 import { BellButton } from "@/components/layout/headers";
-import { Banner } from "@/components/tn/primitives";
+import { Banner, NewBadge } from "@/components/tn/primitives";
 import { AppLink } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { useActingAccount, useCan } from "@/features/family/store";
@@ -12,11 +12,15 @@ import { fmtTL } from "@/lib/format";
 import { ShieldCheck } from "lucide-react";
 import { useWorkflowStore } from "@/features/workflow/store";
 import { isActive } from "@/features/workflow/rules";
+import { GigaAvatar } from "@/features/giga/GigaAvatar";
 
-function Row({ title, to, icon: Icon }: { title: string; to: string; icon: typeof ReceiptText }) {
+function Row({ title, to, icon: Icon, desc, isNew }: { title: string; to: string; icon: typeof ReceiptText; desc?: string; isNew?: boolean }) {
   return (
     <AppLink to={to} className="flex min-h-[72px] items-center justify-between rounded-card bg-card px-6 shadow-card">
-      <span className="font-semibold text-foreground">{title}</span>
+      <span>
+        <span className="flex items-center gap-2 font-semibold text-foreground">{title}{isNew && <NewBadge />}</span>
+        {desc && <span className="mt-1 block text-xs leading-snug text-muted-foreground">{desc}</span>}
+      </span>
       <Icon className="size-7 text-primary" strokeWidth={1.5} />
     </AppLink>
   );
@@ -27,6 +31,7 @@ export function BillsScreen() {
   const canPay = useCan("payment");
   const canView = useCan("bills");
   const addHistory = useAppStore((s) => s.addHistory);
+  const openHelp = useAppStore((s) => s.openHelp);
   const [paid, setPaid] = useState(false);
   const shieldBill = useWorkflowStore((s) => s.bills[0]);
   const shieldWf = useWorkflowStore((s) => s.workflows.find((w) => w.type === "billing_check" && isActive(w)));
@@ -93,12 +98,21 @@ export function BillsScreen() {
           </div>
         )}
 
-        <Row title="Fatura Kalkanı" to="/fatura-kalkani" icon={ShieldCheck} />
+        <Row title="Fatura Kalkanı" to="/fatura-kalkani" icon={ShieldCheck} desc="Fatura ve ödeme kayıtlarını karşılaştırıp farklılıkları incelemene yardımcı olur." isNew />
         <Row title="Geçmiş Faturalarımı Görüntüle" to="/faturalar/gecmis" icon={ReceiptText} />
         <Row title="Akıllı Otomatik Ödeme" to="/otomatik-odeme" icon={CreditCard} />
         <Row title="Fatura Tercihlerimi Düzenle" to="/islem/fatura-tercih" icon={ArrowRight} />
         <Row title="Fatura Gönderim Adresini Düzenle" to="/islem/fatura-adres" icon={Building2} />
+        <button onClick={() => openHelp("Faturamla ilgili başka bir konuda yardıma ihtiyacım var.")} className="flex w-full items-center gap-3 rounded-card border border-primary/10 bg-card p-4 text-left shadow-card">
+          <GigaAvatar size={42} label={false} />
+          <span className="flex-1">
+            <span className="block font-semibold leading-snug text-primary">Faturanla ilgili daha fazla yardıma mı ihtiyacın var?</span>
+            <span className="mt-1 block text-xs text-muted-foreground">GIGA'ya sor</span>
+          </span>
+          <ChevronRight className="size-5 text-muted-foreground" />
+        </button>
       </div>
     </div>
   );
 }
+

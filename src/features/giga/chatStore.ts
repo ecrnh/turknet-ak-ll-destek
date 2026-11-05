@@ -5,7 +5,7 @@
  */
 import { create } from "zustand";
 import type { Intent } from "@/features/workflow/rules";
-import type { GigaAction } from "./assistant";
+import type { GigaAction, GigaBillingSummary } from "./assistant";
 
 export interface ChatMsg {
   id: number;
@@ -13,17 +13,19 @@ export interface ChatMsg {
   text: string;
   actions?: GigaAction[] | undefined;
   /** Streams Hız Koruyucu steps. */
-  agent?: boolean | undefined;
   /** Shows this process live inside the chat. */
   wfId?: string | undefined;
+  billingCard?: GigaBillingSummary | undefined;
 }
 
 interface ChatState {
   msgs: ChatMsg[];
+  entryMode: "qr" | null;
   /** What GIGA proposed last, so "evet" / "başlat" can start it. */
   lastOffer: Intent | null;
   add: (m: Omit<ChatMsg, "id">) => void;
   setOffer: (i: Intent | null) => void;
+  setEntryMode: (mode: "qr" | null) => void;
   clear: () => void;
 }
 
@@ -31,8 +33,11 @@ let seq = 0;
 
 export const useGigaChat = create<ChatState>((set) => ({
   msgs: [],
+  entryMode: null,
   lastOffer: null,
   add: (m) => set((s) => ({ msgs: [...s.msgs, { ...m, id: ++seq }] })),
   setOffer: (lastOffer) => set({ lastOffer }),
-  clear: () => set({ msgs: [], lastOffer: null }),
+  setEntryMode: (entryMode) => set({ entryMode }),
+  clear: () => set({ msgs: [], lastOffer: null, entryMode: null }),
 }));
+

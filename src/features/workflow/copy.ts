@@ -41,11 +41,12 @@ export function customerAction(wf: Pick<Workflow, "status" | "decision">): { nee
 }
 
 /** "Bundan sonra ne olacak?" */
-export function whatsNext(wf: Pick<Workflow, "status" | "decision" | "nextStep" | "handoff" | "outcome">): string {
+export function whatsNext(wf: Pick<Workflow, "status" | "decision" | "nextStep" | "handoff" | "outcome" | "type">): string {
   if (wf.status === "completed") return wf.outcome?.summary ?? "Süreç kapandı.";
   if (wf.decision) return "Seçiminize göre süreci sizin için sürdüreceğiz.";
   if (wf.handoff) return `${wf.handoff.team} konuyu inceliyor. Gelişme olduğunda size haber vereceğiz.`;
   if (wf.status === "waiting_for_external_system") return "Yanıt geldiğinde sizi bilgilendireceğiz.";
+  if (wf.type === "ai_usta" && wf.status === "in_progress") return "Bağlantını kontrol ediyoruz. Sonuca göre sana uygun çözüm seçeneklerini sunacağız.";
   if (wf.nextStep) return `Sıradaki adım: ${wf.nextStep}. Gelişme olduğunda size haber vereceğiz.`;
   return "Gelişme olduğunda size haber vereceğiz.";
 }
@@ -135,3 +136,4 @@ export const HYBRID_COPY = {
   },
   device: { requested: "Talep alındı", preparing: "Hazırlanıyor", on_the_way: "Yolda", delivered: "Teslim edildi", cancelled: "İptal edildi" },
 } as const;
+

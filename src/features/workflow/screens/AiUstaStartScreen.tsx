@@ -1,11 +1,11 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Gauge, HelpCircle, Router, TriangleAlert, WifiOff } from "lucide-react";
+import { ChevronRight, HelpCircle, Router, TriangleAlert, WifiOff } from "lucide-react";
 import { PageHeader } from "@/components/layout/headers";
-import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
-import { startAiUsta, startSpeedCheck, useWorkflowStore } from "@/features/workflow";
+import { GigaAvatar } from "@/features/giga/GigaAvatar";
+import { startAiUsta, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
 import { openOutage } from "../services/hybrid";
-import { DemoNote, StatusPill } from "../components/ui";
+import { StatusPill } from "../components/ui";
 
 /** GIGA Teknik landing: "İnternetinle ilgili bir sorun mu var?" — app, phone and live support meet here. */
 export function AiUstaStartScreen() {
@@ -74,7 +74,6 @@ export function AiUstaStartScreen() {
 
         <div className="space-y-2.5">
           <Entry icon={WifiOff} title="İnternetim çalışmıyor" desc="Önce sorunu anlayıp bağlantını uzaktan kontrol edelim" onClick={() => notWorking("no_internet")} />
-          <Entry icon={Gauge} title="İnternetim yavaş" desc="Hızını ölçer, uzaktan iyileştirebileceğimi denerim" onClick={() => go(startSpeedCheck())} />
           <Entry icon={Router} title="Modemimde sorun var" desc="Önce uzaktan kontrol ederim, gerekirse modemine birlikte bakarız" onClick={() => notWorking("modem")} />
           <Link to="/yardim" className="flex w-full items-center gap-4 rounded-card border border-dashed border-border bg-card p-4 text-left">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-icon-box text-primary"><HelpCircle className="size-6" strokeWidth={1.5} /></span>
@@ -85,9 +84,8 @@ export function AiUstaStartScreen() {
             <ChevronRight className="size-5 text-muted-foreground" />
           </Link>
         </div>
-        <GigaNote>Önce birlikte çözmeyi deneyelim. Çözdüğümüz sorunlar için destek kaydı açmam; yalnızca uzman gerekirse kayıt oluştururum.</GigaNote>
-        <DemoNote className="pb-2">Görsel analiz ve telefon görüşmesi bu prototipte simülasyondur; gerçek görüntü modeli veya arama kullanılmaz.</DemoNote>
       </div>
     </div>
   );
 }
+

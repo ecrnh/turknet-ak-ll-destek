@@ -1,13 +1,13 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowDown, CheckCircle2, Home, Info, Loader2, MapPinned, Search, Smartphone, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowDown, CheckCircle2, Home, Info, Loader2, MapPinned, Search, Sparkles, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
-import { Banner, PlainNote, ToggleRow } from "@/components/tn/primitives";
+import { Banner, PlainNote } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CURRENT_ADDRESS, DEMO_MOVE_DATE, DEMO_NEW_ADDRESS_PARTS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
+import { CURRENT_ADDRESS, DEMO_MOVE_DATE, DEMO_NEW_ADDRESS_PARTS, RELOCATION_GUIDANCE, SUBSCRIPTION } from "@/data/mock";
 import { useScenarioStore } from "@/features/scenario/store";
 import { startRelocation, useWorkflowStore } from "@/features/workflow";
 import { useFlow } from "@/lib/analytics";
@@ -36,7 +36,7 @@ const FIELDS: { key: keyof Addr; label: string; placeholder: string }[] = [
 const RESULT_TEXT: Record<EligibilityResult, { title: string; giga: string; tone: "ok" | "wait" | "unknown" }> = {
   eligible: { title: "Harika! Yeni adresinde TürkNet hizmeti sunulabiliyor.", giga: "Yeni adresinde fiber altyapı ve boş bağlantı noktası var. Süreci başlatırsan randevuya kadar her adımı İşlemlerim'den görebilirsin.", tone: "ok" },
   eligible_external: { title: "Harika! Yeni adresinde TürkNet hizmeti sunulabiliyor.", giga: "Bu adreste bağlantı için altyapı sağlayıcısından bir izin istememiz gerekiyor. Bu izni biz takip ederiz; senin bir şey yapman gerekmiyor.", tone: "ok" },
-  no_port: { title: "Yeni adresinde bağlantı için biraz beklememiz gerekebilir.", giga: "Binadaki bağlantı noktaları şu an dolu görünüyor. İlgili ekibe bilgi verip durumu sana bildireceğiz. Bu süreçte internetsiz kalmanı istemiyoruz.", tone: "wait" },
+  no_port: { title: "Yeni adresinde şu an boş bağlantı noktası yok.", giga: "Altyapı ekibine port takibi açıyoruz. Uygunluk oluştuğunda taşınma ve kurulum adımlarını sürdüreceğiz.", tone: "wait" },
   no_response: { title: "Şu an yeni adresin için yanıt alamadık.", giga: "Sonucu tahmin etmek istemiyoruz. Süreci başlatırsan kontrolü tekrar dener ve sonucu sana bildiririz.", tone: "unknown" },
 };
 
@@ -46,15 +46,12 @@ export function RelocationStartScreen() {
   const navigate = useNavigate();
   const draft = useScenarioStore((s) => s.draft);
   const existing = useWorkflowStore((s) => s.workflows.find((w) => w.type === "relocation" && isActive(w)));
-  const ownsBox = useWorkflowStore((s) => s.config.ownsBox);
   const [stage, setStage] = useState<Stage>("intent");
   const [mode, setMode] = useState<"move" | "check">("move");
   const [addr, setAddr] = useState<Addr>(EMPTY);
   const [date, setDate] = useState("");
-  const [wantsTemp, setWantsTemp] = useState(true);
   const [errors, setErrors] = useState<Partial<Record<keyof Addr | "date", string>>>({});
   const [result, setResult] = useState<EligibilityResult | null>(null);
-  const [tempOpen, setTempOpen] = useState(false);
   const [startedId, setStartedId] = useState<string | null>(null);
 
   const fillDemo = () => {
@@ -64,7 +61,6 @@ export function RelocationStartScreen() {
   useEffect(() => {
     if (draft) {
       fillDemo();
-      setWantsTemp(draft.wantsTemp);
       setStage("address");
     }
   }, [draft]);
@@ -96,7 +92,8 @@ export function RelocationStartScreen() {
 
   const start = () => {
     if (mode === "move" && !validate()) return;
-    const id = startRelocation({ address: { id: "ADR-NEW", line, district: addr.district.trim(), city: addr.city.trim() }, moveDate: date, wantsTemp });
+    useWorkflowStore.setState({ autoFollowUp: true });
+    const id = startRelocation({ address: { id: "ADR-NEW", line, district: addr.district.trim(), city: addr.city.trim() }, moveDate: date, wantsTemp: false, eligibility: result ?? undefined });
     setStartedId(id);
     setStage("started");
   };
@@ -115,18 +112,22 @@ export function RelocationStartScreen() {
 
         {stage === "intent" && (
           <>
-            <div className="rounded-card bg-plum p-5 text-primary-foreground shadow-float">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-foreground/15"><Home className="size-6" strokeWidth={1.5} aria-hidden /></span>
-              <p className="mt-3 text-xl font-semibold leading-snug">Yeni bir adrese mi taşınıyorsun?</p>
-              <p className="mt-1 text-sm text-primary-foreground/80">Yeni adresini birlikte kontrol edelim. Süreci adım adım buradan takip edebilirsin.</p>
+            <div className="rounded-card border border-magenta/15 bg-magenta-soft p-5 shadow-card">
+              <p className="text-xl font-semibold leading-snug text-primary">İnternetini Yeni Adresine Taşı</p>
+              <p className="mt-1.5 flex items-center gap-2 text-sm font-medium text-magenta"><Info className="size-4 shrink-0" /> 2–3 adımda talebini oluşturabilirsin</p>
+              <ul className="mt-4 space-y-2.5 text-sm text-primary">
+                <li className="flex gap-2"><span aria-hidden>•</span><span>İnternetini kolayca yeni adresine taşı</span></li>
+                <li className="flex gap-2"><span aria-hidden>•</span><span>{RELOCATION_GUIDANCE.firstMove}</span></li>
+                <li className="flex gap-2"><span aria-hidden>•</span><span>{RELOCATION_GUIDANCE.repeatMove}</span></li>
+              </ul>
             </div>
             <button type="button" onClick={() => { setMode("move"); setStage("address"); }} className="flex w-full items-center gap-4 rounded-card bg-card p-4 text-left shadow-card">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-icon-box text-primary"><MapPinned className="size-6" strokeWidth={1.5} /></span>
-              <span className="flex-1 font-semibold text-primary">Evet, taşınacağım</span>
+              <span className="flex-1 font-semibold text-primary">Taşınma talebi oluştur</span>
             </button>
             <button type="button" onClick={() => { setMode("check"); setStage("address"); }} className="flex w-full items-center gap-4 rounded-card bg-card p-4 text-left shadow-card">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-icon-box text-primary"><Search className="size-6" strokeWidth={1.5} /></span>
-              <span className="flex-1 font-semibold text-primary">Sadece yeni adresin internet durumunu öğrenmek istiyorum</span>
+              <span className="flex-1 font-semibold text-primary">Sadece adres uygunluğunu kontrol et</span>
             </button>
           </>
         )}
@@ -189,37 +190,57 @@ export function RelocationStartScreen() {
 
         {stage === "result" && r && result && (
           <>
-            <div className={cn("rounded-card p-5 shadow-card", r.tone === "ok" ? "bg-success-soft" : r.tone === "wait" ? "bg-warning-soft" : "bg-card")}>
-              <p className="flex items-start gap-2 text-lg font-semibold leading-snug text-foreground">
-                {r.tone === "ok" ? <CheckCircle2 className="mt-1 size-5 shrink-0 text-success" /> : <TriangleAlert className="mt-1 size-5 shrink-0 text-warning" />}
-                {r.title}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">{newAddressText}</p>
-            </div>
+            {r.tone !== "ok" && (
+              <div className={cn("rounded-card p-5 shadow-card", r.tone === "wait" ? "bg-warning-soft" : "bg-card")}>
+                <p className="flex items-start gap-2 text-lg font-semibold leading-snug text-foreground">
+                  <TriangleAlert className="mt-1 size-5 shrink-0 text-warning" />
+                  {r.title}
+                </p>
+              </div>
+            )}
             <PlainNote>{r.giga}</PlainNote>
             {result === "no_port" && (
-              <div className="rounded-card bg-card p-5 shadow-card">
-                <p className="flex items-center gap-2 font-semibold text-primary">
-                  <Smartphone className="size-5" /> Yeni adresinde bağlantın hazır olana kadar internetsiz kalmanı istemiyoruz.
-                </p>
-                {!tempOpen ? (
-                  <Button variant="outline" className="mt-3 w-full" onClick={() => setTempOpen(true)}>
-                    Geçici internet çözümünü incele
-                  </Button>
-                ) : (
-                  <div className="mt-3 space-y-2 text-sm">
-                    <p className="text-muted-foreground">{ownsBox ? "Evindeki Hibrit Box'ı yeni adreste kullanabilirsin; yeni cihaz göndermemize gerek yok." : `${TEMP_MOBILE_OFFER.device} · ${TEMP_MOBILE_OFFER.delivery}`}</p>
-                    <p className="font-semibold text-foreground">{TEMP_MOBILE_OFFER.price} · {TEMP_MOBILE_OFFER.quota}</p>
-                    <p className="text-xs text-muted-foreground">{TEMP_MOBILE_OFFER.coverage}</p>
-                    <ul className="space-y-0.5 text-xs text-muted-foreground">
-                      {TEMP_MOBILE_OFFER.terms.map((t) => (
-                        <li key={t}>• {t}</li>
-                      ))}
-                    </ul>
-                    <ToggleRow id="ra-temp" title="Süreçte bana geçici interneti öner" desc="Uygunluk, cihaz ve teslimatı ben kontrol ederim; onayın olmadan sipariş verilmez." checked={wantsTemp} onChange={setWantsTemp} />
+              <Button variant="outline" className="w-full" onClick={() => navigate({ to: "/hibrit" })}>
+                NetBox’u etkinleştir
+              </Button>
+            )}
+            {mode === "move" && (
+              <>
+                <section className="rounded-card bg-card p-4 shadow-card" aria-label="Taşınma bağlantı özeti">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-base font-semibold text-primary">İnternet hızın</h2>
+                    <span className="text-xs text-muted-foreground">Paketin</span>
                   </div>
-                )}
-              </div>
+                  <div className="grid grid-cols-2 gap-2 rounded-2xl bg-gradient-to-r from-magenta-soft via-pink-100 to-magenta-soft p-1.5">
+                    <div className="flex min-h-[104px] flex-col justify-center rounded-xl px-3 py-3">
+                      <p className="text-xs font-medium text-primary/65">Mevcut hızın</p>
+                      <p className="mt-1 whitespace-nowrap text-[28px] font-bold leading-none tracking-tight text-primary/70">
+                        {SUBSCRIPTION.speed}<span className="ml-1 text-base font-semibold">Mbps</span>
+                      </p>
+                    </div>
+                    <div className="flex min-h-[104px] flex-col justify-center rounded-xl border-2 border-magenta bg-white px-3 py-3 shadow-[0_4px_14px_hsl(var(--magenta)/0.16)]">
+                      <p className="text-xs font-semibold text-magenta">Yeni adres hızı</p>
+                      {result === "no_port" || result === "no_response" ? (
+                        <p className="mt-1.5 text-sm font-semibold leading-snug text-primary">Port uygunluğu netleşince belli olacak</p>
+                      ) : (
+                        <p className="mt-1 whitespace-nowrap text-[28px] font-bold leading-none tracking-tight text-primary">
+                          {SUBSCRIPTION.speed}<span className="ml-1 text-base font-semibold">Mbps</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </section>
+                <section className="space-y-3 rounded-card bg-card p-5 shadow-card">
+                  <div>
+                    <h2 className="text-base font-semibold text-primary">Modem bilgisi</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-foreground">{RELOCATION_GUIDANCE.modem}</p>
+                  </div>
+                  <div className="border-t border-border pt-3">
+                    <h2 className="text-base font-semibold text-primary">Kurulum bilgisi</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-foreground">{RELOCATION_GUIDANCE.setupWindow}</p>
+                  </div>
+                </section>
+              </>
             )}
             {mode === "check" ? (
               <div className="grid gap-2">
@@ -258,9 +279,10 @@ export function RelocationStartScreen() {
                   <p className={cn("mt-1 text-xs font-semibold", r?.tone === "ok" ? "text-success" : "text-orange-deep")}>{r?.tone === "ok" ? "Hizmet sunulabiliyor" : r?.tone === "wait" ? "Bağlantı için bekleme gerekebilir" : "Sonuç bekleniyor"}</p>
                 </div>
               </div>
+              {result === "no_port" && <PlainNote className="mt-4">Boş port için altyapı takibi başlatacağız. Port açılınca nakil ve kurulum süreci kaldığı yerden devam edecek.</PlainNote>}
               <p className="mb-1.5 mt-4 text-xs font-semibold text-foreground">Sonraki adımlar</p>
               <ol className="list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
-                {result === "no_port" && <li>Bağlantı noktası için ilgili ekibe bilgi veririz{wantsTemp ? "; geçici interneti senin onayına sunarız" : ""}</li>}
+                {result === "no_port" && <li>Port için altyapı ekibine takip talebi açar, NetBox bağlantı seçeneğini gösteririz</li>}
                 {result === "no_response" && <li>Adres kontrolünü tekrar deneriz ve sonucu sana bildiririz</li>}
                 <li>Taşınma talebini başlatırız</li>
                 <li>Seçtiğin zaman için uygun saha ekibini buluruz</li>
@@ -296,3 +318,4 @@ export function RelocationStartScreen() {
     </div>
   );
 }
+

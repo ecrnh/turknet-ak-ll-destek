@@ -240,7 +240,7 @@ export interface DemoConfig {
   ustaDiag: "clear" | "issue" | "regional" | "incomplete";
   /** Estimated duration (hours) of a regional outage found by digital repair. */
   regionalEtaH: number;
-  proactive: "remote_fix" | "field";
+  proactive: "remote_fix" | "field" | "wifi_help" | "wifi_live";
   /** Field-team matching for the relocation appointment: first team accepts, or first declines and a second team takes it. */
   teamMatch: "first" | "second";
   /** Is the TürkNet app installed on the phone that receives the SMS link? */
@@ -354,3 +354,4 @@ export interface HybridService {
   /** A customer on/off command for an already-activated backup is being applied (mock device command). */
   switching?: "on" | "off" | null | undefined;
 }
+

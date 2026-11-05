@@ -3,7 +3,7 @@
  * Branches on the infrastructure answer: eligible / eligible via external
  * provider / no port / no response. Never invents a successful answer.
  */
-import { APPOINTMENT_SLOTS, CURRENT_ADDRESS, FIELD_TEAMS, SUBSCRIPTION, TEAMS, TEMP_MOBILE_OFFER, type DemoAddress } from "@/data/mock";
+import { APPOINTMENT_SLOTS, CURRENT_ADDRESS, FIELD_TEAMS, RELOCATION_GUIDANCE, SUBSCRIPTION, TEAMS, TEMP_MOBILE_OFFER, type DemoAddress } from "@/data/mock";
 import { ask, book, chain, complete, createWorkflow, escalate, getWf, log, notify, plan, registerDecision, registerOp, schedule, setData, setStatus, setWorkOrder, step, stepStatus, workOrder } from "../engine";
 import { MockInfraAPI, MockProviderAPI } from "../mockServices";
 import { relocationPlan, shouldEscalateAfterRetry, type EligibilityResult } from "../rules";
@@ -27,6 +27,8 @@ export interface RelocationInput {
   address: DemoAddress;
   moveDate: string;
   wantsTemp: boolean;
+  /** Address availability was already checked in the customer-facing move flow. */
+  eligibility?: EligibilityResult;
 }
 
 export function startRelocation(input: RelocationInput): string {
@@ -43,8 +45,16 @@ export function startRelocation(input: RelocationInput): string {
   });
   if (!created) return wf.id;
   step(wf.id, "context", "done", `${SUBSCRIPTION.packageName} · borç yok · taahhüt ${SUBSCRIPTION.commitmentEnd} · mevcut port ${CURRENT_ADDRESS.port}`, "Nakil öncesi abonelik, borç ve mevcut port bilgisi doğrulanır; müşteriden tekrar istenmez");
-  notify(wf.id, "Yeni adresiniz için altyapı kontrolü başladı", "Taşınma sürecinizi sizin için takip ediyoruz. Önemli bir gelişme olduğunda size haber vereceğiz.");
-  checkEligibility(wf.id);
+  const prechecked = input.eligibility && input.eligibility !== "no_response";
+  if (prechecked) {
+    setData(wf.id, { eligibilityPrechecked: true });
+    step(wf.id, "eligibility", "done", "Yeni adres uygunluğu taşınma başvurusundan önce kontrol edildi");
+    notify(wf.id, "Taşınma talebiniz alındı", input.eligibility === "no_port" ? "Yeni adresinizde boş port bulunmadığı için altyapı takibini başlatıyoruz." : "Adres uygunluk sonucu hazır; taşınma adımlarını başlatıyoruz.");
+    applyEligibility(wf.id, input.eligibility, input.eligibility === "no_port" ? "Yeni adreste şu an boş port yok" : "Adres uygunluğu önceden doğrulandı");
+  } else {
+    notify(wf.id, "Yeni adresiniz için altyapı kontrolü başladı", "Taşınma sürecinizi sizin için takip ediyoruz. Önemli bir gelişme olduğunda size haber vereceğiz.");
+    checkEligibility(wf.id);
+  }
   return wf.id;
 }
 
@@ -88,7 +98,13 @@ export function recheckRelocation(id: string) {
 }
 
 function applyEligibility(id: string, result: EligibilityResult, reason: string) {
-  setData(id, { eligibility: result });
+  setData(id, {
+    eligibility: result,
+    currentSpeed: SUBSCRIPTION.speed,
+    newSpeed: result === "no_port" || result === "no_response" ? "Port uygunluğu netleşince" : SUBSCRIPTION.speed,
+    modemGuidance: RELOCATION_GUIDANCE.modem,
+    installGuidance: RELOCATION_GUIDANCE.setupWindow,
+  });
   const keys = relocationPlan(result);
   plan(
     id,
@@ -98,13 +114,14 @@ function applyEligibility(id: string, result: EligibilityResult, reason: string)
   if (result === "no_port") {
     step(id, "eligibility", "done", "Uygun değil: dağıtım kutusunda boş port yok");
     setStatus(id, "blocked", { blocker: reason, eta: "Altyapı planlama yanıtı 3–5 iş günü (demo tahmini)" });
-    notify(id, "Yeni adresinizde şu an boş internet portu bulunmuyor", "Binadaki fiber kutusu dolu; sizin için altyapı durumunu takip edeceğiz.", "quiet");
+    notify(id, "Yeni adresinizde şu an boş internet portu bulunmuyor", "Altyapı ekibine takip isteği açtık. Port uygun olduğunda taşınma ve kurulum adımlarını sürdüreceğiz.", "quiet");
     chain("relocation.infraFollowup", id, 1400);
   } else {
     step(id, "eligibility", "done", result === "eligible" ? "Uygun: fiber ve boş port var" : "Uygun: port tahsisi dış sağlayıcıdan istenecek");
     setStatus(id, "in_progress", { blocker: null, eta: null });
     notify(id, "Yeni adresiniz uygun", result === "eligible" ? "Nakil sürecinizi başlattık." : "Altyapı sağlayıcısından port istedik; süreci sizin için takip ediyoruz.");
-    chain("relocation.transfer", id, 1400);
+    if (getWf(id)?.data["eligibilityPrechecked"] === true) startTransfer(id);
+    else chain("relocation.transfer", id, 1400);
   }
 }
 
@@ -112,13 +129,26 @@ export function openInfraFollowup(id: string) {
   if (stepStatus(id, "infra_followup") !== "pending") return;
   const wo = workOrder(id, { kind: "infra_followup", title: "Port / altyapı genişletme talebi", team: TEAMS.infra }, "Port yokluğu müşteri hatası değil; altyapı ekibinin planlaması gerekir");
   step(id, "infra_followup", "done", `${wo.id} · ${TEAMS.infra}`);
-  chain("relocation.offerTemp", id, 1400);
+  // Port krizinde mobil SIM teklifi açmayız; müşteri NetBox ekranına yönlendirilir.
+  step(id, "temp_offer", "skipped", "NetBox bağlantısı Bağlantım ekranından yönetilir");
+  chain("relocation.requestExternal", id, 1400);
 }
 registerOp("relocation.infraFollowup", openInfraFollowup);
 
 export function offerTemp(id: string) {
   if (stepStatus(id, "temp_offer") !== "pending") return;
   const wf = getWf(id);
+  if (wf?.data["eligibility"] === "no_port") {
+    step(id, "temp_offer", "skipped", "NetBox bağlantısı Bağlantım ekranından yönetilir");
+    chain("relocation.requestExternal", id, 900);
+    return;
+  }
+  if (wf?.data["wantsTemp"] === false) {
+    step(id, "temp_offer", "skipped", "Müşteri geçici internet önerisi istemedi");
+    if (wf.data["eligibility"] === "no_port") chain("relocation.requestExternal", id, 900);
+    else if (stepStatus(id, "external") === "waiting") chain("relocation.checkExternal", id, 6000);
+    return;
+  }
   step(id, "temp_offer", "waiting");
   ask(
     id,
@@ -218,6 +248,18 @@ export function offerAppointment(id: string) {
 }
 registerOp("relocation.offerAppointment", offerAppointment);
 
+/** Updates the booked slot in the relocation demo without creating a second appointment. */
+export function rescheduleRelocation(id: string, slotId: string) {
+  const wf = getWf(id);
+  const appointment = W.getState().appointments.find((a) => a.workflowId === id);
+  const slot = APPOINTMENT_SLOTS.find((candidate) => candidate.id === slotId);
+  if (!wf || !appointment || !slot) return false;
+  book(id, slot, appointment.workOrderId);
+  setData(id, { slotId: slot.id, slotLabel: slot.label });
+  log(id, "customer", "decision", `Randevu zamanı değiştirildi: ${slot.label}`);
+  return true;
+}
+
 registerDecision("relocation_slot", (id, opt) => {
   const slot = APPOINTMENT_SLOTS.find((s) => s.id === opt) ?? APPOINTMENT_SLOTS[0]!;
   setData(id, { slotId: slot.id, slotLabel: slot.label, match: "searching", team: null, declinedTeam: null });
@@ -304,3 +346,4 @@ export function closeOldLine(id: string) {
   });
 }
 registerOp("relocation.oldLine", closeOldLine);
+

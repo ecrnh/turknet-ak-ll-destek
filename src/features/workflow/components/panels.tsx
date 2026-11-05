@@ -1,19 +1,20 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PlainNote } from "@/components/tn/primitives";
-import { ArrowDown, Award, CalendarCheck, CheckCircle2, Gauge, Home, Info, Loader2, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Wifi, WifiOff, Wrench } from "lucide-react";
+import { ArrowDown, CalendarCheck, CheckCircle2, Gauge, Home, Info, Loader2, MapPinned, Power, Radar, Router, ShieldAlert, Signal, Smartphone, Star, Wifi, WifiOff, Wrench } from "lucide-react";
 import modemImg from "@/assets/modem.png";
 import { motion } from "framer-motion";
-import { BILLING_CHECKS, CABLE_STATES, CURRENT_ADDRESS, INTERNET_LIGHT_STATES, REPAIR_CHECKS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
+import { APPOINTMENT_SLOTS, BILLING_CHECKS, CABLE_STATES, CURRENT_ADDRESS, INTERNET_LIGHT_STATES, RELOCATION_GUIDANCE, REPAIR_CHECKS, SUBSCRIPTION, TEMP_MOBILE_OFFER } from "@/data/mock";
 import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
 import { fmtRelative, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { choiceOf } from "../engine";
-import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY, REPAIR_RESULT, REPAIR_STAGES, repairStageStates, solutionText, type RepairOutcome, type StageState } from "../rules";
-import { rateUsta, repairResults, resumeUsta, ustaIssue } from "../services/aiUsta";
-import { measureNearModem } from "../services/proactive";
+import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY } from "../rules";
+import { rateUsta, resumeUsta, ustaIssue } from "../services/aiUsta";
+import { applyWifiPlacement, measureNearModem, measureRoomSpeed, resumeSpeedCheck } from "../services/proactive";
 import { resumeBillingReview } from "../services/billing";
 import { toggleBox } from "../services/connectivity";
+import { rescheduleRelocation } from "../services/migration";
 import { useWorkflowStore } from "../store";
 import type { Workflow } from "../types";
 import { StatusPill } from "./ui";
@@ -26,11 +27,14 @@ const Box = ({ title, children, className }: { title?: string | undefined; child
 );
 
 export function RelocationPanel({ wf }: { wf: Workflow }) {
+  const [showSlots, setShowSlots] = useState(false);
   const temp = useWorkflowStore((s) => s.workflows.find((w) => w.type === "temp_internet" && w.relatedIds.includes(wf.id)));
   const appt = useWorkflowStore((s) => s.appointments.find((a) => a.workflowId === wf.id));
   const elig = wf.data["eligibility"];
+  const appointmentChosen = Boolean(wf.data["slotId"] || appt);
   return (
     <Box>
+      {!appointmentChosen && <>
       <div className="flex gap-3">
         <Home className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
         <div>
@@ -51,12 +55,45 @@ export function RelocationPanel({ wf }: { wf: Workflow }) {
           </p>
         </div>
       </div>
+      {elig === "no_port" && (
+        <div className="mt-4 rounded-2xl border border-warning/30 bg-warning-soft p-3.5">
+          <p className="flex items-center gap-2 text-sm font-semibold text-foreground"><Info className="size-4 shrink-0 text-warning" />Şu an boş bağlantı noktası yok</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Altyapı ekibine takip talebi açtık. Port uygun olduğunda taşınma ve kurulum adımları otomatik devam edecek.</p>
+          <p className="mt-2 text-xs font-semibold text-foreground">Tahmini yanıt: {wf.eta ?? "3–5 iş günü"}</p>
+        </div>
+      )}
+      <div className="mt-4 rounded-2xl bg-muted/70 p-3.5">
+        <p className="text-sm font-semibold text-primary">Hız ve kurulum bilgisi</p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-card p-2.5"><p className="text-[11px] text-muted-foreground">Mevcut hız</p><p className="mt-0.5 font-semibold text-primary">{String(wf.data["currentSpeed"] ?? SUBSCRIPTION.speed)}</p></div>
+          <div className="rounded-xl border border-magenta/40 bg-card p-2.5"><p className="text-[11px] text-muted-foreground">Yeni adres</p><p className="mt-0.5 text-sm font-semibold text-primary">{String(wf.data["newSpeed"] ?? "Kontrol ediliyor")}</p></div>
+        </div>
+        <p className="mt-3 text-xs leading-relaxed text-foreground"><strong>Modem:</strong> {String(wf.data["modemGuidance"] ?? RELOCATION_GUIDANCE.modem)}</p>
+        <p className="mt-2 text-xs leading-relaxed text-foreground"><strong>Kurulum:</strong> {String(wf.data["installGuidance"] ?? RELOCATION_GUIDANCE.setupWindow)}</p>
+      </div>
+      <div className="mt-4 rounded-2xl bg-muted p-3 text-xs text-muted-foreground">
+        <p className="font-semibold text-foreground">Eski adresinizdeki hizmet ne olacak?</p>
+        Eski hattınız, yeni adreste bağlantınız doğrulanmadan kapatılmaz. Kapatma ücretsizdir, taahhüdünüz aynen devam eder.
+      </div>
+      </>}
       {wf.data["match"] && <TeamMatch wf={wf} />}
       {appt && (
-        <p className="mt-4 flex items-center gap-2 rounded-2xl bg-success-soft px-3 py-2 text-sm font-semibold">
-          <CalendarCheck className="size-4 text-success" /> Randevun onaylandı: {appt.label}
-          {wf.data["team"] ? ` · ${String(wf.data["team"])}` : ""}
-        </p>
+        <div className="mt-4 rounded-2xl bg-success-soft p-3">
+          <p className="flex items-center gap-2 text-sm font-semibold">
+            <CalendarCheck className="size-4 shrink-0 text-success" /> Randevu onaylandı: {appt.label}
+            {wf.data["team"] ? ` · ${String(wf.data["team"])}` : ""}
+          </p>
+          <button type="button" onClick={() => setShowSlots((visible) => !visible)} className="mt-3 text-sm font-semibold text-primary underline underline-offset-2">
+            {showSlots ? "Vazgeç" : "Randevu değişikliği yapmak istiyorum"}
+          </button>
+          {showSlots && <div className="mt-2 space-y-2">
+            {APPOINTMENT_SLOTS.filter((slot) => slot.id !== appt.slotId).map((slot) => (
+              <button key={slot.id} type="button" onClick={() => { rescheduleRelocation(wf.id, slot.id); setShowSlots(false); }} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-left text-sm font-medium text-foreground hover:border-magenta">
+                {slot.label}
+              </button>
+            ))}
+          </div>}
+        </div>
       )}
       {temp && (
         <Link to="/surec/$id" params={{ id: temp.id }} className="mt-3 flex items-center gap-2 rounded-2xl bg-icon-box px-3 py-2 text-sm">
@@ -65,10 +102,6 @@ export function RelocationPanel({ wf }: { wf: Workflow }) {
           <StatusPill status={temp.status} />
         </Link>
       )}
-      <div className="mt-4 rounded-2xl bg-muted p-3 text-xs text-muted-foreground">
-        <p className="font-semibold text-foreground">Eski adresinizdeki hizmet ne olacak?</p>
-        Eski hattınız, yeni adreste bağlantınız doğrulanmadan kapatılmaz. Kapatma ücretsizdir, taahhüdünüz aynen devam eder.
-      </div>
     </Box>
   );
 }
@@ -98,8 +131,6 @@ function TeamMatch({ wf }: { wf: Workflow }) {
       {(m === "declined" || (wf.data["declinedTeam"] && m !== "accepted")) && (
         <PlainNote className="mt-3">Bu saat için ekip uygunluğu değişti. Başka bir ekip arıyoruz; tekrar araman gerekmiyor.</PlainNote>
       )}
-      {m === "accepted" && <PlainNote icon={CheckCircle2} className="mt-3">Randevun onaylandı! {String(wf.data["team"] ?? "")} {String(wf.data["slotLabel"] ?? "")} aralığında gelecek.</PlainNote>}
-      <p className="mt-2 text-[10px] text-muted-foreground">Ekip uygunluğu demo verisidir; gerçek teknisyen sistemi bağlı değildir.</p>
     </div>
   );
 }
@@ -268,14 +299,13 @@ export function UstaWelcome({ wf }: { wf: Workflow }) {
   );
 }
 
-const STAGE_LABEL: Record<StageState, string> = { done: "Tamamlandı", running: "Kontrol ediliyor", pending: "Bekliyor" };
+export function UstaIntro({ wf }: { wf: Workflow }) {
+  if (wf.type !== "ai_usta" || wf.status === "completed" || wf.status === "failed" || wf.handoff) return null;
+  return <GigaNote mood="listening">Canlı desteği beklemeden sorununu birlikte çözelim. İnternet bağlantını adım adım kontrol edeceğim ve her adımda sana ne yapacağını anlatacağım.</GigaNote>;
+}
 
-/**
- * "Bağlantı kontrolü": the five background checks shown as three plain stages
- * and a single result line. The individual checks stay behind "Teknik detayları gör".
- */
+/** Compact customer-facing status for the automatic connection check. */
 export function RepairProgress({ wf }: { wf: Workflow }) {
-  const [details, setDetails] = useState(false);
   const repairStep = wf.steps.find((x) => x.key === "repair")?.status;
   // Watchdog: if the next check was never queued (reload, demo reset, paused scenario), pick it up again.
   useEffect(() => {
@@ -284,67 +314,27 @@ export function RepairProgress({ wf }: { wf: Workflow }) {
     return () => window.clearInterval(t);
   }, [repairStep, wf.id]);
   if (!repairStep || repairStep === "pending") return null;
-  const results = repairResults(wf.data);
-  const checkIdx = Number(wf.data["checkIdx"] ?? 0);
-  const outcome = (String(wf.data["repairOutcome"] ?? "") || null) as RepairOutcome | null;
-  const states = repairStageStates(checkIdx, outcome);
   const running = repairStep === "in_progress";
-  const issue = ustaIssue(wf.id);
-  const etaH = Number(wf.data["etaH"] ?? 0) || null;
+  const checkIdx = Number(wf.data["checkIdx"] ?? 0);
+  const currentCheck = REPAIR_CHECKS[Math.min(checkIdx, REPAIR_CHECKS.length - 1)];
+  const outcome = String(wf.data["repairOutcome"] ?? "");
+  const message = running
+    ? "Bağlantını kontrol ediyorum…"
+    : outcome === "clear"
+      ? "Bağlantını kontrol ettim. Şu anda sistemlerimizde bilinen bir arıza görünmüyor."
+      : outcome === "regional"
+        ? "Bölgende bilinen bir kesinti var. Gelişme olduğunda seni bilgilendireceğiz."
+        : outcome === "incomplete"
+          ? "Bağlantını şu an kontrol edemedim. Yeniden deneyebilir veya destek alabilirsin."
+          : "Bağlantındaki sorunu buldum. Uzaktan çözmeyi deniyorum.";
   return (
-    <Box>
-      <p className="flex items-center gap-2 text-sm font-semibold text-primary">
-        <Radar className="size-4 text-magenta" /> Bağlantı kontrolü
-      </p>
-      <ol className="mt-3 space-y-3">
-        {REPAIR_STAGES.map((st, i) => {
-          const state = states[i]!;
-          return (
-            <li key={st.id} className="flex items-start gap-2.5">
-              <span className="mt-0.5 shrink-0">
-                {state === "done" ? <CheckCircle2 className="size-4 text-success" /> : state === "running" ? <Loader2 className="size-4 animate-spin text-magenta" /> : <span className="block h-4 w-4 rounded-full border-2 border-muted" />}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center justify-between gap-2">
-                  <span className={cn("text-sm font-semibold", state === "pending" ? "text-muted-foreground" : "text-foreground")}>{st.title}</span>
-                  <span className={cn("shrink-0 text-[11px] font-semibold", state === "done" ? "text-success" : state === "running" ? "text-magenta" : "text-muted-foreground")}>{STAGE_LABEL[state]}</span>
-                </span>
-                <span className="block text-xs text-muted-foreground">{st.id === "solution" && outcome ? solutionText(outcome, etaH) : st.desc}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-      {outcome && (
-        <p className={cn("mt-3 rounded-2xl px-3 py-2 text-sm font-semibold", outcome === "clear" ? "bg-success-soft text-success" : "bg-warning-soft text-warning")} role="status">
-          {REPAIR_RESULT[outcome]}
-        </p>
-      )}
-      <button type="button" onClick={() => setDetails((v) => !v)} aria-expanded={details} className="mt-3 text-xs font-semibold text-primary underline-offset-2 hover:underline">
-        {details ? "Teknik detayları gizle" : "Teknik detayları gör"}
-      </button>
-      {details && (
-        <ul className="mt-2 space-y-1.5 rounded-2xl bg-muted/60 p-3">
-          {REPAIR_CHECKS.map((c, i) => {
-            const r = results[c.id];
-            const now = running && i === checkIdx;
-            return (
-              <li key={c.id} className="flex items-start gap-2 text-xs">
-                <span className="mt-px shrink-0">
-                  {r === undefined ? (now ? <Loader2 className="size-3.5 animate-spin text-magenta" /> : <span className="block h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/30" />) : r ? <CheckCircle2 className="size-3.5 text-success" /> : <ShieldAlert className="size-3.5 text-warning" />}
-                </span>
-                <span>
-                  <span className="font-semibold text-foreground">{c.label}</span>
-                  {r !== undefined && <span className="text-muted-foreground"> · {r ? c.ok : c.id === "regional" ? "Bölgede bilinen bir kesinti var" : issue.finding}</span>}
-                  {r === undefined && outcome === "incomplete" && i === checkIdx && <span className="text-muted-foreground"> · yanıt alınamadı</span>}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <p className="mt-3 text-[11px] text-muted-foreground">Kontroller bu prototipte simülasyondur; gerçek TürkNet sistemlerine bağlanılmaz.</p>
-    </Box>
+    <div className={cn("flex items-start gap-3 rounded-card p-4", outcome === "clear" ? "bg-success-soft" : "bg-icon-box")} role="status">
+      {running ? <Loader2 className="mt-0.5 size-5 shrink-0 animate-spin text-magenta" /> : <Radar className="mt-0.5 size-5 shrink-0 text-primary" />}
+      <div>
+        <p className="text-sm font-medium leading-relaxed text-foreground">{message}</p>
+        {running && currentCheck && <p className="mt-1 text-xs text-muted-foreground">Kontrol {Math.min(checkIdx + 1, REPAIR_CHECKS.length)}/{REPAIR_CHECKS.length} · {currentCheck.running}</p>}
+      </div>
+    </div>
   );
 }
 
@@ -363,15 +353,12 @@ export function AiUstaPanel({ wf, inChat }: { wf: Workflow; inChat?: boolean }) 
   const st = (k: string) => wf.steps.find((x) => x.key === k)?.status;
   const light = INTERNET_LIGHT_STATES.find((x) => x.id === wf.data["light"]);
   const cable = CABLE_STATES.find((x) => x.id === wf.data["cable"]);
-  const results = repairResults(wf.data);
   const checkIdx = Number(wf.data["checkIdx"] ?? 0);
-  const repairing = st("repair") === "in_progress";
   const finding = wf.data["finding"] ? String(wf.data["finding"]) : null;
   const issue = ustaIssue(wf.id);
   const open = wf.status !== "completed" && !wf.handoff;
   return (
     <div className="space-y-3">
-    {!inChat && repairing && <GigaNote mood="working">Bağlantını kontrol ediyorum. Önce sorunun evindeki bağlantıdan mı yoksa bölgesel bir kesintiden mi kaynaklandığını anlamaya çalışalım.</GigaNote>}
     {!inChat && <RepairProgress wf={wf} />}
     {finding && open && (st("remote") === "in_progress" || st("verify") === "in_progress") && (
       <>
@@ -434,10 +421,9 @@ export function AiUstaPanel({ wf, inChat }: { wf: Workflow; inChat?: boolean }) 
           </div>
         </div>
         {leds.some((l) => !l.ok) && open && <p className="mt-3 rounded-2xl bg-orange-soft p-3 text-sm text-foreground">İnternet göstergende anormal bir durum görünüyor. Şimdi modem bağlantını birlikte kontrol edelim.</p>}
-        <p className="mt-3 text-[11px] text-muted-foreground">Değerlendirme bu prototipte simülasyondur; sonuç kesin teşhis değildir, yalnızca sıradaki güvenli adımı seçmek içindir.</p>
       </Box>
     )}
-    {wf.status === "completed" && wf.data["reward"] === true && (
+    {wf.status === "completed" && (
       <Box>
         {rating ? (
           <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -446,18 +432,15 @@ export function AiUstaPanel({ wf, inChat }: { wf: Workflow; inChat?: boolean }) 
         ) : (
           <>
             <p className="text-sm font-semibold text-foreground">GIGA Teknik ile çözüm deneyiminiz nasıldı?</p>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {([3, 2, 1] as const).map((n) => (
-                <button key={n} type="button" onClick={() => rateUsta(wf.id, n)} className="min-h-11 rounded-xl bg-magenta-soft text-sm font-semibold text-primary">
-                  {n === 3 ? "Çok iyi" : n === 2 ? "İdare eder" : "Kötü"}
+            <div className="mt-3 flex items-center gap-2" role="group" aria-label="Süreci yıldızla puanla">
+              {([1, 2, 3, 4, 5] as const).map((n) => (
+                <button key={n} type="button" aria-label={`${n} yıldız`} onClick={() => rateUsta(wf.id, n)} className="rounded-lg p-2 text-amber-500 transition-transform active:scale-110">
+                  <Star className={cn("size-7", Number(rating ?? 0) >= n ? "fill-amber-400" : "fill-transparent")} />
                 </button>
               ))}
             </div>
           </>
         )}
-        <p className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
-          <Award className="size-4 text-magenta" /> Doğrulanmış çözüm rozeti örnek gösterimdir; gerçek ödül veya kampanya vaadi değildir.
-        </p>
       </Box>
     )}
     </div>
@@ -466,6 +449,7 @@ export function AiUstaPanel({ wf, inChat }: { wf: Workflow; inChat?: boolean }) 
 
 /** Speed Optimisation Agent: package vs measured, possible causes, before/after. */
 export function SpeedPanel({ wf }: { wf: Workflow }) {
+  if (wf.type === "speed_optimize") return <SpeedOptimizePanel wf={wf} />;
   const pkg = Number(wf.data["pkg"] ?? SUBSCRIPTION.speed);
   const before = wf.data["speedBefore"] != null ? Number(wf.data["speedBefore"]) : null;
   const after = wf.data["speedAfter"] != null ? Number(wf.data["speedAfter"]) : null;
@@ -538,6 +522,79 @@ export function SpeedPanel({ wf }: { wf: Workflow }) {
       )}
       {after != null && <p className={cn("mt-3 text-sm font-semibold", after >= pkg * 0.8 ? "text-success" : "text-warning")}>{after >= pkg * 0.8 ? "Bağlantındaki sorunu uzaktan giderdik. Şu anda bağlantın normal görünüyor." : "Sorunun devam ettiğini görüyorum. Bu fiziksel bir müdahale gerektiriyor; gerekli teknik süreci senin için başlatıyorum."}</p>}
     </Box>
+    </div>
+  );
+}
+
+function SpeedOptimizePanel({ wf }: { wf: Workflow }) {
+  useEffect(() => { resumeSpeedCheck(wf.id); }, [wf.id]);
+  const pkg = Number(wf.data["pkg"] ?? SUBSCRIPTION.speed);
+  const before = wf.data["speedBefore"] == null ? null : Number(wf.data["speedBefore"]);
+  const after = wf.data["speedAfter"] == null ? null : Number(wf.data["speedAfter"]);
+  const roomSpeed = wf.data["roomSpeed"] == null ? null : Number(wf.data["roomSpeed"]);
+  const wifiHelp = wf.data["wifiHelp"] === true;
+  const wifiPlacementDone = wf.data["wifiPlacementDone"] === true;
+  const wifiStepsTried = wf.data["wifiStepsTried"] === true;
+  const state = (key: string) => wf.steps.find((step) => step.key === key)?.status ?? "pending";
+  const resultStatus = wifiHelp ? state("wifi") : state("verify") !== "pending" ? state("verify") : state("field") !== "skipped" && state("field") !== "pending" ? state("field") : state("retest");
+  const steps = [
+    { title: "Hızını ölçüyorum", status: state("measure") },
+    { title: "Bağlantını kontrol ediyorum", status: state("speed") },
+    { title: "Uzaktan iyileştirmeyi deniyorum", status: state("remote") },
+    { title: wifiHelp ? "Wi-Fi kapsamasını birlikte iyileştirelim" : "Sonucu kontrol ediyorum", status: resultStatus },
+  ] as const;
+  const workingText = state("measure") === "in_progress"
+    ? "Önce mevcut internet hızını ölçüyorum."
+    : state("remote") === "in_progress"
+      ? "Hat ayarlarını ve Wi-Fi kanalını kontrol edip modemi uzaktan yeniden başlatıyorum. Bu sırada senin bir işlem yapman gerekmiyor."
+      : state("field") === "in_progress"
+        ? "Uzaktan iyileştirme yeterli olmadı. Teknik ekibin desteğini organize ediyorum."
+        : state("verify") === "done"
+          ? after != null && after >= pkg * 0.8 ? "Hızın normale döndü; bağlantını tekrar ölçtüm." : "Uzaktan çözüm yeterli olmadı; teknik destek süreci başlatıldı."
+          : wifiHelp && wifiStepsTried && after != null && after < pkg * 0.7
+              ? "Modem konumunu değiştirdikten sonra sorun yaşadığın odada tekrar ölçtüm; hız hâlâ düşük. İstersen canlı destekle birlikte inceleyelim."
+              : wifiHelp && wifiPlacementDone && roomSpeed == null
+                ? "Modemi daha açık, merkezi ve yerden yüksek bir yere aldığını gördüm. Şimdi sorunu yaşadığın odada hızı tekrar ölçelim."
+                : wifiHelp && !wifiPlacementDone
+                  ? "Modemi açık, evin daha merkezi ve yerden yüksek bir yere al. Kalın duvarlardan ve elektronik cihazlardan uzak tut. Sonra sorun yaşadığın odada yeniden ölçelim."
+                  : wifiHelp && roomSpeed != null
+                    ? after != null && after >= pkg * 0.7 ? `Sorun yaşadığın odada hızın ${after} Mbps'e çıktı. Modemin yeni konumu Wi-Fi kapsamasını iyileştirdi.` : "Sorun yaşadığın odada yeni ölçümü tamamladım."
+                : "Ölçümden sonra bağlantını kontrol edip uzaktan çözmeyi deneyeceğim.";
+  const currentSpeed = after ?? before;
+  return (
+    <div className="space-y-3">
+      <Box title="İnternet hızını birlikte kontrol edelim">
+        <ol className="space-y-3">
+          {steps.map((item, index) => (
+            <li key={item.title} className="flex items-center gap-3">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-icon-box text-xs font-bold text-primary">
+                {item.status === "done" || item.status === "skipped" ? <CheckCircle2 className="size-4 text-success" /> : item.status === "in_progress" ? <Loader2 className="size-4 animate-spin text-magenta" /> : index + 1}
+              </span>
+              <span className={cn("text-sm", item.status === "pending" ? "text-muted-foreground" : "font-semibold text-foreground")}>{item.title}</span>
+            </li>
+          ))}
+        </ol>
+        <GigaNote mood={wf.status === "completed" ? "done" : "working"} className="mt-4">{workingText}</GigaNote>
+        {wifiHelp && !wifiPlacementDone && wf.status !== "completed" && (
+          <button type="button" onClick={() => applyWifiPlacement(wf.id)} className="mt-3 flex min-h-11 w-full items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground">
+            Bu adımı uyguladım
+          </button>
+        )}
+      </Box>
+      {currentSpeed != null && (
+        <div className="flex items-center justify-between rounded-card bg-icon-box px-4 py-3">
+          <div>
+            <p className="text-xs text-muted-foreground">{after == null ? "İlk hız ölçümün" : "Güncel hızın"}</p>
+            <p className="text-2xl font-bold text-primary">{currentSpeed} <span className="text-sm font-semibold">Mbps</span></p>
+          </div>
+          <p className="text-right text-xs text-muted-foreground">Paketin<br /><strong className="text-sm text-foreground">{pkg} Mbps</strong></p>
+        </div>
+      )}
+      {wifiHelp && wifiPlacementDone && roomSpeed == null && wf.status !== "completed" && (
+        <button type="button" onClick={() => measureRoomSpeed(wf.id)} className="flex min-h-12 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+          Bu odada hızı tekrar ölç
+        </button>
+      )}
     </div>
   );
 }
@@ -635,3 +692,4 @@ export function ConnectivityPanel({ compact }: { compact?: boolean }) {
     </Box>
   );
 }
+

@@ -22,6 +22,7 @@ import {
   Snowflake,
   Target,
   TrendingUp,
+  UserPlus,
   UserX,
   Video,
   Wifi,
@@ -56,9 +57,11 @@ export const ICONS: Record<string, LucideIcon> = {
   wrench: Wrench,
   more: Ellipsis,
   track: ListChecks,
+  "user-plus": UserPlus,
   usta: ScanEye,
   shield: ShieldCheck,
   network: Network,
 };
 
 export const iconFor = (name: string): LucideIcon => ICONS[name] ?? Info;
+

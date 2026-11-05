@@ -36,6 +36,18 @@ export interface GigaReply {
   /** Proposed but not started: a following "evet / başlat" starts it. */
   offer?: Intent;
   topic: Intent | GigaTopic | "status" | "clarify" | "outage";
+  billingCard?: GigaBillingSummary;
+}
+
+export interface GigaBillingSummary {
+  period: string;
+  amount: number;
+  due: string;
+  shownDebt: number;
+  paid: boolean;
+  packageName: string;
+  usage: { total: string; download: string; upload: string; dailyAverage: string };
+  discounts: string[];
 }
 
 export type GigaWf = Pick<Workflow, "id" | "type" | "title" | "status"> & {
@@ -54,6 +66,16 @@ export interface GigaContext {
   outage: boolean;
   /** What GIGA proposed in its previous message (for "evet", "başlat"). */
   lastOffer?: Intent | null;
+  billing?: {
+    period: string;
+    amount: number;
+    due: string;
+    shownDebt: number;
+    paid: boolean;
+    packageName: string;
+    usage: GigaBillingSummary["usage"];
+    discounts: string[];
+  };
 }
 
 /** Scope of connection checks, in plain words. Never implies access to browsing, messages or unrelated activity. */
@@ -63,7 +85,7 @@ export const PRIVACY_REPLY =
 export const CLARIFY_PROMPTS: readonly string[] = GIGA.starters;
 
 /** Follow-up chips when the internet problem is not specific enough to pick a check. */
-export const TECH_CLARIFY = ["İnternetim tamamen kesildi", "İnternetim yavaş", "Bağlantım sürekli kopuyor", "Wi-Fi ağıma bağlanamıyorum", "Modem ışıkları farklı yanıyor"];
+export const TECH_CLARIFY = ["İnternete hiç bağlanamıyorum", "İnternetim yavaş", "Bağlantım sürekli kopuyor", "Wi-Fi ağıma bağlanamıyorum"];
 
 const HUMAN: GigaAction = { label: "Uzmana bağlan", kind: "human" };
 
@@ -163,6 +185,25 @@ function withAlso(r: GigaReply, also: GigaTopic | null): GigaReply {
 export function gigaReply(input: string, ctx: GigaContext): GigaReply {
   const u = understand(input);
   const openOf = (types: WorkflowType[]) => ctx.active.find((w) => types.includes(w.type));
+  const normalizedInput = input.toLocaleLowerCase("tr-TR");
+
+  // Answer a balance question with the customer's current invoice context, then offer related actions.
+  if ((u.topic === "billing" || u.topic === "payment") && /(ne kadar|kalan borc|borcum)/.test(normalizedInput)) {
+    const b = ctx.billing;
+    return {
+      topic: "payment",
+      text: b
+        ? `Fatura bilgilerin aşağıda yer alıyor. ${b.paid ? "Ödenmemiş faturanın bulunmuyor." : "Ödeme bekleyen faturanın var."} Faturanla ilgili başka ne yapmak istersin?`
+        : "Fatura bilgilerini ve kullanım detaylarını burada gösterebilirim. Faturanda yapmak istediğin başka bir işlem var mı?",
+      ...(b ? { billingCard: b } : {}),
+      actions: [
+        { label: "Güncel faturam", kind: "go", to: "/faturalar" },
+        { label: "Fatura Kalkanı", kind: "go", to: "/fatura-kalkani" },
+        { label: "Geçmiş faturalar", kind: "go", to: "/faturalar/gecmis" },
+        { label: "Otomatik ödeme", kind: "go", to: "/otomatik-odeme" },
+      ],
+    };
+  }
 
   // Status questions about a specific process ("nakil başvurum ne durumda?").
   if (u.isStatus && u.topic && u.topic !== "track") {
@@ -204,10 +245,12 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
     case "payment":
       return {
         topic: "payment",
-        text: "Ödenmemiş faturan bulunmuyor. Otomatik ödeme talimatı verirsen son ödeme gününü takip etmene gerek kalmaz; talimatı yalnızca senin onayınla oluştururum.",
+      text: "Fatura bilgilerini ve kullanım detaylarını burada görebilirsin. Faturanla ilgili başka ne yapmak istersin?",
         actions: [
-          { label: "Faturalarım", kind: "go", to: "/faturalar" },
-          { label: "Otomatik ödeme talimatı", kind: "approval", to: "/otomatik-odeme" },
+          { label: "Güncel faturam", kind: "go", to: "/faturalar" },
+          { label: "Fatura Kalkanı", kind: "go", to: "/fatura-kalkani" },
+          { label: "Geçmiş faturalar", kind: "go", to: "/faturalar/gecmis" },
+          { label: "Otomatik ödeme", kind: "go", to: "/otomatik-odeme" },
         ],
       };
     case "refund": {
@@ -248,7 +291,7 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
     }
     case "speed": {
       if (ctx.outage) return outageReply(ctx.net);
-      return withAlso({ topic: "speed", text: "Hızını kontrol ediyorum. Uzaktan düzeltilebilir bir durum bulursam düzeltip tekrar ölçeceğim; her adımı burada göreceksin.", agent: "speed" }, u.also);
+      return withAlso({ topic: "speed", text: "Önce hızını ölçüp bağlantını kontrol ediyorum. Ardından uzaktan iyileştirmeyi deneyeceğim; hız düşük kalırsa modem konumunu ve sorun yaşadığın odadaki Wi-Fi hızını birlikte kontrol ederiz.", start: "speed" }, u.also);
     }
     case "hybrid": {
       if (ctx.outage) return outageReply(ctx.net);
@@ -267,9 +310,11 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
     case "internet": {
       if (ctx.outage) return outageReply(ctx.net);
       const open = openOf(["ai_usta"]);
-      if (open) return { ...statusReply(open), topic: "ai_usta", text: `Bu sorun için başlattığımız kontrol sürüyor; kaldığımız yerden devam edelim. ${nextForChat(open)}` };
+      // An escalated process should appear only when the customer asks for its status.
+      // Otherwise every new technical question repeats the live-support handoff.
+      if (open && !open.team) return { ...statusReply(open), topic: "ai_usta", text: `Bu sorun için başlattığımız kontrol sürüyor; kaldığımız yerden devam edelim. ${nextForChat(open)}` };
       if (u.topic === "internet" && !u.ustaIssue) {
-        return { topic: "clarify", text: "Doğru kontrolü seçebilmem için sorunu biraz anlatır mısın? Aşağıdakilerden biri olabilir ya da kendi cümlenle yazabilirsin.", actions: TECH_CLARIFY.map(ask) };
+        return { topic: "clarify", text: "İnternetinle ilgili nasıl bir sorun yaşıyorsun?", actions: TECH_CLARIFY.map(ask) };
       }
       if (u.topic === "modem") {
         return withAlso({ topic: "modem", text: "Önce bağlantını uzaktan kontrol ediyorum. Bir arıza görünmezse modeminin ışıklarına birlikte bakar, tek seferde bir güvenli adım öneririm.", start: "ai_usta", usta: "modem" }, u.also);
@@ -303,6 +348,16 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
         actions: [{ label: "Aile Yetkilendirme", kind: "go", to: "/aile" }],
       };
     case "subscription":
+      if (normalizedInput.includes("iptal")) return {
+        topic: "subscription",
+        text: "Abonelik iptal sürecini ve gerekli bilgileri buradan inceleyebilirsin.",
+        actions: [{ label: "Abonelik iptal işlemi", kind: "approval", to: "/islem/iptal" }],
+      };
+      if (normalizedInput.includes("dondur")) return {
+        topic: "subscription",
+        text: "Hizmetini belirli bir süre dondurma seçeneklerini buradan görebilirsin.",
+        actions: [{ label: "Hizmeti dondur", kind: "approval", to: "/islem/dondur" }],
+      };
       return {
         topic: "subscription",
         text: "Bu işlemleri uygulamadan yapabilirsin; her biri senin onayınla tamamlanır.",
@@ -332,3 +387,4 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
       };
   }
 }
+
