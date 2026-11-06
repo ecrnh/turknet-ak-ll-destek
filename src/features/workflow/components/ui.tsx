@@ -131,7 +131,7 @@ export function DecisionCard({ wf }: { wf: Workflow }) {
       <h3 className="mt-1 text-lg font-semibold leading-snug text-primary">{d.prompt}</h3>
       {d.detail && <p className="mt-1.5 text-sm text-muted-foreground">{d.detail}</p>}
       <div className="mt-4 space-y-2.5">
-        {options.map((o) => (
+        {(options as DecisionOption[]).map((o) => (
           <button
             key={o.id}
             type="button"

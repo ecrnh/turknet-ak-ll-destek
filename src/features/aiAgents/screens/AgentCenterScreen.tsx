@@ -163,7 +163,7 @@ export function AgentCenterScreen() {
           shownDebt: bill.shownDebt,
           paid: bill.status === "paid",
           packageName: SUBSCRIPTION.packageName,
-          usage: GENERIC_OPS.kullanim.usage ?? { total: "—", download: "—", upload: "—", dailyAverage: "—" },
+          usage: GENERIC_OPS["kullanim"]?.usage ?? { total: "—", download: "—", upload: "—", dailyAverage: "—" },
           discounts: BILL_DISCOUNTS,
         } : undefined,
       });

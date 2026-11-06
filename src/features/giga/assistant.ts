@@ -65,7 +65,7 @@ export interface GigaContext {
   /** A known outage is being tracked. */
   outage: boolean;
   /** What GIGA proposed in its previous message (for "evet", "başlat"). */
-  lastOffer?: Intent | null;
+  lastOffer?: Intent | null | undefined;
   billing?: {
     period: string;
     amount: number;
@@ -75,7 +75,7 @@ export interface GigaContext {
     packageName: string;
     usage: GigaBillingSummary["usage"];
     discounts: string[];
-  };
+  } | undefined;
 }
 
 /** Scope of connection checks, in plain words. Never implies access to browsing, messages or unrelated activity. */

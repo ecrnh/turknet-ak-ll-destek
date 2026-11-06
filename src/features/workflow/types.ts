@@ -36,7 +36,7 @@ export interface DecisionOption {
 export interface Decision {
   key: string;
   prompt: string;
-  detail?: string;
+  detail?: string | undefined;
   options: DecisionOption[];
   askedAt: number;
 }

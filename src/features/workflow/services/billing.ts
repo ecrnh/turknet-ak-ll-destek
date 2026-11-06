@@ -6,7 +6,7 @@
  */
 import { BILLING_CHECKS, BILLING_REVIEW_ISSUES, BILLING_SEED, TEAMS, type BillingReviewIssueId } from "@/data/mock";
 import { fmtTL } from "@/lib/format";
-import { ask, chain, choiceOf, complete, createWorkflow, decide, escalate, getWf, log, notify, registerDecision, registerOp, schedule, setData, setStatus, step, stepStatus, teamResolve, workOrder } from "../engine";
+import { ask, chain, choiceOf, complete, createWorkflow, decide, escalate, getWf, log, notify, registerDecision, registerOp, schedule, setData, setStatus, step, stepStatus, teamResolve, workOrder, setWorkOrder } from "../engine";
 import { MockBillingAPI } from "../mockServices";
 import { compareBilling } from "../rules";
 import { useWorkflowStore as W } from "../store";

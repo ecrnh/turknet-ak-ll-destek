@@ -3,9 +3,9 @@ import { QrScanScreen } from "@/features/qrSupport/screens/QrScanScreen";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/qr/tara")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    sub: typeof search.sub === "string" ? search.sub : "",
-    dev: typeof search.dev === "string" ? search.dev : "",
+  validateSearch: (search: Record<string, unknown>): { sub?: string; dev?: string } => ({
+    sub: typeof search["sub"] === "string" ? search["sub"]  : undefined,
+    dev: typeof search["dev"] === "string" ? search["dev"]  : undefined,
   }),
   head: () => pageHead("QR Tara", "Modemindeki QR etiketiyle GIGA bağlantı desteğini başlat."),
   component: QrScanRoute,
