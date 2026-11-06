@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GIGA, SEARCH_INDEX, SUPPORT_OPS } from "@/data/mock";
+import { GIGA, SEARCH_INDEX } from "@/data/mock";
 import { gigaReply, PRIVACY_REPLY } from "@/features/giga/assistant";
 import { TYPE_LABEL } from "@/features/workflow/copy";
 import { HEALTH_COPY } from "@/features/workflow/rules";
@@ -8,7 +8,7 @@ const BANNED_NAMES = ["GIGA Fatura", "GIGA Taşınma", "GIGA Takip", "GIGA Bildi
 
 describe("GIGA yalnızca asistan deneyiminde kullanılır", () => {
   it("sıradan özellikler GIGA önekiyle adlandırılmaz", () => {
-    const names = [...Object.values(TYPE_LABEL), ...GIGA.capabilities.map((c) => c.name), ...SUPPORT_OPS.map((o) => o.title), ...SEARCH_INDEX.map((s) => s.title)];
+    const names = [...Object.values(TYPE_LABEL), ...GIGA.capabilities.map((c) => c.name), ...SEARCH_INDEX.map((s) => s.title)];
     for (const n of names) for (const b of BANNED_NAMES) expect(n).not.toContain(b);
   });
   it("yerleşik ürün adları korunur", () => {

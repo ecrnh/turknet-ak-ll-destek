@@ -31,7 +31,7 @@ import { decide, WO_LABEL } from "../engine";
 import { STATUS_LABEL } from "../rules";
 import { customerAction, lastDoneStep, TYPE_LABEL } from "../copy";
 import { useWorkflowStore } from "../store";
-import type { Actor, AuditEvent, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
+import type { Actor, AuditEvent, DecisionOption, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
 import { ModemInspectCard } from "./modem";
 
 export const TYPE_ICON: Record<WorkflowType, LucideIcon> = {
