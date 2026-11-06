@@ -32,22 +32,15 @@ describe("Hibrit İnternet ekranı · durum tutarlılığı", () => {
     expect(v.main).toBe("Kesik");
   });
 
-  it("kesinti kaydı yokken Hibrit Box hazır, mobil yedek beklemede ve buton henüz açılamaz", () => {
+  it("kesinti 24 saati doldurmadıysa Hibrit Box hazır, mobil yedek beklemede ve buton henüz açılamaz", () => {
     const v = hybridView({ ...base, fixed: "down", outageOngoing: true, hours: 3 });
     expect([v.main, v.box, v.mobile]).toEqual(["Kesik", "Hazır", "Beklemede"]);
     expect(v.showOpen).toBe(true);
     expect(v.canOpen).toBe(false);
-    expect(v.openHint).toContain("kesinti başladığında");
+    expect(v.openHint).toContain("24 saati");
   });
 
-  it("teklif kesintinin ilk anında açılır: başlık kesintiyi söyler, buton açılabilir olur", () => {
-    const v = hybridView({ ...base, fixed: "down", outageOngoing: true, hours: 0.1, offerOpen: true, status: "offered" });
-    expect(v.title).toBe("Ana internetinde kesinti var");
-    expect(v.showOpen).toBe(true);
-    expect(v.canOpen).toBe(true);
-  });
-
-  it("otomatik açılan yedek 'Yedek bağlantı aktif' ve Kesik/Aktif/Bağlı gösterir", () => {
+  it("24 saat sonrası otomatik açılan yedek 'Yedek bağlantı aktif' ve Kesik/Aktif/Bağlı gösterir", () => {
     const v = hybridView({ ...base, fixed: "down", outageOngoing: true, hours: 25, offerOpen: true, status: "active", activatedBy: "auto" });
     expect(v.title).toBe("Yedek bağlantı aktif");
     expect(v.badge.label).toBe("NetBox'ta");
@@ -63,7 +56,7 @@ describe("Hibrit İnternet ekranı · durum tutarlılığı", () => {
     expect(manual.lines[0]).toBe("Hibrit Box'ı açtın.");
   });
 
-  it("teklif açıkken ve izin yoksa buton açılabilir olur", () => {
+  it("24 saat dolduğunda izin yoksa buton açılabilir olur", () => {
     const v = hybridView({ ...base, fixed: "down", outageOngoing: true, hours: 25, offerOpen: true, status: "ready", autoFailover: false });
     expect(v.canOpen).toBe(true);
   });
@@ -121,7 +114,7 @@ describe("Hibrit İnternet anahtarı ve ana buton aynı durumu gösterir", () =>
     expect(hybridSwitchView({ ...sw, status: "active", paused: true })).toMatchObject({ on: false, label: "Kapalı", canToggle: true, cta: "Hibrit Box'ı Aç" });
   });
 
-  it("teklif kapalıyken ve kapsama/cihaz yokken anahtar açılamaz", () => {
+  it("ilk 24 saatte ve kapsama/cihaz yokken anahtar açılamaz", () => {
     expect(hybridSwitchView({ ...sw, offerOpen: false })).toMatchObject({ canToggle: false, cta: null });
     expect(hybridSwitchView({ ...sw, status: "no_coverage" })).toMatchObject({ canToggle: false, cta: null });
     expect(hybridSwitchView({ ...sw, status: "no_device" })).toMatchObject({ canToggle: false, cta: null });

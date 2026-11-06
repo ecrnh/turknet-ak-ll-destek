@@ -1,9 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageSquareText, BatteryMedium, Camera, EyeOff, Flashlight, Lock, Signal, Wifi } from "lucide-react";
+import { BatteryMedium, Camera, EyeOff, Flashlight, Lock, Signal, Wifi } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/features/core/appStore";
-import { useWorkflowStore } from "@/features/workflow/store";
 import { GigaAvatar } from "@/features/giga/GigaAvatar";
 import { fmtClock, fmtRelative } from "@/lib/format";
 import { TurknetLogo } from "./headers";
@@ -19,8 +18,6 @@ export function LockPhone({ onHide, className = "hidden xl:flex" }: { onHide: ()
   const dismissLock = useAppStore((s) => s.dismissLock);
   const clearLock = useAppStore((s) => s.clearLock);
   const navigate = useNavigate();
-  const netSms = useWorkflowStore((s) => s.sms.find((m) => !m.opened && m.kind === "netbox"));
-  const closeSms = (id: string) => useWorkflowStore.setState((s) => ({ sms: s.sms.map((m) => (m.id === id ? { ...m, opened: true } : m)) }));
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 15_000);
@@ -66,21 +63,6 @@ export function LockPhone({ onHide, className = "hidden xl:flex" }: { onHide: ()
           </div>
 
           <div className="mt-5 flex-1 space-y-2 overflow-y-auto px-3 no-scrollbar">
-            {netSms && (
-              <div className="rounded-2xl bg-card/85 p-3 text-foreground shadow-card backdrop-blur-md" role="alert">
-                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <MessageSquareText className="size-3.5 text-success" /> Mesajlar · TürkNet <span className="ml-auto normal-case">{fmtRelative(netSms.at, now)}</span>
-                </div>
-                <p className="mt-1 text-[12px] leading-snug">
-                  {netSms.body}{" "}
-                  <button type="button" onClick={() => { closeSms(netSms.id); navigate({ to: "/hibrit" }); }} className="font-semibold text-magenta underline underline-offset-2">{netSms.link}</button>
-                </p>
-                <div className="mt-2 flex gap-2">
-                  <button type="button" onClick={() => closeSms(netSms.id)} className="flex min-h-9 flex-1 items-center justify-center rounded-full border border-border text-xs font-semibold">Kapat</button>
-                  <button type="button" onClick={() => { closeSms(netSms.id); navigate({ to: "/hibrit" }); }} className="flex min-h-9 flex-1 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">NetBox'u etkinleştir</button>
-                </div>
-              </div>
-            )}
             <AnimatePresence initial={false}>
               {list.map((n) => (
                 <motion.button
@@ -116,7 +98,7 @@ export function LockPhone({ onHide, className = "hidden xl:flex" }: { onHide: ()
                 </motion.button>
               ))}
             </AnimatePresence>
-            {list.length === 0 && !netSms && (
+            {list.length === 0 && (
               <p className="pt-10 text-center text-xs text-primary-foreground/70">
                 Bildirim yok.
                 <br />

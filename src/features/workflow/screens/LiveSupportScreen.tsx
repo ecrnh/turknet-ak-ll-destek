@@ -1,6 +1,6 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { AlertTriangle, CalendarCheck, Headset, SendHorizontal, Wifi } from "lucide-react";
+import { AlertTriangle, CalendarCheck, Headset, SendHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { EmptyState } from "@/components/tn/primitives";
@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { GigaAvatar } from "@/features/giga/GigaAvatar";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
-import { APPOINTMENT_SLOTS } from "@/data/mock";
-import { bookFieldVisit, offerHybridFromLive, handoffSummary, LIVE_AGENT, openLiveChat, sendLiveChat } from "../services/liveSupport";
+import { acceptFieldVisit, declineFieldVisit, handoffSummary, LIVE_AGENT, openLiveChat, sendLiveChat } from "../services/liveSupport";
 import { useWorkflowStore } from "../store";
 import { DemoNote } from "../components/ui";
 
@@ -19,7 +18,6 @@ export function LiveSupportScreen({ id }: { id: string }) {
   const wf = useWorkflowStore((s) => s.workflows.find((w) => w.id === id));
   const connectivity = useWorkflowStore((s) => s.connectivity);
   const chat = useWorkflowStore((s) => s.chats.find((c) => c.workflowId === id));
-  const navigate = useNavigate();
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -52,7 +50,7 @@ export function LiveSupportScreen({ id }: { id: string }) {
     );
 
   const summary = handoffSummary(wf, connectivity);
-  const pendingOffer = chat?.messages.some((m) => m.offer === "field_visit") && !wf.data["fieldVisit"];
+  const pendingOffer = chat?.messages.some((m) => m.offer === "field_visit") && !wf.data["fieldVisit"] && !chat?.messages.some((m) => m.from === "customer" && m.text === "Şimdilik gerek yok.");
 
   const send = () => {
     if (!text.trim()) return setError("Mesajını yaz, sonra gönder.");
@@ -105,21 +103,10 @@ export function LiveSupportScreen({ id }: { id: string }) {
               ))}
             </div>
             {pendingOffer && (
-              <div className="rounded-card border border-primary/20 bg-card p-4 shadow-card">
-                <p className="flex items-center gap-2 text-sm font-semibold text-foreground"><CalendarCheck /> Size uygun gün ve saati seçin</p>
-                <div className="mt-3 grid gap-2">
-                  {APPOINTMENT_SLOTS.map((slot, i) => (
-                    <Button key={slot.id} variant={i === 0 ? "default" : "outline"} className="w-full justify-start text-left" onClick={() => bookFieldVisit(id, slot.id)}>
-                      {slot.label}
-                    </Button>
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button onClick={() => acceptFieldVisit(id)}><CalendarCheck /> Evet, randevu oluştur</Button>
+                <Button variant="outline" onClick={() => declineFieldVisit(id)}>Şimdilik gerek yok</Button>
               </div>
-            )}
-            {wf.data["fieldVisit"] && !wf.data["hybridOffered"] && (
-              <Button className="w-full" onClick={() => { offerHybridFromLive(id); navigate({ to: "/hibrit" }); }}>
-                <Wifi /> Hibrit İnternet'i aç
-              </Button>
             )}
             {wf.data["fieldVisit"] && (
               <Link to="/surec/$id" params={{ id }} className="flex min-h-12 items-center justify-center rounded-full border border-primary/20 bg-card text-sm font-semibold text-primary">

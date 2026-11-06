@@ -29,37 +29,6 @@ const toGigaWf = (w: Workflow): GigaWf => ({ id: w.id, type: w.type, title: w.ti
 
 const activeSorted = (list: Workflow[]) => list.filter(isActive).sort((a, b) => Number(!!b.decision) - Number(!!a.decision) || b.updatedAt - a.updatedAt);
 
-const QR_REPLIES = ["İnternetim yavaş veya kopuyor", "Faturamı görmek istiyorum", "Taşınıyorum, nakil yaptırmak istiyorum", "Paketimi değiştirmek istiyorum", "Açık işlemlerimin durumu ne?", "Canlı destekle görüşmek istiyorum"];
-
-const QR_STEPS = ["Modem bağlantısı kontrol ediliyor", "Hat sinyali ölçülüyor", "Wi-Fi kanalı optimize ediliyor", "Bağlantı ayarları yenileniyor"];
-
-/** Shown at the top of a QR-opened chat: GIGA improves the connection while the customer writes. */
-function QrImproveBanner() {
-  const [step, setStep] = useState(0);
-  useEffect(() => {
-    if (step >= QR_STEPS.length) return;
-    const t = window.setTimeout(() => setStep((s) => s + 1), 1500);
-    return () => window.clearTimeout(t);
-  }, [step]);
-  const done = step >= QR_STEPS.length;
-  const pct = Math.round((Math.min(step, QR_STEPS.length) / QR_STEPS.length) * 100);
-  return (
-    <div className="mt-3 rounded-2xl border border-magenta/20 bg-card p-3.5 shadow-card" aria-live="polite">
-      <div className="flex items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 text-sm font-semibold text-primary">
-          {done ? <CheckCircle2 className="size-4 text-success" /> : <Loader2 className="size-4 animate-spin text-magenta" />}
-          {done ? "Bağlantı iyileştirmesi tamamlandı" : "Bağlantın iyileştiriliyor"}
-        </p>
-        <span className="text-xs font-semibold text-muted-foreground">%{pct}</span>
-      </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-magenta transition-all duration-700" style={{ width: `${pct}%` }} />
-      </div>
-      <p className="mt-1.5 text-xs text-muted-foreground">{done ? "Modem ve hat ayarların en iyi duruma getirildi." : QR_STEPS[step]}</p>
-    </div>
-  );
-}
-
 function BotBubble({ children, mood = "idle" }: { children: React.ReactNode; mood?: GigaMood }) {
   return (
     <div className="flex max-w-[94%] gap-2">
@@ -135,7 +104,7 @@ function ChatProcess({ wfId }: { wfId: string }) {
       </div>
       {usta && <RepairProgress wf={wf} />}
       {usta && wf.data["repairOutcome"] === "regional" && <HybridOfferInline />}
-      {usta && (isActive(wf) || (wf.status === "completed" && wf.outcome?.resolved)) && <AiUstaPanel wf={wf} inChat />}
+      {usta && isActive(wf) && <AiUstaPanel wf={wf} inChat />}
       {wf.decision && <DecisionCard key={wf.decision.key} wf={wf} />}
     </div>
   );
@@ -187,18 +156,16 @@ export function AgentCenterScreen() {
         active: activeSorted(useWorkflowStore.getState().workflows).map(toGigaWf),
         outage: !!openOutage(),
         lastOffer: chat.lastOffer,
-        ...(bill ? {
-          billing: {
-            period: bill.period,
-            amount: bill.amount,
-            due: bill.due,
-            shownDebt: bill.shownDebt,
-            paid: bill.status === "paid",
-            packageName: SUBSCRIPTION.packageName,
-            usage: GENERIC_OPS["kullanim"]?.usage ?? { total: "—", download: "—", upload: "—", dailyAverage: "—" },
-            discounts: BILL_DISCOUNTS,
-          },
-        } : {}),
+        billing: bill ? {
+          period: bill.period,
+          amount: bill.amount,
+          due: bill.due,
+          shownDebt: bill.shownDebt,
+          paid: bill.status === "paid",
+          packageName: SUBSCRIPTION.packageName,
+          usage: GENERIC_OPS["kullanim"]?.usage ?? { total: "—", download: "—", upload: "—", dailyAverage: "—" },
+          discounts: BILL_DISCOUNTS,
+        } : undefined,
       });
       setTyping(false);
       chat.setOffer(r.offer ?? null);
@@ -269,11 +236,10 @@ export function AgentCenterScreen() {
       />
 
       <div className="flex-1 space-y-4 px-4 pb-20">
-        {entryMode === "qr" && <QrImproveBanner />}
         <BotBubble mood={mood}>
           {entryMode === "qr" ? (
             <>
-              <p className="text-sm leading-relaxed text-foreground">Merhaba! Modemini tanıdım ve bağlantını iyileştirmeye başladım. Bu arada sana nasıl yardımcı olabilirim? Almak istediğin hizmeti yazabilir ya da aşağıdan seçebilirsin.</p>
+              <p className="text-sm leading-relaxed text-foreground">Merhaba! Modemini tanıdım. Şimdi bağlantını kontrol ederek sana nasıl yardımcı olabileceğime bakalım.</p>
               <p className="mt-2 text-xs text-muted-foreground">{USER.modemModel} · {USER.modemSerial} · Aboneliğin eşleştirildi</p>
             </>
           ) : (
@@ -289,8 +255,8 @@ export function AgentCenterScreen() {
         {!inChat && (
           <>
             <section className="ml-10 space-y-2" aria-label="Sık kullanılan konular">
-              <p className="px-1 text-xs font-semibold text-muted-foreground">{entryMode === "qr" ? "Hazır cevaplar" : "Sık kullanılan konular"}</p>
-              {(entryMode === "qr" ? QR_REPLIES : GIGA.starters).map((s) => (
+              <p className="px-1 text-xs font-semibold text-muted-foreground">Sık kullanılan konular</p>
+              {GIGA.starters.map((s) => (
                 <button key={s} type="button" onClick={() => send(s)} className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-primary/15 bg-card px-3.5 py-2 text-left text-sm font-medium text-primary shadow-sm">
                   <span>{s}</span>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" />

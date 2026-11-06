@@ -8,13 +8,13 @@ import { APPOINTMENT_SLOTS, BILLING_CHECKS, CABLE_STATES, CURRENT_ADDRESS, INTER
 import { GigaAvatar, GigaNote } from "@/features/giga/GigaAvatar";
 import { fmtRelative, fmtTL } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { choiceOf, hasOp, schedule } from "../engine";
+import { choiceOf } from "../engine";
 import { canToggleBox, compareBilling, connectionHealth, HEALTH_COPY } from "../rules";
 import { rateUsta, resumeUsta, ustaIssue } from "../services/aiUsta";
 import { applyWifiPlacement, measureNearModem, measureRoomSpeed, resumeSpeedCheck } from "../services/proactive";
 import { resumeBillingReview } from "../services/billing";
 import { toggleBox } from "../services/connectivity";
-import { activateNetbox, requestNetboxAtNewAddress, rescheduleRelocation } from "../services/migration";
+import { rescheduleRelocation } from "../services/migration";
 import { useWorkflowStore } from "../store";
 import type { Workflow } from "../types";
 import { StatusPill } from "./ui";
@@ -318,11 +318,10 @@ export function RepairProgress({ wf }: { wf: Workflow }) {
   const checkIdx = Number(wf.data["checkIdx"] ?? 0);
   const currentCheck = REPAIR_CHECKS[Math.min(checkIdx, REPAIR_CHECKS.length - 1)];
   const outcome = String(wf.data["repairOutcome"] ?? "");
-  if (outcome === "clear" && (wf.status === "completed" || wf.handoff)) return null;
   const message = running
     ? "Bağlantını kontrol ediyorum…"
     : outcome === "clear"
-      ? "Uzaktan kontrolleri tamamladım. Şimdi birlikte adım adım bakalım."
+      ? "Bağlantını kontrol ettim. Şu anda sistemlerimizde bilinen bir arıza görünmüyor."
       : outcome === "regional"
         ? "Bölgende bilinen bir kesinti var. Gelişme olduğunda seni bilgilendireceğiz."
         : outcome === "incomplete"
@@ -342,13 +341,7 @@ export function RepairProgress({ wf }: { wf: Workflow }) {
 /** `inChat`: the GIGA chat already shows the progress card and its own reply, so they are not repeated. */
 export function AiUstaPanel({ wf, inChat }: { wf: Workflow; inChat?: boolean }) {
   // Picks up a session whose next automatic check never got queued.
-  useEffect(() => {
-    resumeUsta(wf.id);
-    if (wf.status === "completed") return;
-    // Safety net: a waiting step whose timer was lost (reload, reset, presenter pause) is picked up again.
-    const t = window.setInterval(() => resumeUsta(wf.id), 2000);
-    return () => window.clearInterval(t);
-  }, [wf.id, wf.status]);
+  useEffect(() => resumeUsta(wf.id), [wf.id, wf.status]);
   const leds = String(wf.data["leds"] ?? "")
     .split("|")
     .filter(Boolean)
@@ -396,12 +389,12 @@ export function AiUstaPanel({ wf, inChat }: { wf: Workflow; inChat?: boolean }) 
     {wf.status === "completed" && wf.outcome?.resolved && (
       <div className="rounded-card bg-success-soft p-5 text-center">
         <GigaAvatar size={56} mood="done" className="mx-auto" />
-        <p className="mt-2 text-lg font-semibold text-foreground">Harika, birlikte sorunu hallettik!</p>
-        <p className="text-sm text-muted-foreground">Her zaman yanındayım. Bir sorun olursa bana yazman yeterli.</p>
+        <p className="mt-2 text-lg font-semibold text-foreground">Harika! Bağlantın yeniden aktif görünüyor.</p>
+        <p className="text-sm text-muted-foreground">İnternetini tekrar kullanabilirsin. Destek kaydı açmadık.</p>
         <Link to="/" className="mt-4 flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">Ana sayfaya dön</Link>
       </div>
     )}
-    {(leds.length > 0 || cable) && !wf.handoff && (
+    {(leds.length > 0 || cable) && (
       <Box>
         <div className="flex items-center gap-4">
           <img src={modemImg} alt="Modem görseli" width={120} height={120} className="h-24 w-24 object-contain" loading="lazy" />
@@ -434,11 +427,11 @@ export function AiUstaPanel({ wf, inChat }: { wf: Workflow; inChat?: boolean }) 
       <Box>
         {rating ? (
           <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <CheckCircle2 className="size-4 text-success" /> Puanın için teşekkürler! Her zaman yanındayım.
+            <CheckCircle2 className="size-4 text-success" /> Geri bildiriminiz için teşekkürler
           </p>
         ) : (
           <>
-            <p className="text-sm font-semibold text-foreground">Süreci puanlar mısın? GIGA Teknik ile çözüm deneyimin nasıldı?</p>
+            <p className="text-sm font-semibold text-foreground">GIGA Teknik ile çözüm deneyiminiz nasıldı?</p>
             <div className="mt-3 flex items-center gap-2" role="group" aria-label="Süreci yıldızla puanla">
               {([1, 2, 3, 4, 5] as const).map((n) => (
                 <button key={n} type="button" aria-label={`${n} yıldız`} onClick={() => rateUsta(wf.id, n)} className="rounded-lg p-2 text-amber-500 transition-transform active:scale-110">
@@ -563,7 +556,7 @@ function SpeedOptimizePanel({ wf }: { wf: Workflow }) {
               : wifiHelp && wifiPlacementDone && roomSpeed == null
                 ? "Modemi daha açık, merkezi ve yerden yüksek bir yere aldığını gördüm. Şimdi sorunu yaşadığın odada hızı tekrar ölçelim."
                 : wifiHelp && !wifiPlacementDone
-                  ? "Uzaktan ayarları yeniledim ama hızın hâlâ düşük. Modeminle ilgili birkaç basit adımı birlikte uygulayalım."
+                  ? "Modemi açık, evin daha merkezi ve yerden yüksek bir yere al. Kalın duvarlardan ve elektronik cihazlardan uzak tut. Sonra sorun yaşadığın odada yeniden ölçelim."
                   : wifiHelp && roomSpeed != null
                     ? after != null && after >= pkg * 0.7 ? `Sorun yaşadığın odada hızın ${after} Mbps'e çıktı. Modemin yeni konumu Wi-Fi kapsamasını iyileştirdi.` : "Sorun yaşadığın odada yeni ölçümü tamamladım."
                 : "Ölçümden sonra bağlantını kontrol edip uzaktan çözmeyi deneyeceğim.";
@@ -582,22 +575,6 @@ function SpeedOptimizePanel({ wf }: { wf: Workflow }) {
           ))}
         </ol>
         <GigaNote mood={wf.status === "completed" ? "done" : "working"} className="mt-4">{workingText}</GigaNote>
-        {wifiHelp && !wifiPlacementDone && wf.status !== "completed" && (
-          <ol className="mt-3 space-y-2.5 rounded-2xl bg-muted/60 p-4">
-            {[
-              "Modemi kapatıp 10 saniye bekle, sonra yeniden aç.",
-              "Modemin arkasındaki kabloların sıkıca takılı olduğunu kontrol et.",
-              "Modemi dolap içinden çıkar; evin ortasında, yerden yüksek bir yere koy.",
-              "Kalın duvarlardan, mikrodalga ve metal eşyalardan uzak tut.",
-              "Mümkünse cihazını 5 GHz Wi-Fi ağına bağla.",
-            ].map((t, i) => (
-              <li key={t} className="flex gap-3 text-sm text-foreground">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-magenta-soft text-xs font-bold text-magenta">{i + 1}</span>
-                <span className="pt-0.5">{t}</span>
-              </li>
-            ))}
-          </ol>
-        )}
         {wifiHelp && !wifiPlacementDone && wf.status !== "completed" && (
           <button type="button" onClick={() => applyWifiPlacement(wf.id)} className="mt-3 flex min-h-11 w-full items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground">
             Bu adımı uyguladım
@@ -716,52 +693,3 @@ export function ConnectivityPanel({ compact }: { compact?: boolean }) {
   );
 }
 
-
-/** Port crisis: GIGA follows the process; NetBox can be activated at the new address for the move day. */
-export function NetboxMoveCard({ wf }: { wf: Workflow }) {
-  const crisis = wf.type === "relocation" && wf.data["eligibility"] === "no_port";
-  const nb = wf.data["netbox"] as "requested" | "ready" | "active" | undefined;
-  // A request left without a queued job (presenter mode, a lost timer, older saved data)
-  // is picked up here so the card can never sit on "Aktivasyon talebi oluşturuluyor" forever.
-  useEffect(() => {
-    if (crisis && nb === "requested" && !hasOp(wf.id, "relocation.netboxReady")) schedule("relocation.netboxReady", wf.id, 1200);
-  }, [crisis, nb, wf.id]);
-  if (!crisis) return null;
-  const address = String(wf.data["address"] ?? "");
-  const moveDate = String(wf.data["moveDate"] ?? "");
-  return (
-    <div className="rounded-card border border-magenta/25 bg-card p-4 shadow-card">
-      <div className="flex items-start gap-2.5">
-        <GigaAvatar size={28} label={false} />
-        <p className="text-xs leading-relaxed text-foreground">
-          Süreci senin için takip ediyorum; port açıldığı an kurulumu planlayacağım. O zamana kadar internetsiz kalma: <strong>NetBox</strong>'u taşınma adresinde kullanabilirsin.
-        </p>
-      </div>
-      <div className="mt-3 rounded-xl bg-card p-3 text-xs">
-        <p className="text-muted-foreground">Aktivasyon adresi</p>
-        <p className="font-semibold text-foreground">{address}</p>
-        <p className="mt-1.5 text-muted-foreground">Aktivasyon günü</p>
-        <p className="font-semibold text-foreground">{moveDate} · taşındığın gün</p>
-      </div>
-      {!nb && (
-        <button type="button" onClick={() => requestNetboxAtNewAddress(wf.id)} className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-semibold text-primary-foreground">
-          <Power className="size-4" /> NetBox'u taşınma adresimde kullan
-        </button>
-      )}
-      {nb === "requested" && (
-        <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-primary"><Loader2 className="size-4 animate-spin" /> Aktivasyon talebi oluşturuluyor…</p>
-      )}
-      {nb === "ready" && (
-        <>
-          <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-success"><CheckCircle2 className="size-4" /> Talebin oluşturuldu · NetBox yeni adresinde hazır</p>
-          <button type="button" onClick={() => activateNetbox(wf.id)} className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-magenta text-sm font-semibold text-magenta-foreground">
-            <Wifi className="size-4" /> Taşındım, NetBox'u aktif et
-          </button>
-        </>
-      )}
-      {nb === "active" && (
-        <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-success"><CheckCircle2 className="size-4" /> NetBox yeni adresinde aktif · internetin açık</p>
-      )}
-    </div>
-  );
-}

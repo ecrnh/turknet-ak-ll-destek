@@ -135,21 +135,21 @@ describe("Ücretsiz Hibrit İnternet", () => {
   const setCfg = (p: Partial<ReturnType<typeof W.getState>["config"]>) => W.setState((s) => ({ config: { ...s.config, ...p } }));
   const pushes = () => useAppStore.getState().notifications.map((n) => n.title);
 
-  it("kesinti başladığı anda ücretsiz teklif açılır, SMS gelir ve mükerrer kesinti açılmaz", () => {
-    const id = startOutage(0.2);
-    expect(pushes()).toContain("İnternet bağlantınızda kesinti tespit ettik");
-    expect(W.getState().hybrid.status).toBe("offered");
-    expect(stepStatus(id, "hybrid_offer")).toBe("done");
-    expect(W.getState().sms.some((m) => m.kind === "netbox")).toBe(true);
+  it("ilk 24 saatte teklif ve etkinleştirme yok; kesinti bildirimi gönderilir", () => {
+    const id = startOutage(2);
+    expect(pushes()[0]).toBe("İnternet bağlantınızda kesinti tespit ettik");
+    expect(W.getState().hybrid.status).toBe("unavailable");
+    expect(checkHybrid()).toBe(false);
     expect(activateHybrid()).toBe(false);
-    expect(startOutage(0.2)).toBe(id);
+    expect(stepStatus(id, "hybrid_offer")).toBe("pending");
+    expect(startOutage(2)).toBe(id);
   });
 
-  it("teklif ilk andan itibaren açılır; uygunluk kontrolü ve müşteri onayıyla aktifleşir", () => {
-    setOutageElapsed(0.2);
+  it("24 saati aşınca teklif açılır ve push gönderilir; müşteri onayıyla aktifleşir", () => {
+    startOutage(2);
+    setOutageElapsed(25);
     expect(W.getState().hybrid.status).toBe("offered");
-    expect(pushes()).toContain("İnternet bağlantınızda kesinti tespit ettik");
-    expect(W.getState().messages.some((m) => m.title === "Tek tıkla internete erişebilirsin")).toBe(true);
+    expect(pushes()[0]).toBe("Tek tıkla internete erişebilirsin");
     expect(activateHybrid()).toBe(false);
     checkHybrid();
     flushOps();

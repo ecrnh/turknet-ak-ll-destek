@@ -2,7 +2,6 @@ import { useGigaChat } from "@/features/giga/chatStore";
 import { useAppStore } from "@/features/core/appStore";
 import { useAgentsStore } from "@/features/aiAgents/store";
 import { useFamilyStore } from "@/features/family/store";
-import { useQrHealthStore } from "@/features/qrSupport/qrHealth";
 import { useQrStore } from "@/features/qrSupport/store";
 import { useVideoStore } from "@/features/videoSupport/store";
 import { SPEED_FIX_STEPS } from "@/data/mock";
@@ -71,7 +70,6 @@ export function elderVideoScenario() {
 
 export function qrFaultScenario() {
   useQrStore.getState().setScan({ at: 0, score: 0, checks: [] });
-  useQrHealthStore.setState({ health: "bad" });
 }
 
 export function resetAll() {
@@ -80,7 +78,6 @@ export function resetAll() {
   useAgentsStore.getState().reset();
   useFamilyStore.getState().reset();
   useQrStore.getState().reset();
-  useQrHealthStore.setState({ health: "good" });
   useVideoStore.getState().reset();
   useWorkflowStore.getState().reset();
   useScenarioStore.setState(initialScenario());

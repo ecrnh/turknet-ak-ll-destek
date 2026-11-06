@@ -4,8 +4,8 @@
 
 export const USER = {
   firstName: "Çağrı",
-  name: "ÇAĞRI KOYUNCU",
-  initials: "ÇK",
+  name: "ECREN KOYUNCU",
+  initials: "EK",
   subscriberNo: "4896005",
   location: "İstanbul/Ümraniye",
   phone: "0532 418 22 17",
@@ -59,15 +59,45 @@ export const defaultScopes = (): Record<ScopeKey, boolean> => Object.fromEntries
 export const RELATIONS = ["Anne", "Baba", "Eş", "Çocuk", "Diğer"] as const;
 
 export const HERO_SLIDES = [
+  {
+    id: "agents",
+    kind: "feature" as const,
+    eyebrow: "YENİ · TÜRKNET MOBİL'DE",
+    title: "GIGA, her şartta seninle.",
+    text: "Bağlantı sorunlarında çözüm adımlarını seninle yürüten yapay zekâ destekli yardımcın.",
+    cta: "Destek süreçlerini keşfet",
+    to: "/yardim",
+    icon: "bot",
+  },
   { id: "campaign", kind: "campaign" as const },
+  {
+    id: "video",
+    kind: "feature" as const,
+    eyebrow: "YENİ",
+    title: "Görüntülü Destek",
+    text: "Uzmanımız kameradan modemini görsün, sorunu birlikte çözelim. Ailen de görüşmeye katılsın.",
+    cta: "Görüşme Başlat",
+    to: "/goruntulu-destek",
+    icon: "video",
+  },
+  {
+    id: "qr",
+    kind: "feature" as const,
+    eyebrow: "YENİ",
+    title: "QR ile Temassız Destek",
+    text: "Modemindeki QR'ı okut, arızanı form doldurmadan bildir.",
+    cta: "QR'ı Tara",
+    to: "/qr/tara",
+    icon: "qr",
+  },
   {
     id: "hybrid",
     kind: "feature" as const,
     eyebrow: "ÜCRETSİZ · ABONELİĞİNE DAHİL",
     title: "Kesintide Bağlı Kal: Hibrit İnternet",
-    text: "Kesinti başladığı anda yedek bağlantını uygulamadan ücretsiz etkinleştir.",
+    text: "Kesinti 24 saati aşarsa yedek bağlantını uygulamadan ücretsiz etkinleştir.",
     cta: "Nasıl Çalışır?",
-    to: "/netbox-nasil-calisir",
+    to: "/hibrit",
     icon: "router",
   },
   {
@@ -104,7 +134,7 @@ export const SUBSCRIPTION_OPS: OpItem[] = [
   { slug: "hiz-yukseltme", title: "Hız Yükseltme", icon: "speed-up", to: "/islem/hiz-yukseltme" },
   { slug: "fiyat-sabitle", title: "12 Ay Fiyat Sabitle", icon: "price", to: "/islem/fiyat-sabitle" },
   { slug: "dondur", title: "Hizmeti Dondur", icon: "freeze", to: "/islem/dondur" },
-  { slug: "tasi", title: "İnternetini Taşı", icon: "move", to: "/tasinma" },
+  { slug: "tasi", title: "İnternetini Taşı", icon: "move", to: "/tasinma", isNew: true },
   { slug: "iptal", title: "Aboneliğini İptal Et", icon: "cancel", to: "/islem/iptal" },
   { slug: "yeni-abonelik", title: "Yeni Abonelik", icon: "user-plus", to: "/islem/yeni-abonelik" },
 ];
@@ -294,7 +324,7 @@ export const CASE_BASELINE = {
 
 export const AGENT_DEFS = [
   { id: "speed", name: "Hız Koruyucu", desc: "Hızında belirgin bir düşüş olursa izin verdiğin güvenli uzaktan düzeltmeleri dener.", icon: "gauge", to: "/ajanlar/hiz" },
-  { id: "backup", name: "Kesinti Takibi", desc: "Kesintinin güncel durumunu gösterir; kesinti başladığı anda ücretsiz Hibrit İnternet'i hatırlatır.", icon: "route", to: "/hibrit" },
+  { id: "backup", name: "Kesinti Takibi", desc: "Kesintinin güncel durumunu gösterir; 24 saati aşarsa ücretsiz Hibrit İnternet'i hatırlatır.", icon: "route", to: "/hibrit" },
   { id: "modem", name: "Modem Sağlık Kontrolü", desc: "Modem ve bağlantı durumuyla ilgili teknik kontrolleri yapar; bir sorun görünürse haber verir.", icon: "router", to: "/ajanlar/kontroller" },
   { id: "bill", name: "Fatura Hatırlatıcı", desc: "Son ödeme gününü hatırlatır, olağan dışı tutarları açıklar.", icon: "receipt", to: "/fatura-kalkani" },
 ] as const;

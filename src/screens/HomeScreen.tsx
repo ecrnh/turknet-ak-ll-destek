@@ -8,8 +8,6 @@ import { INTERNET_OPS, SUBSCRIPTION_OPS, USER } from "@/data/mock";
 import { useAppStore } from "@/features/core/appStore";
 import { useActingAccount } from "@/features/family/store";
 import { OutageHomeCard } from "@/features/workflow/components/hybrid";
-import { AppointmentHomeCard } from "@/features/workflow/components/AppointmentHomeCard";
-import { RelocationHomeCard } from "@/features/workflow/components/RelocationHomeCard";
 import { cn } from "@/lib/utils";
 import { HeroCarousel } from "./home/HeroCarousel";
 
@@ -80,8 +78,6 @@ export function HomeScreen() {
 
       <div className="space-y-4 px-4">
         <OutageHomeCard />
-        <AppointmentHomeCard />
-        <RelocationHomeCard />
         {simple ? <SimpleHome /> : <CampaignCard />}
       </div>
 

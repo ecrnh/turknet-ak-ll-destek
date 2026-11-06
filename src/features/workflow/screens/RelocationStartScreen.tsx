@@ -93,7 +93,7 @@ export function RelocationStartScreen() {
   const start = () => {
     if (mode === "move" && !validate()) return;
     useWorkflowStore.setState({ autoFollowUp: true });
-    const id = startRelocation({ address: { id: "ADR-NEW", line, district: addr.district.trim(), city: addr.city.trim() }, moveDate: date, wantsTemp: false, ...(result ? { eligibility: result } : {}) });
+    const id = startRelocation({ address: { id: "ADR-NEW", line, district: addr.district.trim(), city: addr.city.trim() }, moveDate: date, wantsTemp: false, eligibility: result ?? undefined });
     setStartedId(id);
     setStage("started");
   };
@@ -200,10 +200,9 @@ export function RelocationStartScreen() {
             )}
             <PlainNote>{r.giga}</PlainNote>
             {result === "no_port" && (
-              <div className="rounded-2xl border border-magenta/25 bg-magenta-soft/40 p-3.5 text-sm leading-relaxed text-foreground">
-                <p className="font-semibold text-primary">Taşındığın gün internetsiz kalmayacaksın</p>
-                <p className="mt-1 text-xs text-muted-foreground">Bir sonraki adımda NetBox'u aktif edebilmen için seni bilgilendireceğiz. Aktivasyon, girdiğin taşınma adresi ve tarihine göre o gün kullanıma hazır olacak şekilde tanımlanır.</p>
-              </div>
+              <Button variant="outline" className="w-full" onClick={() => navigate({ to: "/hibrit" })}>
+                NetBox’u etkinleştir
+              </Button>
             )}
             {mode === "move" && (
               <>

@@ -167,12 +167,12 @@ export function canToggleBox(box: { sim: string } | null | undefined): boolean {
 export const isSpeedProblem = (measured: number, pkg: number) => measured < pkg * 0.6;
 
 /* ---------------- Hibrit İnternet ---------------- */
-/** The free backup connection is offered from the first minute of an unresolved outage: no waiting period. */
-export const HYBRID_OFFER_AFTER_H = 0;
+/** The free backup connection is offered only when an outage is still unresolved after this many hours. */
+export const HYBRID_OFFER_AFTER_H = 24;
 
 export const outageElapsedH = (startedAt: number, now: number) => Math.max(0, (now - startedAt) / 3_600_000);
 
-/** Offer the free Hibrit İnternet the moment the outage starts. */
+/** Offer the free Hibrit İnternet once an outage passes 24 h, or earlier when its estimated duration already exceeds 24 h. */
 export const hybridOfferOpen = (elapsedH: number, etaH?: number | null | undefined) => elapsedH >= HYBRID_OFFER_AFTER_H || (etaH ?? 0) > HYBRID_OFFER_AFTER_H;
 
 /** Hibrit İnternet needs a compatible backup device, an active SIM and enough mobile coverage. */
@@ -182,7 +182,7 @@ export function hybridBlocker(c: { device: boolean; sim: boolean; coverage: bool
   return null;
 }
 
-/** Activation is only possible during an unresolved outage, after a passed check. */
+/** Activation is only possible during an unresolved outage past 24 h, after a passed check. */
 export function canActivateHybrid(p: { elapsedH: number; etaH?: number | null | undefined; fixed: ConnectivityStatus["fixed"]; status: string }): boolean {
   return p.fixed === "down" && hybridOfferOpen(p.elapsedH, p.etaH) && (p.status === "ready" || p.status === "failed");
 }
@@ -225,7 +225,7 @@ export const REPAIR_RESULT: Record<RepairOutcome, string> = {
 
 /** Plain description of the solution stage once the result is known. */
 export function solutionText(outcome: RepairOutcome, etaH?: number | null): string {
-  if (outcome === "regional") return "Teknik ekibimiz çalışıyor; modeminde bir şey yapmana gerek yok. İstersen bu süreyi ücretsiz NetBox yedek internetiyle geçirebilirsin.";
+  if (outcome === "regional") return (etaH ?? 0) > HYBRID_OFFER_AFTER_H ? "Çözüm 24 saatten uzun sürebilir; ücretsiz Hibrit İnternet'i önerebiliriz." : "Teknik ekibimiz çalışıyor; modeminde bir şey yapmana gerek yok.";
   if (outcome === "issue") return "Uygun uzaktan onarımı hemen deniyoruz.";
   if (outcome === "clear") return "Modemine birlikte bakmamız gerekiyor.";
   return "Tekrar deneyebilir ya da uzman desteği alabilirsin.";

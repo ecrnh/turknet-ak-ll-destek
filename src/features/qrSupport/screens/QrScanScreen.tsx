@@ -10,7 +10,7 @@ import { matchesSupportQr } from "../qr";
 import { startQrGigaSupport } from "../startQrSupport";
 import { track, useFlow } from "@/lib/analytics";
 
-export function QrScanScreen({ deepLink }: { deepLink?: { sub?: string | undefined; dev?: string | undefined } }) {
+export function QrScanScreen({ deepLink }: { deepLink?: { sub: string; dev: string } }) {
   useFlow("qr_scan");
   const navigate = useNavigate();
   const router = useRouter();
@@ -28,7 +28,7 @@ export function QrScanScreen({ deepLink }: { deepLink?: { sub?: string | undefin
     window.setTimeout(() => {
       cam.stop();
       startQrGigaSupport();
-      navigate({ to: "/qr/destek" });
+      navigate({ to: "/ajanlar" });
     }, 550);
   };
 

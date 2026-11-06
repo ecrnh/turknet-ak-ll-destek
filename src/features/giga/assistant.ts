@@ -65,7 +65,7 @@ export interface GigaContext {
   /** A known outage is being tracked. */
   outage: boolean;
   /** What GIGA proposed in its previous message (for "evet", "başlat"). */
-  lastOffer?: Intent | null;
+  lastOffer?: Intent | null | undefined;
   billing?: {
     period: string;
     amount: number;
@@ -75,7 +75,7 @@ export interface GigaContext {
     packageName: string;
     usage: GigaBillingSummary["usage"];
     discounts: string[];
-  };
+  } | undefined;
 }
 
 /** Scope of connection checks, in plain words. Never implies access to browsing, messages or unrelated activity. */
@@ -171,7 +171,7 @@ function outageReply(net: NetStatus): GigaReply {
     text:
       net === "mobile"
         ? "Ana bağlantındaki kesinti sürüyor; şu an Hibrit İnternet yedek bağlantın üzerinden bağlısın. Ana bağlantın düzelince geri dönüş otomatik yapılır, sana da haber veririz."
-        : "Bölgende bilinen bir kesinti var ve teknik ekibimiz çözüm üzerinde çalışıyor. Modeminde bir şey yapmana gerek yok. Kesinti başladığı anda ücretsiz Hibrit İnternet'i senin onayınla etkinleştirebiliriz.",
+        : "Bölgende bilinen bir kesinti var ve teknik ekibimiz çözüm üzerinde çalışıyor. Modeminde bir şey yapmana gerek yok. Kesinti 24 saati aşarsa ücretsiz Hibrit İnternet'i senin onayınla etkinleştirebiliriz.",
     actions: [{ label: "Kesinti durumunu gör", kind: "go", to: "/hibrit" }],
   };
 }
@@ -297,7 +297,7 @@ export function gigaReply(input: string, ctx: GigaContext): GigaReply {
       if (ctx.outage) return outageReply(ctx.net);
       return {
         topic: "temp_internet",
-        text: "Şu an bağlantında kesinti görünmüyor. Kesinti başladığı anda ücretsiz Hibrit İnternet'i, taşınma sırasında ise TürkNet Box'ı senin onayınla etkinleştirebiliriz.",
+        text: "Şu an bağlantında kesinti görünmüyor. Kesinti 24 saati aşarsa ücretsiz Hibrit İnternet'i, taşınma sırasında ise TürkNet Box'ı senin onayınla etkinleştirebiliriz.",
         actions: [
           { label: "Hibrit İnternet", kind: "go", to: "/hibrit" },
           { label: "Bağlantım", kind: "go", to: "/baglanti" },

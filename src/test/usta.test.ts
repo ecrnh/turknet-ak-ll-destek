@@ -92,7 +92,7 @@ describe("GIGA Teknik · sade bağlantı kontrolü", () => {
     expect(repairStageStates(5, "clear")).toEqual(["done", "done", "done"]);
   });
 
-  it("bölgesel arıza bulunursa modem adımı istenmez, kesinti takibi başlar ve Hibrit İnternet hemen sunulur", () => {
+  it("bölgesel arıza bulunursa modem adımı istenmez, kesinti takibi başlar ve 24 saati aşan tahminde Hibrit İnternet sunulur", () => {
     cfg({ ustaDiag: "regional", regionalEtaH: 36 });
     const id = startAiUsta("no_internet");
     decide(id, "no_connect");
@@ -105,13 +105,13 @@ describe("GIGA Teknik · sade bağlantı kontrolü", () => {
     expect(W.getState().hybrid.status).toBe("offered");
   });
 
-  it("bölgesel arızanın tahmini süresi kısa olsa da Hibrit İnternet hemen sunulur", () => {
+  it("bölgesel arızanın tahmini süresi 24 saatin altındaysa Hibrit İnternet hemen sunulmaz", () => {
     cfg({ ustaDiag: "regional", regionalEtaH: 6 });
     const id = startAiUsta("no_internet");
     decide(id, "no_connect");
     drain();
     expect(W.getState().outage).toBeTruthy();
-    expect(W.getState().hybrid.status).toBe("offered");
+    expect(W.getState().hybrid.status).toBe("unavailable");
   });
 
   it("kontroller tamamlanamazsa sonuç uydurulmaz; tekrar deneme veya aktarım sunulur", () => {
@@ -130,16 +130,16 @@ describe("GIGA Teknik · sade bağlantı kontrolü", () => {
 });
 
 describe("Hibrit Box · otomatik ve manuel açılış ayrı izlenir", () => {
-  it("izin verilmişse kesinti başladığı anda otomatik açılır; izin yoksa açılmaz", async () => {
+  it("izin verilmişse 24 saati aşan kesintide otomatik açılır; izin yoksa açılmaz", async () => {
     const { setAutoFailover, setOutageElapsed } = await import("@/features/workflow/services/hybrid");
     setAutoFailover(true);
-    setOutageElapsed(0.5);
+    setOutageElapsed(25);
     drain();
     expect(W.getState().hybrid.status).toBe("active");
     expect(W.getState().hybrid.activatedBy).toBe("auto");
 
     W.getState().reset();
-    setOutageElapsed(0.5);
+    setOutageElapsed(25);
     drain();
     expect(W.getState().hybrid.status).toBe("offered");
     expect(W.getState().hybrid.activatedBy ?? null).toBeNull();
@@ -167,64 +167,5 @@ describe("GIGA Teknik · kontroller takılmaz", () => {
     W.setState((s) => ({ ops: s.ops.map((o) => ({ ...o, dueAt: Date.now() - 10_000 })) }));
     resumeUsta(id);
     expect(String(getWf(id)!.data["repair"]).split("|")).toHaveLength(1);
-  });
-});
-
-describe("GIGA Teknik · adım adım müşteri kontrolleri", () => {
-  it("sorun sürüyorsa önce kablo sorulur; çıkmış kablo takılınca yeniden başlatma ve doğrulama gelir", () => {
-    cfg({ ustaDiag: "clear" });
-    const id = startAiUsta("no_internet");
-    decide(id, "no_connect");
-    drain();
-    decide(id, "yes");
-    expect(getWf(id)!.decision?.key).toBe("usta_guide_cable");
-    decide(id, "loose");
-    expect(getWf(id)!.decision?.key).toBe("usta_guide_plug");
-    decide(id, "done");
-    expect(getWf(id)!.decision?.key).toBe("usta_step2");
-    decide(id, "done");
-    drain();
-    expect(stepStatus(id, "recheck")).toBe("done");
-    expect(getWf(id)!.decision?.key).toBe("usta_confirm");
-  });
-
-  it("kablolar takılıysa modem konumu adımı sorulur", () => {
-    cfg({ ustaDiag: "clear" });
-    const id = startAiUsta("no_internet");
-    decide(id, "no_connect");
-    drain();
-    decide(id, "yes");
-    decide(id, "ok");
-    expect(getWf(id)!.decision?.key).toBe("usta_guide_place");
-  });
-});
-
-describe("GIGA Teknik · görüntülü → canlı destek → Hibrit İnternet", () => {
-  it("modem aksaklığı seçilirse görüntülü inceleme başlar; çözülmezse canlı destek sunulur", async () => {
-    cfg({ ustaDiag: "clear" });
-    const id = startAiUsta("no_internet");
-    decide(id, "no_connect");
-    drain();
-    decide(id, "video");
-    expect(stepStatus(id, "video")).toBe("in_progress");
-    const { finishGigaVideoSupport } = await import("@/features/workflow/services/aiUsta");
-    finishGigaVideoSupport(id, false);
-    expect(getWf(id)!.decision?.options.map((o) => o.id)).toContain("live");
-  });
-
-  it("canlı destekte randevu sonrası Hibrit İnternet teklifi açılır", async () => {
-    cfg({ ustaDiag: "clear" });
-    const id = startAiUsta("no_internet");
-    decide(id, "no_connect");
-    drain();
-    decide(id, "video");
-    const { finishGigaVideoSupport } = await import("@/features/workflow/services/aiUsta");
-    finishGigaVideoSupport(id, false);
-    decide(id, "live");
-    const live = await import("@/features/workflow/services/liveSupport");
-    live.openLiveChat(id);
-    expect(live.bookFieldVisit(id, "slot-2")).toBe(true);
-    expect(live.offerHybridFromLive(id)).not.toBeNull();
-    expect(W.getState().hybrid.status).toBe("offered");
   });
 });

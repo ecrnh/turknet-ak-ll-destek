@@ -24,8 +24,6 @@ import { Route as HibritRouteImport } from './routes/hibrit'
 import { Route as HizTestiRouteImport } from './routes/hiz-testi'
 import { Route as IslemGecmisiRouteImport } from './routes/islem-gecmisi'
 import { Route as IslemlerRouteImport } from './routes/islemler'
-import { Route as NetboxNasilCalisirRouteImport } from './routes/netbox-nasil-calisir'
-import { Route as OnarimRouteImport } from './routes/onarim'
 import { Route as OtomatikOdemeRouteImport } from './routes/otomatik-odeme'
 import { Route as TakipRouteImport } from './routes/takip'
 import { Route as TasinmaRouteImport } from './routes/tasinma'
@@ -37,13 +35,6 @@ import { Route as AjanlarIndexRouteImport } from './routes/ajanlar.index'
 import { Route as AjanlarHizRouteImport } from './routes/ajanlar.hiz'
 import { Route as AjanlarKontrollerRouteImport } from './routes/ajanlar.kontroller'
 import { Route as CanliDestekIdRouteImport } from './routes/canli-destek.$id'
-import { Route as EvimIndexRouteImport } from './routes/evim.index'
-import { Route as EvimAiUstaRouteImport } from './routes/evim.ai-usta'
-import { Route as EvimBaglantiRouteImport } from './routes/evim.baglanti'
-import { Route as EvimFaturaRouteImport } from './routes/evim.fatura'
-import { Route as EvimGirisRouteImport } from './routes/evim.giris'
-import { Route as EvimQrRouteImport } from './routes/evim.qr'
-import { Route as EvimYukleRouteImport } from './routes/evim.yukle'
 import { Route as FaturalarIndexRouteImport } from './routes/faturalar.index'
 import { Route as FaturalarGecmisRouteImport } from './routes/faturalar.gecmis'
 import { Route as GoruntuluDestekIndexRouteImport } from './routes/goruntulu-destek.index'
@@ -52,14 +43,8 @@ import { Route as GoruntuluDestekSonucRouteImport } from './routes/goruntulu-des
 import { Route as IslemSlugRouteImport } from './routes/islem.$slug'
 import { Route as QrIndexRouteImport } from './routes/qr.index'
 import { Route as QrAnalizRouteImport } from './routes/qr.analiz'
-import { Route as QrDestekRouteImport } from './routes/qr.destek'
 import { Route as QrTaraRouteImport } from './routes/qr.tara'
 import { Route as SurecIdRouteImport } from './routes/surec.$id'
-import { Route as EvimAileIndexRouteImport } from './routes/evim.aile.index'
-import { Route as EvimAileIdRouteImport } from './routes/evim.aile.$id'
-import { Route as EvimAileDavetRouteImport } from './routes/evim.aile.davet'
-import { Route as EvimCihazlarIndexRouteImport } from './routes/evim.cihazlar.index'
-import { Route as EvimCihazlarIdRouteImport } from './routes/evim.cihazlar.$id'
 import { Route as QrTalepIdRouteImport } from './routes/qr.talep.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -137,16 +122,6 @@ const IslemlerRoute = IslemlerRouteImport.update({
   path: '/islemler',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NetboxNasilCalisirRoute = NetboxNasilCalisirRouteImport.update({
-  id: '/netbox-nasil-calisir',
-  path: '/netbox-nasil-calisir',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnarimRoute = OnarimRouteImport.update({
-  id: '/onarim',
-  path: '/onarim',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OtomatikOdemeRoute = OtomatikOdemeRouteImport.update({
   id: '/otomatik-odeme',
   path: '/otomatik-odeme',
@@ -202,41 +177,6 @@ const CanliDestekIdRoute = CanliDestekIdRouteImport.update({
   path: '/canli-destek/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EvimIndexRoute = EvimIndexRouteImport.update({
-  id: '/evim/',
-  path: '/evim/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimAiUstaRoute = EvimAiUstaRouteImport.update({
-  id: '/evim/ai-usta',
-  path: '/evim/ai-usta',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimBaglantiRoute = EvimBaglantiRouteImport.update({
-  id: '/evim/baglanti',
-  path: '/evim/baglanti',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimFaturaRoute = EvimFaturaRouteImport.update({
-  id: '/evim/fatura',
-  path: '/evim/fatura',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimGirisRoute = EvimGirisRouteImport.update({
-  id: '/evim/giris',
-  path: '/evim/giris',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimQrRoute = EvimQrRouteImport.update({
-  id: '/evim/qr',
-  path: '/evim/qr',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimYukleRoute = EvimYukleRouteImport.update({
-  id: '/evim/yukle',
-  path: '/evim/yukle',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FaturalarIndexRoute = FaturalarIndexRouteImport.update({
   id: '/faturalar/',
   path: '/faturalar/',
@@ -277,11 +217,6 @@ const QrAnalizRoute = QrAnalizRouteImport.update({
   path: '/qr/analiz',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QrDestekRoute = QrDestekRouteImport.update({
-  id: '/qr/destek',
-  path: '/qr/destek',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const QrTaraRoute = QrTaraRouteImport.update({
   id: '/qr/tara',
   path: '/qr/tara',
@@ -290,31 +225,6 @@ const QrTaraRoute = QrTaraRouteImport.update({
 const SurecIdRoute = SurecIdRouteImport.update({
   id: '/surec/$id',
   path: '/surec/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimAileIndexRoute = EvimAileIndexRouteImport.update({
-  id: '/evim/aile/',
-  path: '/evim/aile/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimAileIdRoute = EvimAileIdRouteImport.update({
-  id: '/evim/aile/$id',
-  path: '/evim/aile/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimAileDavetRoute = EvimAileDavetRouteImport.update({
-  id: '/evim/aile/davet',
-  path: '/evim/aile/davet',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimCihazlarIndexRoute = EvimCihazlarIndexRouteImport.update({
-  id: '/evim/cihazlar/',
-  path: '/evim/cihazlar/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvimCihazlarIdRoute = EvimCihazlarIdRouteImport.update({
-  id: '/evim/cihazlar/$id',
-  path: '/evim/cihazlar/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QrTalepIdRoute = QrTalepIdRouteImport.update({
@@ -339,8 +249,6 @@ export interface FileRoutesByFullPath {
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
-  '/netbox-nasil-calisir': typeof NetboxNasilCalisirRoute
-  '/onarim': typeof OnarimRoute
   '/otomatik-odeme': typeof OtomatikOdemeRoute
   '/takip': typeof TakipRoute
   '/tasinma': typeof TasinmaRoute
@@ -350,32 +258,19 @@ export interface FileRoutesByFullPath {
   '/ajanlar/hiz': typeof AjanlarHizRoute
   '/ajanlar/kontroller': typeof AjanlarKontrollerRoute
   '/canli-destek/$id': typeof CanliDestekIdRoute
-  '/evim/ai-usta': typeof EvimAiUstaRoute
-  '/evim/baglanti': typeof EvimBaglantiRoute
-  '/evim/fatura': typeof EvimFaturaRoute
-  '/evim/giris': typeof EvimGirisRoute
-  '/evim/qr': typeof EvimQrRoute
-  '/evim/yukle': typeof EvimYukleRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
-  '/qr/destek': typeof QrDestekRoute
   '/qr/tara': typeof QrTaraRoute
   '/surec/$id': typeof SurecIdRoute
   '/aile/': typeof AileIndexRoute
   '/ajanlar/': typeof AjanlarIndexRoute
-  '/evim/': typeof EvimIndexRoute
   '/faturalar/': typeof FaturalarIndexRoute
   '/goruntulu-destek/': typeof GoruntuluDestekIndexRoute
   '/qr/': typeof QrIndexRoute
-  '/evim/aile/$id': typeof EvimAileIdRoute
-  '/evim/aile/davet': typeof EvimAileDavetRoute
-  '/evim/cihazlar/$id': typeof EvimCihazlarIdRoute
   '/qr/talep/$id': typeof QrTalepIdRoute
-  '/evim/aile/': typeof EvimAileIndexRoute
-  '/evim/cihazlar/': typeof EvimCihazlarIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -393,8 +288,6 @@ export interface FileRoutesByTo {
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
-  '/netbox-nasil-calisir': typeof NetboxNasilCalisirRoute
-  '/onarim': typeof OnarimRoute
   '/otomatik-odeme': typeof OtomatikOdemeRoute
   '/takip': typeof TakipRoute
   '/tasinma': typeof TasinmaRoute
@@ -404,32 +297,19 @@ export interface FileRoutesByTo {
   '/ajanlar/hiz': typeof AjanlarHizRoute
   '/ajanlar/kontroller': typeof AjanlarKontrollerRoute
   '/canli-destek/$id': typeof CanliDestekIdRoute
-  '/evim/ai-usta': typeof EvimAiUstaRoute
-  '/evim/baglanti': typeof EvimBaglantiRoute
-  '/evim/fatura': typeof EvimFaturaRoute
-  '/evim/giris': typeof EvimGirisRoute
-  '/evim/qr': typeof EvimQrRoute
-  '/evim/yukle': typeof EvimYukleRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
-  '/qr/destek': typeof QrDestekRoute
   '/qr/tara': typeof QrTaraRoute
   '/surec/$id': typeof SurecIdRoute
   '/aile': typeof AileIndexRoute
   '/ajanlar': typeof AjanlarIndexRoute
-  '/evim': typeof EvimIndexRoute
   '/faturalar': typeof FaturalarIndexRoute
   '/goruntulu-destek': typeof GoruntuluDestekIndexRoute
   '/qr': typeof QrIndexRoute
-  '/evim/aile/$id': typeof EvimAileIdRoute
-  '/evim/aile/davet': typeof EvimAileDavetRoute
-  '/evim/cihazlar/$id': typeof EvimCihazlarIdRoute
   '/qr/talep/$id': typeof QrTalepIdRoute
-  '/evim/aile': typeof EvimAileIndexRoute
-  '/evim/cihazlar': typeof EvimCihazlarIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -448,8 +328,6 @@ export interface FileRoutesById {
   '/hiz-testi': typeof HizTestiRoute
   '/islem-gecmisi': typeof IslemGecmisiRoute
   '/islemler': typeof IslemlerRoute
-  '/netbox-nasil-calisir': typeof NetboxNasilCalisirRoute
-  '/onarim': typeof OnarimRoute
   '/otomatik-odeme': typeof OtomatikOdemeRoute
   '/takip': typeof TakipRoute
   '/tasinma': typeof TasinmaRoute
@@ -459,32 +337,19 @@ export interface FileRoutesById {
   '/ajanlar/hiz': typeof AjanlarHizRoute
   '/ajanlar/kontroller': typeof AjanlarKontrollerRoute
   '/canli-destek/$id': typeof CanliDestekIdRoute
-  '/evim/ai-usta': typeof EvimAiUstaRoute
-  '/evim/baglanti': typeof EvimBaglantiRoute
-  '/evim/fatura': typeof EvimFaturaRoute
-  '/evim/giris': typeof EvimGirisRoute
-  '/evim/qr': typeof EvimQrRoute
-  '/evim/yukle': typeof EvimYukleRoute
   '/faturalar/gecmis': typeof FaturalarGecmisRoute
   '/goruntulu-destek/gorusme': typeof GoruntuluDestekGorusmeRoute
   '/goruntulu-destek/sonuc': typeof GoruntuluDestekSonucRoute
   '/islem/$slug': typeof IslemSlugRoute
   '/qr/analiz': typeof QrAnalizRoute
-  '/qr/destek': typeof QrDestekRoute
   '/qr/tara': typeof QrTaraRoute
   '/surec/$id': typeof SurecIdRoute
   '/aile/': typeof AileIndexRoute
   '/ajanlar/': typeof AjanlarIndexRoute
-  '/evim/': typeof EvimIndexRoute
   '/faturalar/': typeof FaturalarIndexRoute
   '/goruntulu-destek/': typeof GoruntuluDestekIndexRoute
   '/qr/': typeof QrIndexRoute
-  '/evim/aile/$id': typeof EvimAileIdRoute
-  '/evim/aile/davet': typeof EvimAileDavetRoute
-  '/evim/cihazlar/$id': typeof EvimCihazlarIdRoute
   '/qr/talep/$id': typeof QrTalepIdRoute
-  '/evim/aile/': typeof EvimAileIndexRoute
-  '/evim/cihazlar/': typeof EvimCihazlarIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -504,8 +369,6 @@ export interface FileRouteTypes {
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
-    | '/netbox-nasil-calisir'
-    | '/onarim'
     | '/otomatik-odeme'
     | '/takip'
     | '/tasinma'
@@ -515,32 +378,19 @@ export interface FileRouteTypes {
     | '/ajanlar/hiz'
     | '/ajanlar/kontroller'
     | '/canli-destek/$id'
-    | '/evim/ai-usta'
-    | '/evim/baglanti'
-    | '/evim/fatura'
-    | '/evim/giris'
-    | '/evim/qr'
-    | '/evim/yukle'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
     | '/goruntulu-destek/sonuc'
     | '/islem/$slug'
     | '/qr/analiz'
-    | '/qr/destek'
     | '/qr/tara'
     | '/surec/$id'
     | '/aile/'
     | '/ajanlar/'
-    | '/evim/'
     | '/faturalar/'
     | '/goruntulu-destek/'
     | '/qr/'
-    | '/evim/aile/$id'
-    | '/evim/aile/davet'
-    | '/evim/cihazlar/$id'
     | '/qr/talep/$id'
-    | '/evim/aile/'
-    | '/evim/cihazlar/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -558,8 +408,6 @@ export interface FileRouteTypes {
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
-    | '/netbox-nasil-calisir'
-    | '/onarim'
     | '/otomatik-odeme'
     | '/takip'
     | '/tasinma'
@@ -569,32 +417,19 @@ export interface FileRouteTypes {
     | '/ajanlar/hiz'
     | '/ajanlar/kontroller'
     | '/canli-destek/$id'
-    | '/evim/ai-usta'
-    | '/evim/baglanti'
-    | '/evim/fatura'
-    | '/evim/giris'
-    | '/evim/qr'
-    | '/evim/yukle'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
     | '/goruntulu-destek/sonuc'
     | '/islem/$slug'
     | '/qr/analiz'
-    | '/qr/destek'
     | '/qr/tara'
     | '/surec/$id'
     | '/aile'
     | '/ajanlar'
-    | '/evim'
     | '/faturalar'
     | '/goruntulu-destek'
     | '/qr'
-    | '/evim/aile/$id'
-    | '/evim/aile/davet'
-    | '/evim/cihazlar/$id'
     | '/qr/talep/$id'
-    | '/evim/aile'
-    | '/evim/cihazlar'
   id:
     | '__root__'
     | '/'
@@ -612,8 +447,6 @@ export interface FileRouteTypes {
     | '/hiz-testi'
     | '/islem-gecmisi'
     | '/islemler'
-    | '/netbox-nasil-calisir'
-    | '/onarim'
     | '/otomatik-odeme'
     | '/takip'
     | '/tasinma'
@@ -623,32 +456,19 @@ export interface FileRouteTypes {
     | '/ajanlar/hiz'
     | '/ajanlar/kontroller'
     | '/canli-destek/$id'
-    | '/evim/ai-usta'
-    | '/evim/baglanti'
-    | '/evim/fatura'
-    | '/evim/giris'
-    | '/evim/qr'
-    | '/evim/yukle'
     | '/faturalar/gecmis'
     | '/goruntulu-destek/gorusme'
     | '/goruntulu-destek/sonuc'
     | '/islem/$slug'
     | '/qr/analiz'
-    | '/qr/destek'
     | '/qr/tara'
     | '/surec/$id'
     | '/aile/'
     | '/ajanlar/'
-    | '/evim/'
     | '/faturalar/'
     | '/goruntulu-destek/'
     | '/qr/'
-    | '/evim/aile/$id'
-    | '/evim/aile/davet'
-    | '/evim/cihazlar/$id'
     | '/qr/talep/$id'
-    | '/evim/aile/'
-    | '/evim/cihazlar/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -667,8 +487,6 @@ export interface RootRouteChildren {
   HizTestiRoute: typeof HizTestiRoute
   IslemGecmisiRoute: typeof IslemGecmisiRoute
   IslemlerRoute: typeof IslemlerRoute
-  NetboxNasilCalisirRoute: typeof NetboxNasilCalisirRoute
-  OnarimRoute: typeof OnarimRoute
   OtomatikOdemeRoute: typeof OtomatikOdemeRoute
   TakipRoute: typeof TakipRoute
   TasinmaRoute: typeof TasinmaRoute
@@ -678,32 +496,19 @@ export interface RootRouteChildren {
   AjanlarHizRoute: typeof AjanlarHizRoute
   AjanlarKontrollerRoute: typeof AjanlarKontrollerRoute
   CanliDestekIdRoute: typeof CanliDestekIdRoute
-  EvimAiUstaRoute: typeof EvimAiUstaRoute
-  EvimBaglantiRoute: typeof EvimBaglantiRoute
-  EvimFaturaRoute: typeof EvimFaturaRoute
-  EvimGirisRoute: typeof EvimGirisRoute
-  EvimQrRoute: typeof EvimQrRoute
-  EvimYukleRoute: typeof EvimYukleRoute
   FaturalarGecmisRoute: typeof FaturalarGecmisRoute
   GoruntuluDestekGorusmeRoute: typeof GoruntuluDestekGorusmeRoute
   GoruntuluDestekSonucRoute: typeof GoruntuluDestekSonucRoute
   IslemSlugRoute: typeof IslemSlugRoute
   QrAnalizRoute: typeof QrAnalizRoute
-  QrDestekRoute: typeof QrDestekRoute
   QrTaraRoute: typeof QrTaraRoute
   SurecIdRoute: typeof SurecIdRoute
   AileIndexRoute: typeof AileIndexRoute
   AjanlarIndexRoute: typeof AjanlarIndexRoute
-  EvimIndexRoute: typeof EvimIndexRoute
   FaturalarIndexRoute: typeof FaturalarIndexRoute
   GoruntuluDestekIndexRoute: typeof GoruntuluDestekIndexRoute
   QrIndexRoute: typeof QrIndexRoute
-  EvimAileIdRoute: typeof EvimAileIdRoute
-  EvimAileDavetRoute: typeof EvimAileDavetRoute
-  EvimCihazlarIdRoute: typeof EvimCihazlarIdRoute
   QrTalepIdRoute: typeof QrTalepIdRoute
-  EvimAileIndexRoute: typeof EvimAileIndexRoute
-  EvimCihazlarIndexRoute: typeof EvimCihazlarIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -813,20 +618,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IslemlerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/netbox-nasil-calisir': {
-      id: '/netbox-nasil-calisir'
-      path: '/netbox-nasil-calisir'
-      fullPath: '/netbox-nasil-calisir'
-      preLoaderRoute: typeof NetboxNasilCalisirRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onarim': {
-      id: '/onarim'
-      path: '/onarim'
-      fullPath: '/onarim'
-      preLoaderRoute: typeof OnarimRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/otomatik-odeme': {
       id: '/otomatik-odeme'
       path: '/otomatik-odeme'
@@ -904,55 +695,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CanliDestekIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/evim/': {
-      id: '/evim/'
-      path: '/evim'
-      fullPath: '/evim/'
-      preLoaderRoute: typeof EvimIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/ai-usta': {
-      id: '/evim/ai-usta'
-      path: '/evim/ai-usta'
-      fullPath: '/evim/ai-usta'
-      preLoaderRoute: typeof EvimAiUstaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/baglanti': {
-      id: '/evim/baglanti'
-      path: '/evim/baglanti'
-      fullPath: '/evim/baglanti'
-      preLoaderRoute: typeof EvimBaglantiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/fatura': {
-      id: '/evim/fatura'
-      path: '/evim/fatura'
-      fullPath: '/evim/fatura'
-      preLoaderRoute: typeof EvimFaturaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/giris': {
-      id: '/evim/giris'
-      path: '/evim/giris'
-      fullPath: '/evim/giris'
-      preLoaderRoute: typeof EvimGirisRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/qr': {
-      id: '/evim/qr'
-      path: '/evim/qr'
-      fullPath: '/evim/qr'
-      preLoaderRoute: typeof EvimQrRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/yukle': {
-      id: '/evim/yukle'
-      path: '/evim/yukle'
-      fullPath: '/evim/yukle'
-      preLoaderRoute: typeof EvimYukleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/faturalar/': {
       id: '/faturalar/'
       path: '/faturalar'
@@ -1009,13 +751,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QrAnalizRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/qr/destek': {
-      id: '/qr/destek'
-      path: '/qr/destek'
-      fullPath: '/qr/destek'
-      preLoaderRoute: typeof QrDestekRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/qr/tara': {
       id: '/qr/tara'
       path: '/qr/tara'
@@ -1028,41 +763,6 @@ declare module '@tanstack/react-router' {
       path: '/surec/$id'
       fullPath: '/surec/$id'
       preLoaderRoute: typeof SurecIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/aile/': {
-      id: '/evim/aile/'
-      path: '/evim/aile'
-      fullPath: '/evim/aile/'
-      preLoaderRoute: typeof EvimAileIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/aile/$id': {
-      id: '/evim/aile/$id'
-      path: '/evim/aile/$id'
-      fullPath: '/evim/aile/$id'
-      preLoaderRoute: typeof EvimAileIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/aile/davet': {
-      id: '/evim/aile/davet'
-      path: '/evim/aile/davet'
-      fullPath: '/evim/aile/davet'
-      preLoaderRoute: typeof EvimAileDavetRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/cihazlar/': {
-      id: '/evim/cihazlar/'
-      path: '/evim/cihazlar'
-      fullPath: '/evim/cihazlar/'
-      preLoaderRoute: typeof EvimCihazlarIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evim/cihazlar/$id': {
-      id: '/evim/cihazlar/$id'
-      path: '/evim/cihazlar/$id'
-      fullPath: '/evim/cihazlar/$id'
-      preLoaderRoute: typeof EvimCihazlarIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/qr/talep/$id': {
@@ -1091,8 +791,6 @@ const rootRouteChildren: RootRouteChildren = {
   HizTestiRoute: HizTestiRoute,
   IslemGecmisiRoute: IslemGecmisiRoute,
   IslemlerRoute: IslemlerRoute,
-  NetboxNasilCalisirRoute: NetboxNasilCalisirRoute,
-  OnarimRoute: OnarimRoute,
   OtomatikOdemeRoute: OtomatikOdemeRoute,
   TakipRoute: TakipRoute,
   TasinmaRoute: TasinmaRoute,
@@ -1102,32 +800,19 @@ const rootRouteChildren: RootRouteChildren = {
   AjanlarHizRoute: AjanlarHizRoute,
   AjanlarKontrollerRoute: AjanlarKontrollerRoute,
   CanliDestekIdRoute: CanliDestekIdRoute,
-  EvimAiUstaRoute: EvimAiUstaRoute,
-  EvimBaglantiRoute: EvimBaglantiRoute,
-  EvimFaturaRoute: EvimFaturaRoute,
-  EvimGirisRoute: EvimGirisRoute,
-  EvimQrRoute: EvimQrRoute,
-  EvimYukleRoute: EvimYukleRoute,
   FaturalarGecmisRoute: FaturalarGecmisRoute,
   GoruntuluDestekGorusmeRoute: GoruntuluDestekGorusmeRoute,
   GoruntuluDestekSonucRoute: GoruntuluDestekSonucRoute,
   IslemSlugRoute: IslemSlugRoute,
   QrAnalizRoute: QrAnalizRoute,
-  QrDestekRoute: QrDestekRoute,
   QrTaraRoute: QrTaraRoute,
   SurecIdRoute: SurecIdRoute,
   AileIndexRoute: AileIndexRoute,
   AjanlarIndexRoute: AjanlarIndexRoute,
-  EvimIndexRoute: EvimIndexRoute,
   FaturalarIndexRoute: FaturalarIndexRoute,
   GoruntuluDestekIndexRoute: GoruntuluDestekIndexRoute,
   QrIndexRoute: QrIndexRoute,
-  EvimAileIdRoute: EvimAileIdRoute,
-  EvimAileDavetRoute: EvimAileDavetRoute,
-  EvimCihazlarIdRoute: EvimCihazlarIdRoute,
   QrTalepIdRoute: QrTalepIdRoute,
-  EvimAileIndexRoute: EvimAileIndexRoute,
-  EvimCihazlarIndexRoute: EvimCihazlarIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

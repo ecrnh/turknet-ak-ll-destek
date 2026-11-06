@@ -25,15 +25,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { CablePlugAnimation } from "./CablePlugAnimation";
-import { USTA_MORE_OPTIONS } from "../services/aiUsta";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { decide, WO_LABEL } from "../engine";
 import { STATUS_LABEL } from "../rules";
 import { customerAction, lastDoneStep, TYPE_LABEL } from "../copy";
 import { useWorkflowStore } from "../store";
-import type { Actor, AuditEvent, Decision, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
+import type { Actor, AuditEvent, DecisionOption, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
 import { ModemInspectCard } from "./modem";
 
 export const TYPE_ICON: Record<WorkflowType, LucideIcon> = {
@@ -110,12 +108,12 @@ export function TechDetails({ title = "Teknik detayları gör", children, classN
 export function DecisionCard({ wf }: { wf: Workflow }) {
   const navigate = useNavigate();
   const stored = wf.decision;
-  const d: Decision | null | undefined = stored?.key === "usta_more"
-    ? { ...stored, prompt: "Sorunun hâlâ devam ediyor mu?", detail: "", options: USTA_MORE_OPTIONS }
+  const d = stored?.key === "usta_more"
+    ? { ...stored, prompt: "Sorunun hâlâ devam ediyor mu?", detail: undefined, options: [{ id: "yes", label: "Evet, devam ediyor", primary: true }, { id: "fixed", label: "Hayır, düzeldi" }] }
     : stored?.key === "usta_support"
       ? { ...stored, prompt: "Bağlantı sorunun sürüyorsa birlikte deneyelim.", detail: "Modem kısa süreli takılmış olabilir. Bağlantıyı uzaktan yenilemek modemin yeniden ağa bağlanmasını sağlar; evindeki modemi kapatıp açmana gerek kalmaz.", options: [{ id: "restart", label: "Bağlantıyı uzaktan yenile", desc: "Modemini yeniden ağa bağlamayı deneyelim.", primary: true }, { id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek." }] }
       : stored?.key === "usta_remote_failed"
-        ? { ...stored, prompt: "Bağlantı sorunun sürüyor. Nasıl devam etmek istersin?", detail: "", options: [{ id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek.", primary: true }] }
+        ? { ...stored, prompt: "Bağlantı sorunun sürüyor. Nasıl devam etmek istersin?", detail: undefined, options: [{ id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek.", primary: true }] }
         : stored;
     if (!d) return null;
   if (d.key === "usta_final_support" && d.options.length === 0) return (
@@ -132,9 +130,8 @@ export function DecisionCard({ wf }: { wf: Workflow }) {
       <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Sizden bir karar bekleniyor</p>
       <h3 className="mt-1 text-lg font-semibold leading-snug text-primary">{d.prompt}</h3>
       {d.detail && <p className="mt-1.5 text-sm text-muted-foreground">{d.detail}</p>}
-      {d.key === "usta_guide_plug" && <CablePlugAnimation />}
       <div className="mt-4 space-y-2.5">
-        {options.map((o) => (
+        {(options as DecisionOption[]).map((o) => (
           <button
             key={o.id}
             type="button"
@@ -275,7 +272,7 @@ export function HandoffCard({ wf }: { wf: Workflow }) {
           <Headset className="size-5" />
         </span>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">Uzman ekibimize iletildi</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">Uzman ekibimize iletildi · {wf.handoff.id}</p>
           <p className="font-semibold">{wf.handoff.team}</p>
         </div>
       </div>
@@ -283,10 +280,15 @@ export function HandoffCard({ wf }: { wf: Workflow }) {
         <p className="mt-3 font-semibold">Bu adımlara rağmen bağlantın düzelmedi. Sorunu daha detaylı inceleyelim.</p>
       )}
       <p className="mt-3 text-sm text-primary-foreground/90">{wf.handoff.reason}</p>
-      <p className="mt-3 text-xs text-primary-foreground/80">Yaptığımız tüm kontroller ekibe iletildi; konuyu baştan anlatman gerekmez.</p>
-      {wf.type !== "relocation" && <Link to="/canli-destek/$id" params={{ id: wf.id }} className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-full bg-card text-sm font-semibold text-primary">
+      <p className="mt-3 text-xs font-semibold text-primary-foreground/70">Ekibe ilettiğimiz bilgiler (sorunu baştan anlatmanız gerekmez):</p>
+      <ul className="mt-1.5 space-y-1 text-xs text-primary-foreground/90">
+        {wf.handoff.context.map((c, i) => (
+          <li key={`${i}-${c}`}>{c}</li>
+        ))}
+      </ul>
+      <Link to="/canli-destek/$id" params={{ id: wf.id }} className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-full bg-card text-sm font-semibold text-primary">
         <Headset className="size-4" /> Canlı desteğe bağlan
-      </Link>}
+      </Link>
     </div>
   );
 }

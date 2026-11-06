@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ChevronRight, HeartPulse, QrCode } from "lucide-react";
 import modemImg from "@/assets/modem.png";
 import { PageHeader } from "@/components/layout/headers";
+import { FeedbackButton } from "@/components/tn/FeedbackButton";
 import { iconFor } from "@/components/tn/icons";
 import { NewBadge, SectionTitle } from "@/components/tn/primitives";
 import { HELP_CATEGORIES, HELP_FEATURES } from "@/data/mock";
@@ -52,6 +53,7 @@ export function HelpScreen() {
         <Link to="/destek-kayitlari" className="flex min-h-[60px] items-center justify-between rounded-card bg-card px-5 font-semibold text-primary shadow-card">
           Tüm Destek Kayıtlarım <ChevronRight className="size-5" />
         </Link>
+        <FeedbackButton />
       </div>
     </div>
   );

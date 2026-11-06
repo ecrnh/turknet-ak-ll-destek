@@ -9,10 +9,9 @@ import { openOutage, outageHours, restoreMain, setOutageElapsed, startOutage } f
 import { useWorkflowStore as W } from "@/features/workflow/store";
 import type { DemoConfig, HybridStatus } from "@/features/workflow/types";
 import { useScenarioStore as S } from "./store";
-import { useQrHealthStore } from "@/features/qrSupport/qrHealth";
 
 const STATUS: Record<HybridStatus, string> = {
-  unavailable: "Teklif yok (kesinti yok)",
+  unavailable: "Teklif yok (24 saat dolmadı)",
   offered: "Teklif açık",
   checking: "Uygunluk kontrol ediliyor",
   ready: "Uygun · müşteri onayı bekleniyor",
@@ -47,7 +46,6 @@ export function HybridControls() {
   const hybrid = W((s) => s.hybrid);
   const config = W((s) => s.config);
   const fixed = W((s) => s.connectivity.fixed);
-  const qrHealth = useQrHealthStore((s) => s.health);
   const now = Math.max(useNow(5_000), outage?.lastUpdateAt ?? 0);
   const ongoing = !!outage && !outage.restoredAt;
   const hours = ongoing ? Math.round(outageHours(outage, now)) : 0;
@@ -103,7 +101,7 @@ export function HybridControls() {
         />
         <div className="flex justify-between text-[10px] text-muted-foreground">
           <span>0</span>
-          <span className="font-semibold text-magenta">anında ücretsiz teklif</span>
+          <span className="font-semibold text-magenta">24 sa · ücretsiz teklif</span>
           <span>72</span>
         </div>
         <div className="grid grid-cols-4 gap-1">
@@ -125,7 +123,6 @@ export function HybridControls() {
         <Seg label="SMS alan telefonda uygulama" value={config.appInstalled ? "yes" : "no"} options={[["yes", "Yüklü"], ["no", "Yüklü değil"]]} onChange={(v) => setConfig({ appInstalled: v === "yes" })} />
         <Seg label="Dijital onarım sonucu" value={config.ustaDiag} options={[["clear", "Sorun yok"], ["issue", "Sorun bulur"], ["regional", "Bölgesel arıza"], ["incomplete", "Tamamlanamaz"]]} onChange={(v) => setConfig({ ustaDiag: v })} />
         <Seg label="Bölgesel arıza tahmini süre" value={String(config.regionalEtaH)} options={[["6", "6 sa"], ["36", "36 sa"]]} onChange={(v) => setConfig({ regionalEtaH: Number(v) })} />
-        <Seg label="QR internet sağlığı kontrolü" value={qrHealth} options={[["good", "Sağlıklı"], ["bad", "Sorun çıkar"]]} onChange={(v) => useQrHealthStore.setState({ health: v })} />
         <Seg label="GIGA Teknik adımları" value={config.aiFix} options={[["fixed", "Çözülür"], ["not_fixed", "Çözülmez"]]} onChange={(v) => setConfig({ aiFix: v })} />
         <p className="text-[10px] text-muted-foreground">Cihaz ve kapsama ayarı, müşterinin bir sonraki uygunluk kontrolünde kullanılır (telefonda “Tekrar Kontrol Et”).</p>
       </div>

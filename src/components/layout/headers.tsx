@@ -13,13 +13,13 @@ export function TurknetLogo({ className }: { className?: string }) {
   );
 }
 
-export function BellButton({ small }: { small?: boolean }) {
+export function BellButton() {
   const count = useAppStore(unreadCount);
   return (
-    <Link to="/bildirimler" aria-label={`Bildirimler, ${count} okunmamış`} className={cn("relative flex shrink-0 items-center", small ? "h-9 w-9" : "h-11 w-11", " justify-center rounded-full text-muted-foreground hover:bg-muted")}>
-      <Bell className={small ? "size-5" : "size-7"} strokeWidth={1.5} />
+    <Link to="/bildirimler" aria-label={`Bildirimler, ${count} okunmamış`} className="relative flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">
+      <Bell className="size-7" strokeWidth={1.5} />
       {count > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex min-w-5 h-5 items-center justify-center rounded-full bg-magenta px-1 text-[10px] font-bold text-magenta-foreground ring-2 ring-card">
+        <span className="absolute -right-0.5 -top-0.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-magenta px-1 text-xs font-bold text-magenta-foreground ring-2 ring-card">
           {count}
         </span>
       )}
@@ -29,10 +29,10 @@ export function BellButton({ small }: { small?: boolean }) {
 
 export function HomeTopBar() {
   return (
-    <div className="sticky top-0 z-30 flex items-center gap-2 rounded-b-[28px] bg-card px-3 pb-3 pt-3 shadow-card">
-      <TurknetLogo className="text-[2.2rem]" />
+    <div className="sticky top-0 z-30 flex items-center gap-3 rounded-b-[28px] bg-card px-4 pb-3 pt-3 shadow-card">
+      <TurknetLogo className="text-[2.6rem]" />
       <SmartSearchBar />
-      <BellButton small />
+      <BellButton />
     </div>
   );
 }

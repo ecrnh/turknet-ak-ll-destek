@@ -168,9 +168,7 @@ export function CallSmsLayer() {
   const navigate = useNavigate();
   const appInstalled = useWorkflowStore((s) => s.config.appInstalled);
   const call = useWorkflowStore((s) => s.workflows.find((w) => w.type === "ai_usta" && w.data["channel"] === "ivr" && !w.data["callEnded"] && w.steps.find((x) => x.key === "sms")?.status !== "done" && !w.handoff && w.status !== "completed"));
-  const sms = useWorkflowStore((s) => s.sms.find((m) => !m.opened && m.kind !== "appointment" && m.kind !== "netbox"));
-  const apptSms = useWorkflowStore((s) => s.sms.find((m) => !m.opened && m.kind === "appointment"));
-  const closeAppt = (id: string) => useWorkflowStore.setState((s) => ({ sms: s.sms.map((m) => (m.id === id ? { ...m, opened: true } : m)) }));
+  const sms = useWorkflowStore((s) => s.sms.find((m) => !m.opened));
   const [installFor, setInstallFor] = useState<string | null>(null);
 
   const open = (wfId: string) => {
@@ -205,21 +203,6 @@ export function CallSmsLayer() {
               GIGA Teknik'i Aç
             </button>
             <p className="mt-2 text-center text-[10px] text-muted-foreground">Demo SMS · gerçek mesaj gönderilmedi{appInstalled ? "" : " · uygulama yüklü değil"}</p>
-          </motion.div>
-        )}
-        {!showSms && apptSms && (
-          <motion.div key={apptSms.id} initial={{ y: -120, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -120, opacity: 0 }} className="fixed inset-x-3 top-10 z-[85] rounded-3xl bg-card p-4 shadow-device" role="alert">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <MessageSquareText className="size-4 text-success" />
-              <span className="font-semibold text-foreground">Mesajlar · TürkNet</span>
-              <span className="ml-auto">şimdi</span>
-            </div>
-            <p className="mt-2 text-sm text-foreground">{apptSms.body} <span className="font-semibold text-magenta">{apptSms.link}</span></p>
-            <div className="mt-3 flex gap-2">
-              <button type="button" onClick={() => closeAppt(apptSms.id)} className="flex min-h-11 flex-1 items-center justify-center rounded-full border border-border text-sm font-semibold text-foreground">Kapat</button>
-              <button type="button" onClick={() => { closeAppt(apptSms.id); navigate({ to: "/surec/$id", params: { id: apptSms.workflowId } }); }} className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">Randevuyu gör</button>
-            </div>
-            <p className="mt-2 text-center text-[10px] text-muted-foreground">Demo SMS · gerçek mesaj gönderilmedi</p>
           </motion.div>
         )}
       </AnimatePresence>

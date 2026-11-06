@@ -4,12 +4,15 @@ import { PageHeader } from "@/components/layout/headers";
 import { SectionTitle } from "@/components/tn/primitives";
 import { useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
-import { WorkflowCard } from "../components/ui";
+import { AuditList, DemoNote, TechDetails, WorkflowCard } from "../components/ui";
+import { ConnectivityPanel } from "../components/panels";
 import { IntentBox } from "../components/IntentBox";
 
 /** "Benim İçin Takip Et": every workflow, decision and dependency in one place. */
 export function TrackHubScreen() {
   const workflows = useWorkflowStore((s) => s.workflows);
+  const audit = useWorkflowStore((s) => s.audit);
+  const ops = useWorkflowStore((s) => s.ops);
   const workOrders = useWorkflowStore((s) => s.workOrders);
   const temp = useWorkflowStore((s) => s.temp);
   const active = [...workflows].filter(isActive).sort((a, b) => b.updatedAt - a.updatedAt);
@@ -18,6 +21,7 @@ export function TrackHubScreen() {
   const running = active.filter((w) => !w.decision);
   const external = active.filter((w) => w.status === "waiting_for_external_system");
   const openWo = workOrders.filter((o) => o.status !== "done" && o.status !== "cancelled");
+  const timeline = [...audit].filter((e) => e.workflowId).reverse().slice(0, 14);
 
   const chips: [string, number][] = [
     ["Kararınızı bekleyen", decisions.length],
@@ -113,6 +117,14 @@ export function TrackHubScreen() {
           </>
         )}
 
+        {timeline.length > 0 && (
+          <TechDetails title="Tüm işlemlerin zaman çizelgesi">
+            <p className="text-[11px] text-muted-foreground">Otomatik takip açık · {ops.length} planlı kontrol. Bekleyen yanıtları düzenli olarak yeniden kontrol ediyoruz.</p>
+            <AuditList events={timeline} showWf />
+            <ConnectivityPanel compact />
+            <DemoNote />
+          </TechDetails>
+        )}
         <div className="pb-2" />
       </div>
     </div>
