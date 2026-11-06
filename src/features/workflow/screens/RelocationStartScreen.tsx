@@ -200,9 +200,10 @@ export function RelocationStartScreen() {
             )}
             <PlainNote>{r.giga}</PlainNote>
             {result === "no_port" && (
-              <Button variant="outline" className="w-full" onClick={() => navigate({ to: "/hibrit" })}>
-                NetBox’u etkinleştir
-              </Button>
+              <div className="rounded-2xl border border-magenta/25 bg-magenta-soft/40 p-3.5 text-sm leading-relaxed text-foreground">
+                <p className="font-semibold text-primary">Taşındığın gün internetsiz kalmayacaksın</p>
+                <p className="mt-1 text-xs text-muted-foreground">Bir sonraki adımda NetBox'u aktif edebilmen için seni bilgilendireceğiz. Aktivasyon, girdiğin taşınma adresi ve tarihine göre o gün kullanıma hazır olacak şekilde tanımlanır.</p>
+              </div>
             )}
             {mode === "move" && (
               <>

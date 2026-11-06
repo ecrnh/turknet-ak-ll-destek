@@ -1,5 +1,6 @@
 import type { Intent } from "@/features/workflow/rules";
 import type { UstaIssueId } from "@/data/mock";
+import { understand } from "@/features/giga/intent";
 
 /** Where a step answer leads: another step, a real service, live support, or done. */
 export type Next =
@@ -18,9 +19,11 @@ export type StepId =
   | "lights"
   | "tip_slow"
   | "tip_drops"
+  | "tip_pages"
   | "tip_wifi"
   | "tip_restart"
   | "tip_power"
+  | "other"
   | "done";
 
 const STILL = "Hâlâ devam ediyor";
@@ -29,23 +32,23 @@ const FIXED = "Düzeldi, teşekkürler";
 /** Pure self-service tree for QR entry; each answer decides the next step. */
 export const QR_STEPS: Record<StepId, Step> = {
   topic: {
-    title: "Bugün ne konuda yardım istersin?",
+    title: "Farklı bir konuda yardım ister misin?",
     body: "Bir konu seç, seni adım adım çözüme götürelim.",
     options: [
       { label: "İnternet bağlantım", hint: "Yavaşlık, kopma, ışıklar, Wi-Fi", next: { step: "net_symptom" } },
       { label: "Faturam", hint: "Tutar, ödeme, beklenmeyen ücret", next: { intent: "billing" } },
       { label: "Taşınma / nakil", hint: "Aboneliğini yeni adrese taşı", next: { intent: "relocation" } },
       { label: "Açık işlemlerim", hint: "Başvuru ve taleplerin durumu", next: { intent: "track" } },
-      { label: "Paket değişikliği", hint: "Hız veya tarife değiştir", next: { chat: "Paketimi değiştirmek istiyorum" } },
+      { label: "Diğer", hint: "Başka bir konuda yardım al", next: { step: "other" } },
     ],
   },
   net_symptom: {
-    title: "Tam olarak ne yaşıyorsun?",
+    title: "Yardıma ihtiyacın olan konuda bana biraz daha detay verebilir misin?",
     options: [
-      { label: "İnternet hiç yok", next: { step: "lights" } },
-      { label: "İnternet yavaş", next: { step: "tip_slow" } },
-      { label: "Sık sık kopuyor", next: { step: "tip_drops" } },
-      { label: "Wi-Fi bazı odalarda çekmiyor", next: { step: "tip_wifi" } },
+      { label: "İnternete bağlanamıyorum.", next: { step: "lights" } },
+      { label: "Bazı sayfalara erişemiyorum.", next: { step: "tip_pages" } },
+      { label: "İnternete yavaş bağlanıyorum.", next: { step: "tip_slow" } },
+      { label: "Kablosuz modem kullanıyorum. Evin bazı bölgelerinde internet bağlantım çok yavaş.", next: { step: "tip_wifi" } },
     ],
   },
   lights: {
@@ -89,6 +92,15 @@ export const QR_STEPS: Record<StepId, Step> = {
       { label: STILL, next: { intent: "ai_usta" } },
     ],
   },
+  tip_pages: {
+    title: "Sayfalara erişimi birlikte kontrol edelim",
+    body: "Bazı siteler açılmıyor, bazıları açılıyorsa sorun senin bağlantında değil cihaz ayarlarında olabilir.",
+    tips: ["Modemi kapat, 30 saniye bekleyip tekrar aç.", "Açılmayan sayfayı farklı bir tarayıcı veya cihazda dene.", "Tarayıcının geçmişini ve önbelleğini temizleyip tekrar dene."],
+    options: [
+      { label: FIXED, next: { done: true } },
+      { label: STILL, next: { intent: "ai_usta" } },
+    ],
+  },
   tip_wifi: {
     title: "Wi-Fi kapsamasını iyileştirelim",
     tips: ["Modemi evin ortasına, yerden yüksek bir yere taşı.", "Modemin önünde metal eşya veya ayna olmasın.", "Uzak odalarda 2.4 GHz ağına bağlan."],
@@ -96,6 +108,11 @@ export const QR_STEPS: Record<StepId, Step> = {
       { label: FIXED, next: { done: true } },
       { label: "Hâlâ çekmiyor, ölçüm yap", next: { intent: "speed" } },
     ],
+  },
+  other: {
+    title: "Sorununu bize anlat",
+    body: "Yaz ya da mikrofona dokunup konuş. Uygulamada çözebileceğimiz bir konuysa seni oraya götürelim, değilse canlı desteğe bağlayalım.",
+    options: [],
   },
   done: {
     title: "Harika, sorunun çözüldü!",
@@ -107,4 +124,23 @@ export const QR_STEPS: Record<StepId, Step> = {
 /** Step numbers shown in the progress header (answers decide the path length). */
 export function stepNumber(path: StepId[]): number {
   return path.length;
+}
+
+/**
+ * "Diğer": free text or speech. Topics the app can handle open that flow;
+ * anything else (or an explicit request for a person) goes to live support.
+ */
+export function routeFreeText(text: string): Next {
+  const u = understand(text);
+  if (!u.topic || u.confidence === "none") return { live: true };
+  switch (u.topic) {
+    case "billing": case "refund": case "payment": return { intent: "billing" };
+    case "relocation": return { intent: "relocation" };
+    case "track": return { intent: "track" };
+    case "speed": return { intent: "speed" };
+    case "outage": case "hybrid": return { intent: "temp_internet" };
+    case "modem": case "wifi": case "internet": return { intent: "ai_usta", ...(u.ustaIssue ? { usta: u.ustaIssue } : {}) };
+    case "family": case "subscription": case "upgrade": case "video": case "privacy": case "hallet": return { chat: text };
+    default: return { live: true };
+  }
 }

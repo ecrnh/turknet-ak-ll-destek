@@ -41,7 +41,7 @@ export const SEARCH_INTENTS: Record<SearchIntentId, SearchIntent> = {
     id: "hybrid", label: "Kesinti / Hibrit İnternet", to: "/hibrit", cta: "Hibrit İnternet'e git",
     reply: "Anladım! İnternetin kesildi ve bağlantıya ihtiyacın var. Alternatif bağlantı seçeneğine bakalım.",
     help: "Kesinti sırasında bağlantı istediğini görüyorum. Arıza bilgisini ve NetBox'u bu sayfadan takip edebilirsin.",
-    helpAction: "Kesinti 24 saati aştıysa NetBox'u etkinleştir düğmesine dokun.",
+    helpAction: "Kesinti başladığında NetBox'u etkinleştir düğmesine dokun.",
   },
   modem: {
     id: "modem", label: "Modem sorunu", to: "/goruntulu-destek", cta: "Görüntülü desteğe git",

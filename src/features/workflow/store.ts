@@ -60,7 +60,7 @@ export const defaultConfig = (): DemoConfig => ({
   aiFix: "fixed",
   ustaDiag: "clear",
   regionalEtaH: 36,
-  proactive: "remote_fix",
+  proactive: "wifi_help",
   teamMatch: "first",
   appInstalled: true,
   ownsBox: false,

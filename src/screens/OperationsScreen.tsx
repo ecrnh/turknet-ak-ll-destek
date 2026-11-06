@@ -1,4 +1,4 @@
-import { HandHeart } from "lucide-react";
+import { MessageSquareHeart } from "lucide-react";
 import { TabHeader } from "@/components/layout/headers";
 import { ActionRow, CampaignCard, ListCard, ListRow } from "@/components/tn/cards";
 import { FeedbackButton } from "@/components/tn/FeedbackButton";
@@ -13,7 +13,7 @@ export function OperationsScreen() {
         <CampaignCard className="mt-4" />
 
         <ListCard className="mt-5">
-          <ListRow title="Yardım & Destek" to="/yardim" desc="Bağlantı, fatura, abonelik, dijital destek ve daha fazlası." icon={<IconBox icon={HandHeart} />} />
+          <ListRow title="Yardım & Destek" to="/yardim" desc="Bağlantı, fatura, abonelik, dijital destek ve daha fazlası." icon={<IconBox icon={MessageSquareHeart} />} />
         </ListCard>
 
         <SectionTitle>Abonelik İşlemlerim</SectionTitle>
@@ -36,9 +36,7 @@ export function OperationsScreen() {
           ))}
         </ListCard>
 
-        <div className="mt-5">
-          <FeedbackButton />
-        </div>
+        <FeedbackButton />
       </div>
     </div>
   );

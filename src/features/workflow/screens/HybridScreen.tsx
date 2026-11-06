@@ -12,8 +12,8 @@ import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { HYBRID_COPY as C } from "../copy";
 import { runOverdueOps } from "../engine";
-import { hybridView, outageInfo, type HybridTone } from "../hybridView";
-import { HYBRID_OFFER_AFTER_H, hybridOfferOpen, hybridUsageMb } from "../rules";
+import { hybridView, outageInfo, outageRemainingH, type HybridTone } from "../hybridView";
+import { hybridOfferOpen, hybridUsageMb } from "../rules";
 import { checkHybrid, openHybridBox, outageHours, requestHybridDevice, setAutoFailover } from "../services/hybrid";
 import { useWorkflowStore } from "../store";
 import { ChecksList, DeviceTracker, fmtOngoing, fmtUsage, OutageMeta } from "../components/hybrid";
@@ -89,7 +89,7 @@ export function HybridScreen() {
   }, [h.status, h.attempts, flow]);
 
   const openBox = () => {
-    if (!openHybridBox()) toast("NetBox şu an açılamıyor", { description: `Kesinti ${HYBRID_OFFER_AFTER_H} saati aştığında ya da aşması beklendiğinde açılabilir.` });
+    if (!openHybridBox()) toast("NetBox şu an açılamıyor", { description: "Yedek bağlantı ancak kesinti sırasında açılabilir." });
   };
 
   const v = hybridView({
@@ -117,15 +117,31 @@ export function HybridScreen() {
   // Only problem states get a note in the connection card; the normal flow stays quiet.
   const showNote = !!info && (h.status === "no_device" || h.status === "no_coverage" || h.status === "failed" || v.phase === "activating");
 
+  const hm = (t: number) => new Date(t).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+  const dur = (h: number) => { const m = Math.max(1, Math.round(h * 60)); const hh = Math.floor(m / 60), mm = m % 60; return hh ? `${hh} saat${mm ? ` ${mm} dk` : ""}` : `${mm} dk`; };
+  const leftH = ongoing && o ? outageRemainingH(hours, o.etaH, regional) : null;
+
   return (
     <div>
       <PageHeader title="İnternet Durumu" right={<StatusPill label={v.badge.label} tone={v.badge.tone} className="mr-1" />} />
       <div className="space-y-3 px-4 pb-4">
         {info && (
           <section className={card}>
-            <p className="text-lg font-bold leading-snug text-primary">İnternetin kesilse bile bağlantın NetBox ile devam etsin.</p>
+            <p className="text-lg font-bold leading-snug text-primary">İnternet kesintisinde, <span className="font-extrabold tracking-tighter text-primary">NetBox</span> ile bağlantıya devam! 🚀</p>
           </section>
         )}
+
+        <section className={card}>
+          <label htmlFor="hybrid-auto" className="flex items-center justify-between gap-3">
+            <span className="text-base font-bold text-foreground">Otomatik yedek geçiş</span>
+            <Switch id="hybrid-auto" checked={h.autoFailover} onCheckedChange={(val) => setAutoFailover(val)} className="data-[state=checked]:bg-magenta" />
+          </label>
+          <ul className="mt-3 space-y-1.5 text-sm text-foreground">
+            <li><span className="font-bold text-primary">✓</span> Telefonun yanında olmasa bile internetin kesilmez.</li>
+            <li><span className="font-bold text-primary">✓</span> Kesinti süresince yedek internet ücretsizdir.</li>
+            <li><span className="font-bold text-primary">✓</span> İstediğin zaman bu ayarı kapatabilirsin.</li>
+          </ul>
+        </section>
 
         {info ? (
           <section className={card} aria-labelledby="net-status-title" aria-live="polite">
@@ -138,7 +154,8 @@ export function HybridScreen() {
             <dl className="mt-4 space-y-3 text-sm">
               {[
                 { k: "Arıza sebebi", v: info.cause },
-                { k: "Tahmini çözüm", v: ongoing ? `${info.remaining} (demo)` : info.remaining },
+                ...(ongoing ? [{ k: "Başlangıç", v: hm(o.startedAt) }] : []),
+                { k: "Tahmini çözüm", v: ongoing && leftH != null ? `${hm(Date.now() + leftH * 3_600_000)} · ${dur(leftH)} içinde (demo)` : info.remaining },
                 ...(ongoing ? [{ k: "Süre", v: `Kesinti ${fmtOngoing(hours)} sürüyor` }, { k: "Onarım durumu", v: o.repairNote }] : []),
               ].map((r) => (
                 <div key={r.k} className="grid grid-cols-[96px_1fr] gap-3">
@@ -225,16 +242,6 @@ export function HybridScreen() {
           <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
             <div className="h-full rounded-full bg-primary" style={{ width: `${(left / HYBRID_BACKUP_QUOTA_MB) * 100}%` }} />
           </div>
-        </section>
-
-        <section className={card}>
-          <label htmlFor="hybrid-auto" className="flex items-center justify-between gap-3">
-            <span className="text-base font-bold text-foreground">Otomatik yedek geçiş</span>
-            <Switch id="hybrid-auto" checked={h.autoFailover} onCheckedChange={(val) => setAutoFailover(val)} className="data-[state=checked]:bg-magenta" />
-          </label>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Açtığında, kesinti 24 saati aşarsa mobil yedek bağlantın otomatik açılır. Ana internetin geri geldiğinde sistem sabit bağlantıya döner.
-          </p>
         </section>
 
         <TechDetails>

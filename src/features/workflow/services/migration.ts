@@ -348,3 +348,33 @@ export function closeOldLine(id: string) {
 }
 registerOp("relocation.oldLine", closeOldLine);
 
+
+/**
+ * Port crisis: the customer asks for NetBox at the new address. The address and
+ * move date come from the relocation itself (never typed again); the request is
+ * prepared, then becomes usable at the new address (demo: shortly after).
+ */
+export function requestNetboxAtNewAddress(id: string) {
+  const wf = getWf(id);
+  if (!wf || wf.data["eligibility"] !== "no_port" || wf.data["netbox"]) return;
+  const address = String(wf.data["address"] ?? "");
+  const moveDate = String(wf.data["moveDate"] ?? "");
+  setData(id, { netbox: "requested" });
+  log(id, "customer", "decision", "NetBox taşınma adresinde aktivasyon talebi", `Adres: ${address} · Aktivasyon günü: ${moveDate}`);
+  notify(id, "NetBox talebin alındı", `${moveDate} tarihinde ${address} adresinde kullanıma hazır olacak.`, "quiet");
+  // Customer asked for this directly: the readiness step must always be queued,
+  // even while a presenter is stepping through a scenario (chain() would skip it).
+  schedule("relocation.netboxReady", id, 2500);
+}
+export function netboxReady(id: string) {
+  if (getWf(id)?.data["netbox"] !== "requested") return;
+  setData(id, { netbox: "ready" });
+  notify(id, "NetBox yeni adresinde hazır", "Taşındığın gün internetini NetBox ile kullanmaya başlayabilirsin. Port açılınca fiber kurulum ayrıca yapılır.");
+}
+registerOp("relocation.netboxReady", netboxReady);
+export function activateNetbox(id: string) {
+  if (getWf(id)?.data["netbox"] !== "ready") return;
+  setData(id, { netbox: "active" });
+  log(id, "customer", "info", "NetBox yeni adreste aktif edildi", "Port açılana kadar müşteri NetBox ile bağlı");
+  notify(id, "NetBox aktif", "Yeni adresinde NetBox ile internete bağlısın.", "quiet");
+}

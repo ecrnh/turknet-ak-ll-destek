@@ -1,3 +1,4 @@
+import { startOutage } from "./hybrid";
 /**
  * LiveSupportService: simulated live chat after GIGA hands a process over.
  * The agent starts with the full troubleshooting context, so the customer never
@@ -96,30 +97,42 @@ registerOp("live.reply", (wfId) => {
   const asked = chat.messages.some((m) => m.offer === "field_visit");
   const visit = getWf(wfId)?.data["fieldVisit"];
   if (!asked && !visit) {
-    push(wfId, msg("agent", "Teşekkürler. Kontrollerine göre sorun modeminden değil, hattından kaynaklanıyor gibi görünüyor. Bunu uzaktan çözemiyoruz; senin için saha ekibi randevusu oluşturmamı ister misin?", "field_visit"));
+    push(wfId, msg("agent", "Teşekkürler. Kontrollerine göre sorun modeminden değil, hattından kaynaklanıyor gibi görünüyor. Bunu uzaktan çözemiyoruz. Saha ekibi randevusu oluşturabiliriz; size uygun gün ve saati seçebilirsiniz.", "field_visit"));
   } else {
     push(wfId, msg("agent", visit ? "Notunu randevu kaydına ekledim. Ekip gelmeden önce SMS alacaksın (demo)." : "Not aldım. Başka bir konuda yardımcı olabileceğim bir şey var mı?"));
   }
 });
 
-/** Customer accepts the agent's offer: physical intervention is needed, so a field work order and appointment are created. */
-export function acceptFieldVisit(wfId: string): boolean {
+/** Customer picks the visit time themselves: physical intervention is needed, so a field work order and appointment are created for the chosen slot. */
+export function bookFieldVisit(wfId: string, slotId: string): boolean {
   const wf = getWf(wfId);
-  if (!wf?.handoff || wf.data["fieldVisit"]) return false;
-  const slot = APPOINTMENT_SLOTS[1]!;
+  const slot = APPOINTMENT_SLOTS.find((s) => s.id === slotId);
+  if (!wf?.handoff || wf.data["fieldVisit"] || !slot) return false;
   const team = FIELD_TEAMS[0]!;
-  const wo = workOrder(wfId, { kind: "field_repair", title: "Hat arızası · saha ziyareti", team: `${TEAMS.field} · ${team.name}` }, "Canlı destek, fiziksel müdahale gerektiğini belirledi; müşteri randevuyu onayladı");
+  const wo = workOrder(wfId, { kind: "field_repair", title: "Hat arızası · saha ziyareti", team: `${TEAMS.field} · ${team.name}` }, "Canlı destek, fiziksel müdahale gerektiğini belirledi; müşteri randevu saatini kendisi seçti");
   book(wfId, slot, wo.id);
   setData(wfId, { fieldVisit: slot.label });
-  push(wfId, msg("customer", "Evet, randevu oluştur."));
+  push(wfId, msg("customer", slot.label));
   push(wfId, msg("agent", `Randevun oluşturuldu: ${slot.label} · ${team.name}. Yaptığın kontroller ekibe iletildi. Süreci İşlemlerim'den takip edebilirsin.`));
+  push(wfId, msg("agent", "Ekip gelene kadar internetsiz kalmaman için Hibrit İnternet'i (Netbox yedek bağlantısı) ücretsiz açabilirim. İster misin?", "hybrid"));
   notify(wfId, "Teknik ekip randevunuz oluşturuldu", `${slot.label} · Ekip yola çıkmadan önce SMS alacaksınız (demo).`);
+  W.setState((s) => ({
+    sms: [
+      ...s.sms.filter((m) => !(m.workflowId === wfId && m.kind === "appointment")),
+      { id: `SMS-${uid().slice(0, 5).toUpperCase()}`, workflowId: wfId, kind: "appointment", body: `TürkNet: Teknik ekip randevunuz oluşturuldu. ${slot.label} · ${team.name}. Ekip yola çıkmadan önce size tekrar SMS göndereceğiz. Detaylar:`, link: `turk.net/randevu/${wfId}`, at: Date.now(), opened: false },
+    ],
+  }));
   return true;
 }
 
-export function declineFieldVisit(wfId: string) {
-  if (!chatOf(wfId)) return;
-  push(wfId, msg("customer", "Şimdilik gerek yok."));
-  push(wfId, msg("agent", "Anladım. Kaydın açık kalıyor; istediğin zaman buradan randevu isteyebilirsin."));
+/** After the field visit is booked the agent opens a tracked outage (fix > 24 h) so the free Hibrit İnternet offer can be activated. */
+export function offerHybridFromLive(wfId: string): string | null {
+  const wf = getWf(wfId);
+  if (!wf?.data["fieldVisit"]) return null;
+  const outageId = startOutage(0.2, { etaH: 36, relatedIds: [wfId], why: "Canlı destek saha ziyareti planladı; ekip gelene kadar yedek bağlantı sunuldu" });
+  setData(wfId, { hybridOffered: true, outageWf: outageId });
+  push(wfId, msg("customer", "Evet, Hibrit İnternet'i açmak istiyorum."));
+  push(wfId, msg("agent", "Hibrit İnternet ekranını açtım. Cihaz ve kapsama kontrolünden sonra tek dokunuşla etkinleştirebilirsin."));
+  return outageId;
 }
 

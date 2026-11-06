@@ -263,7 +263,7 @@ export function OutageHomeCard() {
     if (setHybridOn(on)) pending.current = on ? "on" : "off";
     else
       toast.error(on ? "Hibrit Box şu an açılamıyor" : "Hibrit İnternet şu an kapatılamıyor", {
-        description: on ? "Kesinti 24 saati aştığında ya da aşması beklendiğinde açılabilir." : "Lütfen birkaç saniye sonra tekrar deneyin.",
+        description: on ? "Yedek bağlantı ancak kesinti sırasında açılabilir." : "Lütfen birkaç saniye sonra tekrar deneyin.",
       });
   };
 
@@ -288,14 +288,14 @@ export function OutageHomeCard() {
   }
 
   const hours = outageHours(o, now);
-  const after24 = hybridOfferOpen(hours, o.etaH);
+  const offerOpen = hybridOfferOpen(hours, o.etaH);
   const active = h.status === "active" && !h.pausedAt && h.switching !== "off";
-  const sw = hybridSwitchView({ status: h.status, paused: !!h.pausedAt, switching: h.switching, openRequested: h.openRequested, offerOpen: after24 });
+  const sw = hybridSwitchView({ status: h.status, paused: !!h.pausedAt, switching: h.switching, openRequested: h.openRequested, offerOpen });
 
   // Why the toggle can't be used right now (only when there is a reason to tell).
   let hybridNote: string | null = null;
   if (sw.busy || active) hybridNote = null;
-  else if (!after24) hybridNote = h.autoFailover ? "Kesinti 24 saati aşarsa otomatik açılacak." : "Kesinti 24 saati aşarsa ücretsiz açabilirsiniz.";
+  else if (!offerOpen) hybridNote = h.autoFailover ? "Kesinti başladığında otomatik açılacak." : "Arıza boyunca NetBox ile internetini kullanmaya devam edebilirsin.";
   else if (h.status === "no_coverage") hybridNote = "Adresinizde yedek bağlantı için yeterli mobil kapsama yok.";
   else if (h.status === "no_device") hybridNote = h.device ? `Yedek cihazınız · ${C.device[h.device.status]}` : "Evinizde uyumlu Hibrit Box bulunamadı.";
   else if (h.status === "failed") hybridNote = "Son deneme başarısız oldu. Tekrar açmayı deneyebilirsiniz.";
@@ -308,7 +308,7 @@ export function OutageHomeCard() {
       note={hybridNote}
       onChange={change}
       action={
-        h.status === "no_device" && after24 && !h.device ? (
+        h.status === "no_device" && offerOpen && !h.device ? (
           <Link to="/hibrit" className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-magenta">
             {C.noDevice.cta} →
           </Link>
@@ -347,8 +347,8 @@ export function ConnectionDiagram() {
 
 /**
  * Regional outage found during a GIGA conversation: plain explanation, the
- * estimated duration and — when it is expected to exceed 24 h — the free
- * Hibrit İnternet with an explicit eligibility check and activation consent.
+ * estimated duration and the free Hibrit İnternet with an explicit eligibility
+ * check and activation consent.
  */
 export function HybridOfferInline() {
   const o = useWorkflowStore((s) => s.outage);

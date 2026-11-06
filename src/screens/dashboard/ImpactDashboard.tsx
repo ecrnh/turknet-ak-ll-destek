@@ -49,7 +49,7 @@ const DROPOFF = [
 const AB = [
   { f: "QR ile Destek", metric: "Kayıt açma süresi", control: "Asistan + form", variant: "QR tek dokunuş", effect: "-%60", dur: "4 hafta", n: "2 × 12.000 abone", good: true },
   { f: "Görüntülü Destek", metric: "Saha ziyareti oranı", control: "Chat → saha randevusu", variant: "Görüntülü uzman", effect: "-%25", dur: "6 hafta", n: "2 × 8.500 teknik kayıt", good: true },
-  { f: "Hibrit İnternet", metric: "24 saat+ kesintide destek çağrısı", control: "Sadece SMS bilgilendirme", variant: "Proaktif kart + ücretsiz yedek bağlantı", effect: "-%35", dur: "Kesinti bazlı, 3 olay", n: "Etkilenen bölge aboneleri", good: true },
+  { f: "Hibrit İnternet", metric: "Kesintide destek çağrısı", control: "Sadece SMS bilgilendirme", variant: "Proaktif kart + ücretsiz yedek bağlantı", effect: "-%35", dur: "Kesinti bazlı, 3 olay", n: "Etkilenen bölge aboneleri", good: true },
   { f: "GIGA", metric: "GIGA'dan canlı chat'e geçiş", control: "Reaktif asistan", variant: "Proaktif Hız Koruyucu", effect: "-%18", dur: "4 hafta", n: "2 × 20.000 abone", good: true },
   { f: "Aile Yetkilendirme", metric: "65+ yaş self-servis çözüm", control: "Yetki yok", variant: "Yakın yönetimi", effect: "+%22", dur: "8 hafta", n: "2 × 3.000 hane", good: true },
 ];
@@ -258,8 +258,8 @@ export function ImpactDashboard() {
           </div>
           <div className="space-y-4">
             <div className="rounded-card bg-card p-5 shadow-card">
-              <p className="flex items-center gap-2 font-semibold text-primary"><Inbox className="size-4 text-magenta" /> Talep Kutusu</p>
-              <p className="text-xs text-muted-foreground">"Bu işlemi uygulamadan yapamadın mı?" yanıtları</p>
+              <p className="flex items-center gap-2 font-semibold text-primary"><Inbox className="size-4 text-magenta" /> Talep ve Öneri Kutusu</p>
+              <p className="text-xs text-muted-foreground">Müşteri talep ve önerileri</p>
               {feedback.length === 0 ? (
                 <p className="py-4 text-sm text-muted-foreground">Henüz talep yok.</p>
               ) : (

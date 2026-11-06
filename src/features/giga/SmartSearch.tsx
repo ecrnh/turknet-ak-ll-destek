@@ -23,6 +23,7 @@ export function SmartSearchBar() {
   const timer = useRef<number | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const [hint, setHint] = useState(false);
+  const [full, setFull] = useState(false);
   useEffect(() => {
     if (sessionStorage.getItem("tn-voice-hint")) return;
     const show = window.setTimeout(() => { setHint(true); sessionStorage.setItem("tn-voice-hint", "1"); }, 1200);
@@ -41,7 +42,7 @@ export function SmartSearchBar() {
   const go = () => {
     if (!result?.intent) return;
     setCtx(result.query, result.intent.id, result.intent.to, result.intent.reply);
-    setOpen(false); setResult(null); setQ("");
+    setOpen(false); setFull(false); setResult(null); setQ("");
     navigate({ to: result.intent.to as "/" });
   };
 
@@ -81,31 +82,30 @@ export function SmartSearchBar() {
     setHeard(true);
   };
 
-  const close = () => { stopVoice(); setHeard(false); setOpen(false); setResult(null); };
+  const close = () => { stopVoice(); setHeard(false); setOpen(false); setFull(false); setResult(null); };
+  const other = () => { setResult(null); setHeard(false); setQ(""); setOpen(false); setFull(true); };
   const sendHeard = () => { setHeard(false); submit(); };
 
   return (
     <div className="relative flex-1">
-      <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="flex h-12 items-center gap-1.5 rounded-full border-2 border-primary/30 bg-card pl-3 ring-1 ring-primary/5 transition-colors focus-within:border-primary pr-1.5 shadow-sm">
-        <button type="submit" aria-label="Ara" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-foreground">
-          <Search className="size-5" strokeWidth={1.75} />
+      <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="flex h-12 items-center gap-2 rounded-full border-2 border-primary/30 bg-card pl-1.5 pr-3 ring-1 ring-primary/5 transition-colors focus-within:border-primary shadow-sm">
+        <button type="button" onClick={() => { setHint(false); listening ? stopVoice() : startVoice(); }} aria-label={listening ? "Dinlemeyi durdur" : "Sesle anlat"} className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full", listening ? "bg-magenta text-magenta-foreground" : "bg-icon-box text-primary")}>
+          <Mic className="size-[18px]" strokeWidth={1.75} />
         </button>
         <input
           ref={input}
           value={q}
           onChange={(e) => { setQ(e.target.value); setResult(null); setHeard(false); }}
-          onFocus={() => setOpen(true)}
-          placeholder="Aradığın işlemi yaz veya konuşarak anlat..."
+          onFocus={() => setFull(true)}
+          placeholder="Ne yapmak istiyorsun?"
           aria-label="Aradığın işlemi yaz veya konuşarak anlat"
           enterKeyHint="search"
-          className="h-full min-w-0 flex-1 bg-transparent text-[0.85rem] outline-none placeholder:text-muted-foreground"
+          className="h-full min-w-0 flex-1 bg-transparent text-[0.78rem] outline-none placeholder:text-muted-foreground"
         />
-        <button type="button" onClick={() => { setHint(false); listening ? stopVoice() : startVoice(); }} aria-label={listening ? "Dinlemeyi durdur" : "Sesle anlat"} className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full", listening ? "bg-magenta text-magenta-foreground" : "bg-icon-box text-primary")}>
-          <Mic className="size-[18px]" strokeWidth={1.75} />
-        </button>
       </form>
-      {hint && !open && (
-        <div role="status" className="absolute right-0 top-[54px] z-20 flex w-60 items-start gap-2 rounded-2xl bg-primary px-3 py-2.5 text-primary-foreground shadow-float animate-in fade-in slide-in-from-top-1">
+      <p className="mt-1.5 px-1 text-[0.68rem] leading-tight text-muted-foreground">Aradığın işlemi söyleyerek de anlatabilirsin!</p>
+      {hint && !open && !full && (
+        <div role="status" className="absolute right-0 top-[74px] z-20 flex w-60 items-start gap-2 rounded-2xl bg-primary px-3 py-2.5 text-primary-foreground shadow-float animate-in fade-in slide-in-from-top-1">
           <span aria-hidden className="absolute -top-1.5 right-4 h-3 w-3 rotate-45 bg-primary" />
           <Mic className="mt-0.5 size-4 shrink-0" strokeWidth={1.75} />
           <p className="flex-1 text-xs leading-snug">Sorununu sesli de söyleyebilirsin. Mikrofona dokunman yeter.</p>
@@ -113,10 +113,26 @@ export function SmartSearchBar() {
         </div>
       )}
 
+      {full && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background p-4">
+          <div className="flex items-center gap-2">
+            <form onSubmit={(e) => { e.preventDefault(); const t = q; setFull(false); submit(t); }} className="flex h-12 flex-1 items-center gap-2 rounded-full border-2 border-primary bg-card px-3">
+              <Search className="size-5 shrink-0" strokeWidth={1.75} />
+              <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ne yapmak istediğini yaz..." aria-label="Ne yapmak istediğini yaz" className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none" />
+              <button type="button" onClick={() => { setFull(false); startVoice(); }} aria-label="Sesle anlat" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-icon-box text-primary"><Mic className="size-[18px]" /></button>
+            </form>
+            <button onClick={close} aria-label="Kapat" className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"><X className="size-5" /></button>
+          </div>
+          <div className="mt-4 overflow-y-auto">
+            <Suggestions title="Popüler sorular" onPick={(s) => { setQ(s); setFull(false); submit(s); }} />
+          </div>
+        </div>
+      )}
+
       {open && (
         <>
           <button aria-label="Kapat" onClick={close} className="fixed inset-0 z-0 cursor-default bg-primary-deep/20" />
-          <div className="fixed inset-x-3 top-[118px] z-10 rounded-card bg-card p-4 shadow-float">
+          <div className="fixed inset-x-3 top-[136px] z-10 rounded-card bg-card p-4 shadow-float">
             <button onClick={close} aria-label="Kapat" className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"><X className="size-4" /></button>
 
             {listening ? (
@@ -145,14 +161,9 @@ export function SmartSearchBar() {
                   aria-label="Algılanan metin"
                   className="w-full resize-none rounded-2xl border border-border bg-background px-3 py-2 text-sm leading-snug outline-none focus:border-primary"
                 />
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button onClick={startVoice} className="flex h-11 items-center justify-center gap-1.5 rounded-full border-2 border-primary/20 text-sm font-semibold text-primary">
-                    <Mic className="size-4" /> Tekrar dinle
-                  </button>
-                  <button onClick={sendHeard} disabled={!q.trim()} className="flex h-11 items-center justify-center gap-1.5 rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50">
-                    Gönder <ArrowRight className="size-4" />
-                  </button>
-                </div>
+                <button onClick={sendHeard} disabled={!q.trim()} className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                  Gönder <ArrowRight className="size-4" />
+                </button>
               </div>
             ) : result ? (
               <div aria-live="polite">
@@ -168,16 +179,19 @@ export function SmartSearchBar() {
                   <button onClick={go} className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground">
                     {result.intent.cta} <ArrowRight className="size-4" />
                   </button>
-                ) : (
-                  <Suggestions onPick={(s) => { setQ(s); submit(s); }} />
-                )}
+                ) : null}
+                <button onClick={other} className="mt-2 flex w-full items-center justify-center rounded-full border-2 border-primary/20 py-2.5 text-sm font-semibold text-primary">
+                  {result.intent ? "Bunu kastetmedim, başka bir konu" : "Popüler sorulara göz at"}
+                </button>
               </div>
             ) : q.trim() ? (
               <button onClick={() => submit()} className="flex w-full items-center gap-2 text-left text-sm text-primary">
                 <Search className="size-4" /> “{q}” için ne yapabileceğimi göster
               </button>
             ) : (
-              <Suggestions onPick={(s) => { setQ(s); submit(s); }} />
+              <button onClick={() => { setOpen(false); setFull(true); }} className="flex w-full items-center gap-2 text-left text-sm text-primary">
+                <Search className="size-4" /> Popüler sorulara göz at
+              </button>
             )}
           </div>
         </>
@@ -186,10 +200,10 @@ export function SmartSearchBar() {
   );
 }
 
-function Suggestions({ onPick }: { onPick: (s: string) => void }) {
+function Suggestions({ onPick, title = "Neler yapabilirsin?" }: { onPick: (s: string) => void; title?: string }) {
   return (
     <div className="mt-1">
-      <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-primary"><Sparkles className="size-4 text-magenta" /> Neler yapabilirsin?</p>
+      <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-primary"><Sparkles className="size-4 text-magenta" /> {title}</p>
       <div className="flex flex-col gap-1.5">
         {SEARCH_SUGGESTIONS.map((s) => (
           <button key={s} onClick={() => onPick(s)} className="flex items-center justify-between rounded-2xl bg-muted/60 px-3 py-2.5 text-left text-sm font-medium text-primary hover:bg-muted">

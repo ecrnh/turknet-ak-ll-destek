@@ -1,14 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, Clock3, Link2, RefreshCw } from "lucide-react";
+import { AlertTriangle, CalendarCheck, Clock3, Link2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
-import { EmptyState, SectionTitle } from "@/components/tn/primitives";
+import { EmptyState, PlainNote, SectionTitle } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/format";
 import { recheck, runDueOps, useWorkflowStore } from "@/features/workflow";
 import { isActive } from "../rules";
-import { customerAction, statusSentence, whatsNext } from "../copy";
-import { AiUstaPanel, BillingPanel, ConnectivityPanel, HealthCard, RelocationPanel, SpeedPanel, TempPanel, UstaIntro, UstaWelcome } from "../components/panels";
+import { customerAction, handoffNote, statusSentence, whatsNext } from "../copy";
+import { AiUstaPanel, BillingPanel, ConnectivityPanel, HealthCard, NetboxMoveCard, RelocationPanel, SpeedPanel, TempPanel, UstaIntro, UstaWelcome } from "../components/panels";
 import { AuditList, DecisionCard, DemoNote, HandoffCard, OutcomeCard, RecordsList, StatusPill, StepTimeline, TechDetails, TYPE_ICON, TYPE_LABEL } from "../components/ui";
 
 export function WorkflowDetailScreen({ id }: { id: string }) {
@@ -16,6 +16,7 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
   const related = useWorkflowStore((s) => s.workflows).filter((w) => wf?.relatedIds.includes(w.id));
   const audit = useWorkflowStore((s) => s.audit).filter((e) => e.workflowId === id);
   const [showAll, setShowAll] = useState(false);
+  const appt = useWorkflowStore((s) => s.appointments).find((a) => a.workflowId === id && a.status === "booked");
 
   useEffect(() => {
     if (wf?.type !== "relocation") return;
@@ -29,6 +30,28 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
       <div>
         <PageHeader title="İşlem" />
         <EmptyState icon={AlertTriangle} title="İşlem bulunamadı" text="Demo sıfırlanmış olabilir." action={<Link to="/takip" className="font-semibold text-magenta">Tüm işlemlerim</Link>} />
+      </div>
+    );
+
+  if (appt && wf.type !== "relocation")
+    return (
+      <div>
+        <PageHeader title="Teknik ekip randevun" />
+        <div className="space-y-4 px-4">
+          <section className="rounded-card bg-card p-5 shadow-card">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-icon-box text-primary"><CalendarCheck className="size-5" /></span>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-primary">Randevun oluşturuldu</p>
+                <p className="text-sm text-foreground">{appt.label}</p>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">Teknik ekibimiz seçtiğin gün ve saatte adresine gelecek.</p>
+          </section>
+          <Link to="/hibrit" className="flex min-h-12 items-center justify-center rounded-full border border-primary/20 bg-card text-sm font-semibold text-primary">
+            Hibrit İnternet Durumunu Gör
+          </Link>
+        </div>
       </div>
     );
 
@@ -52,7 +75,7 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
               <p className="text-xs text-primary-foreground/70">Başlangıç {fmtDateTime(wf.createdAt)}</p>
             </div>
           </div>
-          <h2 className="mt-4 text-xl font-semibold leading-snug">{statusSentence(wf)}</h2>
+          {wf.status !== "escalated" && <h2 className="mt-4 text-xl font-semibold leading-snug">{statusSentence(wf)}</h2>}
           {wf.type === "relocation" && wf.nextStep && isActive(wf) && (
             <div className="mt-3 rounded-2xl bg-primary-foreground/10 px-3.5 py-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-primary-foreground/65">Sıradaki adım</p>
@@ -79,10 +102,18 @@ export function WorkflowDetailScreen({ id }: { id: string }) {
           )}
         </section>}
 
+        {wf.status === "escalated" && wf.type === "relocation" && (
+          <PlainNote>
+            <p className="font-semibold text-primary">{statusSentence(wf)}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{handoffNote(wf)}</p>
+          </PlainNote>
+        )}
+
         <UstaWelcome wf={wf} />
         <UstaIntro wf={wf} />
         <DecisionCard key={wf.decision?.key ?? "none"} wf={wf} />
-        <HandoffCard wf={wf} />
+        <NetboxMoveCard wf={wf} />
+        {wf.type !== "relocation" && <HandoffCard wf={wf} />}
         {wf.type !== "speed_optimize" && <OutcomeCard wf={wf} />}
 
         {wf.type === "outage_recovery" && (

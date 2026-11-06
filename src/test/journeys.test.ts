@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { useAppStore, type AppNotification } from "@/features/core/appStore";
 import { addToLockScreen, mergeNotification, pushAllowed } from "@/features/core/notifications";
 import {
-  acceptFieldVisit,
   announceCollection,
   approveCollection,
+  bookFieldVisit,
   decide,
   flushOps,
   getWf,
@@ -106,9 +106,10 @@ describe("Bağlamı koruyan canlı destek", () => {
     expect(getWf(id)!.handoff).not.toBeNull();
     expect(openLiveChat(id)).toBe(true);
     const chat = W.getState().chats.find((c) => c.workflowId === id)!;
-    expect(chat.messages.some((m) => m.from === "agent" && m.text.includes("baştan yapmana gerek yok"))).toBe(true);
-    expect(acceptFieldVisit(id)).toBe(true);
-    expect(acceptFieldVisit(id)).toBe(false);
+    expect(chat.messages.some((m) => m.from === "agent" && m.text.includes("konusundaki talebini aldım"))).toBe(true);
+    expect(bookFieldVisit(id, "slot-3")).toBe(true);
+    expect(bookFieldVisit(id, "slot-3")).toBe(false);
+    expect(W.getState().appointments.find((a) => a.workflowId === id)?.label).toBe("4 Kas Çarşamba · 13:00–17:00");
     expect(W.getState().workOrders.filter((o) => o.workflowId === id && o.kind === "field_repair")).toHaveLength(1);
   });
 });
@@ -151,5 +152,34 @@ describe("Kilitli telefon bildirimleri", () => {
     useAppStore.getState().setPref("campaignPush", false);
     useAppStore.getState().notify({ kind: "campaign", title: "kampanya", body: "" });
     expect(useAppStore.getState().lockScreen.map((x) => x.title)).toEqual(["önemli"]);
+  });
+});
+
+import { activateNetbox, requestNetboxAtNewAddress } from "@/features/workflow/services/migration";
+describe("Taşınma · port yok → NetBox yeni adreste", () => {
+  it("talep taşınma adresi ve tarihiyle oluşur, hazır olunca aktif edilir", () => {
+    cfg({ addressCheck: "no_port" });
+    const id = startRelocation({ address: DEMO_NEW_ADDRESS, moveDate: DEMO_MOVE_DATE, wantsTemp: false });
+    drain();
+    expect(getWf(id)!.data["eligibility"]).toBe("no_port");
+    activateNetbox(id);
+    expect(getWf(id)!.data["netbox"]).toBeUndefined();
+    requestNetboxAtNewAddress(id);
+    expect(getWf(id)!.data["netbox"]).toBe("requested");
+    drain();
+    expect(getWf(id)!.data["netbox"]).toBe("ready");
+    activateNetbox(id);
+    expect(getWf(id)!.data["netbox"]).toBe("active");
+  });
+
+  it("sunum modunda (otomatik takip kapalı) bile talep hazırlanır ve takılmaz", () => {
+    cfg({ addressCheck: "no_port" });
+    const id = startRelocation({ address: DEMO_NEW_ADDRESS, moveDate: DEMO_MOVE_DATE, wantsTemp: false });
+    drain();
+    W.setState({ autoFollowUp: false });
+    requestNetboxAtNewAddress(id);
+    expect(getWf(id)!.data["netbox"]).toBe("requested");
+    drain();
+    expect(getWf(id)!.data["netbox"]).toBe("ready");
   });
 });

@@ -44,7 +44,7 @@ function QrImproveBanner() {
   const done = step >= QR_STEPS.length;
   const pct = Math.round((Math.min(step, QR_STEPS.length) / QR_STEPS.length) * 100);
   return (
-    <div className="sticky top-0 z-20 rounded-2xl border border-magenta/20 bg-card p-3.5 shadow-card" aria-live="polite">
+    <div className="mt-3 rounded-2xl border border-magenta/20 bg-card p-3.5 shadow-card" aria-live="polite">
       <div className="flex items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 text-sm font-semibold text-primary">
           {done ? <CheckCircle2 className="size-4 text-success" /> : <Loader2 className="size-4 animate-spin text-magenta" />}
@@ -135,7 +135,7 @@ function ChatProcess({ wfId }: { wfId: string }) {
       </div>
       {usta && <RepairProgress wf={wf} />}
       {usta && wf.data["repairOutcome"] === "regional" && <HybridOfferInline />}
-      {usta && isActive(wf) && <AiUstaPanel wf={wf} inChat />}
+      {usta && (isActive(wf) || (wf.status === "completed" && wf.outcome?.resolved)) && <AiUstaPanel wf={wf} inChat />}
       {wf.decision && <DecisionCard key={wf.decision.key} wf={wf} />}
     </div>
   );

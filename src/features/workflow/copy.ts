@@ -31,6 +31,14 @@ export function statusSentence(wf: Pick<Workflow, "status" | "type">): string {
   return STATUS_SENTENCE[wf.status];
 }
 
+/** Friendly follow-up for the expert handoff: who took it over and that nothing is expected from the customer. */
+export function handoffNote(wf: Pick<Workflow, "handoff">): string {
+  const team = wf.handoff?.team;
+  return team
+    ? `Süreci ${team} devraldı. Yaptığımız tüm kontrolleri onlara da ilettik; konuyu baştan anlatman gerekmiyor.`
+    : "Süreci uzman ekibimiz devraldı. Yaptığımız tüm kontrolleri onlara da ilettik; konuyu baştan anlatman gerekmiyor.";
+}
+
 /** "Benim bir şey yapmam gerekiyor mu?" */
 export function customerAction(wf: Pick<Workflow, "status" | "decision">): { needed: boolean; text: string } {
   if (wf.decision) return { needed: true, text: "Aşağıdaki seçimi yapmanız gerekiyor." };
@@ -104,7 +112,7 @@ export const HYBRID_COPY = {
   },
   what: "Ana bağlantınız kesildiğinde yedek internet cihazınız mobil ağ üzerinden devreye girer. Böylece arıza giderilene kadar internete bağlı kalırsınız.",
   how: [
-    "Kesinti 24 saati aşarsa ücretsiz olarak etkinleştirebilirsiniz.",
+    "Kesinti başladığı anda ücretsiz olarak etkinleştirebilirsiniz.",
     "Yedek cihazınız ve SIM'iniz mobil ağ üzerinden çalışır.",
     "Ana bağlantınız düzelince otomatik olarak ana bağlantıya dönersiniz.",
   ],
@@ -135,5 +143,40 @@ export const HYBRID_COPY = {
     plain: "Kesinti giderildi ve bağlantınızı doğruladık. Anlayışınız için teşekkür ederiz.",
   },
   device: { requested: "Talep alındı", preparing: "Hazırlanıyor", on_the_way: "Yolda", delivered: "Teslim edildi", cancelled: "İptal edildi" },
+} as const;
+
+/**
+ * NetBox bilgilendirmesi: paketin içinde ne olduğu, adım adım nasıl çalıştığı,
+ * neler gerektirdiği ve ana hat gelince ne olduğu. Ana sayfadaki "Nasıl Çalışır?"
+ * bağlantısı bu içeriği gösterir.
+ */
+export const NETBOX_INFO = {
+  intro:
+    "NetBox, TürkNet paketinizin içinde gelen ücretsiz yedek internettir. Ana internetiniz kesildiğinde mobil ağ üzerinden devreye girer ve siz hiçbir şey yapmasanız bile bağlantınız sürer.",
+  included: [
+    { title: "Ek ücret yok", desc: "NetBox aboneliğinize dahildir. Ayrı bir fatura, ek sözleşme veya taahhüt gerektirmez." },
+    { title: "Kesinti başladığı anda hazır", desc: "Yedek internet, kesinti tespit edildiği anda etkinleştirilebilir hale gelir; bekleme süresi yoktur." },
+    { title: "Aylık yedek internet hakkı", desc: "Kesinti süresince kullandığınız yedek internet, o aya ait yedek internet hakkınızdan düşer." },
+    { title: "Otomatik yedek geçiş", desc: "Bu ayarı açarsanız NetBox kesintide kendiliğinden devreye girer; telefonunuz yanında olmasa bile." },
+  ],
+  steps: [
+    { title: "Kesinti algılanır", desc: "Ana hattınızdaki kesinti tespit edilir, size bildirim ve SMS gönderilir." },
+    { title: "Uygunluk kontrolü yapılır", desc: "Yedek cihazınız, SIM'iniz ve mobil kapsamanız otomatik olarak kontrol edilir." },
+    { title: "NetBox devreye girer", desc: "Siz etkinleştirirsiniz ya da otomatik yedek geçiş açıksa kendiliğinden açılır." },
+    { title: "Bağlantınız sürer", desc: "Modeminiz mobil ağ üzerinden internete bağlanmaya devam eder; Wi-Fi adınız ve şifreniz değişmez." },
+    { title: "Ana hat gelince geri dönersiniz", desc: "Ana bağlantınız düzelince otomatik olarak ana hatta geçersiniz, NetBox kapanır." },
+  ],
+  needs: [
+    { title: "Uyumlu yedek internet cihazı", desc: "NetBox, uyumlu bir yedek internet cihazı üzerinde çalışır." },
+    { title: "Aktif SIM", desc: "Cihazınızda mobil ağa bağlanabilen aktif bir SIM bulunmalıdır." },
+    { title: "Yeterli mobil kapsama", desc: "Bulunduğunuz adreste yeterli mobil kapsama olmalıdır." },
+  ],
+  noDevice: "Cihazınız yoksa ücretsiz olarak talep edebilirsiniz; kargoyla adresinize gönderilir.",
+  openFrom: [
+    "Uygulamadaki İnternet Durumu ekranından",
+    "Ana sayfadaki NetBox anahtarından",
+    "Kesinti anında gelen SMS'teki bağlantıdan",
+  ],
+  cta: "İnternet durumunu gör",
 } as const;
 

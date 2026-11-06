@@ -24,10 +24,10 @@ export function ConnectivityScreen() {
     hybrid.status === "active"
       ? HYBRID_COPY.active.title
       : ongoing && hybrid.status !== "unavailable"
-        ? "Kesintiniz 24 saati aştı. Ücretsiz yedek bağlantınızı etkinleştirebilirsiniz."
+        ? "Kesintiniz var. Ücretsiz yedek bağlantınızı hemen etkinleştirebilirsiniz."
         : ongoing
-          ? "Kesinti 24 saati aşarsa ücretsiz yedek bağlantınızı buradan etkinleştirebilirsiniz."
-          : "Kesinti 24 saati aşarsa aboneliğinize dahil yedek bağlantınızla internete bağlı kalırsınız.";
+          ? "Kesinti başladığı anda ücretsiz yedek bağlantınızı buradan etkinleştirebilirsiniz."
+          : "Kesinti olursa aboneliğinize dahil ücretsiz yedek bağlantınızla internete bağlı kalırsınız.";
 
   return (
     <div>

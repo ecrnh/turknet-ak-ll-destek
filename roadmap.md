@@ -67,3 +67,7 @@
 - [x] Süreçler sohbet içinde canlı kart + karar (GIGA Teknik, Fatura Kalkanı); taşınma sihirbazı açılır
 - [x] Son aksiyonlarım kaldırıldı; otomatik kontroller /ajanlar/kontroller
 
+
+## Tur 8 — Canlı destek randevusu
+- [x] Temsilci "randevu oluşturabilirim" der, müşteri uygun gün ve saati kendisi seçer; "Şimdilik gerek yok" seçeneği kaldırıldı
+- [x] Seçilen saat randevuya yazılır, iş emri ve Hibrit İnternet teklifi aynı akışta kalır

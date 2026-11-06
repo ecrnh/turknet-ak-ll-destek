@@ -200,6 +200,8 @@ export interface SmsMessage {
   link: string;
   at: number;
   opened: boolean;
+  /** "appointment" = field-visit confirmation; default = GIGA Teknik support link. */
+  kind?: "usta" | "appointment" | "netbox";
 }
 
 export type Actor = "system" | "customer" | "external" | "agent" | "presenter" | "team";
@@ -258,7 +260,7 @@ export interface LiveChatMessage {
   text: string;
   at: number;
   /** Agent message offering an action the customer can accept. */
-  offer?: "field_visit";
+  offer?: "field_visit" | "hybrid";
 }
 
 export interface LiveChat {

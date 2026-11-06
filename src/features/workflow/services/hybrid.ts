@@ -2,9 +2,9 @@
  * OutageService + HybridService: "Ücretsiz Hibrit İnternet".
  *
  * Product rule: Hibrit İnternet is included in every TürkNet subscription at no
- * extra cost. It is offered only when an outage is still unresolved after 24 h,
- * the customer activates it from the app, and it works only with a compatible
- * backup device, an active SIM and enough mobile coverage.
+ * extra cost. It is offered the moment an outage starts, the customer activates
+ * it from the app, and it works only with a compatible backup device, an active
+ * SIM and enough mobile coverage.
  *
  * No real modem, SIM, coverage or operator system exists: every answer comes
  * from MockHybridAPI / MockLogisticsAPI and is labelled as demo data.
@@ -23,7 +23,7 @@ const H = 3_600_000;
 const OUTAGE_STEPS = [
   { key: "signal", label: "Kesinti tespit edildi" },
   { key: "repair", label: "Teknik ekip çözüm üzerinde çalışıyor" },
-  { key: "hybrid_offer", label: "Ücretsiz Hibrit İnternet hakkı (24 saat sonra)" },
+  { key: "hybrid_offer", label: "Ücretsiz Hibrit İnternet hakkı" },
   { key: "hybrid", label: "Hibrit İnternet etkinleştirme" },
   { key: "restore", label: "Ana bağlantı geri geldi" },
   { key: "switch_back", label: "Yedek bağlantıdan ana bağlantıya dönüş" },
@@ -49,7 +49,7 @@ function repairNoteFor(hours: number, regional: boolean): string {
   return "Onarım sürüyor; ek teknik ekip görevlendirildi";
 }
 
-/** Re-reads the elapsed time and applies the 24-hour rule (offer appears / disappears). */
+/** Re-reads the elapsed time and keeps the repair note and the backup offer in sync. */
 function evaluate(wfId: string) {
   const o = W.getState().outage;
   if (!o || o.restoredAt) return;
@@ -57,38 +57,32 @@ function evaluate(wfId: string) {
   const note = repairNoteFor(hours, getWf(wfId)?.data["outageType"] === "regional");
   patchOutage({ repairNote: note, lastUpdateAt: now() });
   step(wfId, "repair", "in_progress", note);
-  // One-time push the first time the outage reaches 24 hours (even if the offer opened earlier).
-  if (hours >= 24 && !o.notified24) {
-    patchOutage({ notified24: true });
-    notify(
-      wfId,
-      "Tek tıkla internete erişebilirsin",
-      "Devam eden genel arıza durumunda internetsiz kalmanı istemiyoruz. Uygulama içerisinde Netbox butonunu aktif ederek ev internetini kesintisiz kullanmaya devam edebilirsin.",
-      "push",
-      "/hibrit",
-    );
-  }
   const status = W.getState().hybrid.status;
   if (hybridOfferOpen(hours, o.etaH)) {
     if (status !== "unavailable") return;
-    const early = hours < 24;
     patchHybrid({ status: "offered" });
     step(
       wfId,
       "hybrid_offer",
       "done",
-      early ? `Tahmini çözüm süresi ${o.etaH} saat · ücretsiz Hibrit İnternet sunuldu` : "Kesinti 24 saati aştı · ücretsiz Hibrit İnternet sunuldu",
-      "Kural: 24 saatten uzun süren ya da sürmesi beklenen kesintide aboneliğe dahil yedek bağlantı sunulur",
+      "Kesinti başladı · ücretsiz Hibrit İnternet sunuldu",
+      "Kural: kesinti başladığı anda aboneliğe dahil yedek bağlantı sunulur",
     );
-    if (early) notify(wfId, "Kesintinin 24 saatten uzun sürmesi bekleniyor", "Bağlantınızı sürdürmeniz için ücretsiz Hibrit İnternet desteğinizi etkinleştirebilirsiniz.", "quiet", "/hibrit");
+    notify(
+      wfId,
+      "Tek tıkla internete erişebilirsin",
+      "Devam eden arıza durumunda internetsiz kalmanı istemiyoruz. Uygulama içerisindeki NetBox butonuyla ya da SMS'teki bağlantıyla ev internetini kesintisiz kullanmaya devam edebilirsin.",
+      "quiet",
+      "/hibrit",
+    );
     if (W.getState().hybrid.autoFailover) {
-      log(wfId, "system", "info", "Otomatik geçiş izni var: uygunluk kontrolü başlatıldı", "Müşteri, 24 saati aşan kesintide yedek bağlantıya otomatik geçişi önceden onayladı");
+      log(wfId, "system", "info", "Otomatik geçiş izni var: uygunluk kontrolü başlatıldı", "Müşteri, kesinti başladığında yedek bağlantıya otomatik geçişi önceden onayladı");
       checkHybrid();
     }
   } else if (status === "offered") {
     patchHybrid({ status: "unavailable" });
     step(wfId, "hybrid_offer", "pending");
-    log(wfId, "presenter", "info", "Demo: kesinti süresi 24 saatin altına alındı; Hibrit İnternet teklifi gizlendi");
+    log(wfId, "presenter", "info", "Demo: kesinti kaydı kapandı; Hibrit İnternet teklifi geri alındı");
   }
 }
 
@@ -113,6 +107,12 @@ export function startOutage(hours = 0.2, opts: { etaH?: number; regional?: boole
   W.setState({ outage: { wfId: wf.id, startedAt: t - hours * H, lastUpdateAt: t, repairNote: "", restoredAt: null, dismissed: false, etaH: opts.etaH ?? null }, hybrid: initialHybrid(W.getState().hybrid.autoFailover) });
   step(wf.id, "signal", "done", "Modem oturumu yok · komşu hatlar kontrol edildi (demo)");
   notify(wf.id, "İnternet bağlantınızda kesinti tespit ettik", "Teknik ekibimiz sorunun çözümü için çalışıyor. Gelişmeleri sizin için takip ediyoruz.", "push", "/");
+  W.setState((s) => ({
+    sms: [
+      ...s.sms.filter((m) => m.kind !== "netbox"),
+      { id: `SMS-${wf.id.slice(-5)}`, workflowId: wf.id, kind: "netbox", body: "TürkNet: İnternet bağlantınızda kesinti tespit ettik. Kesinti süresince ücretsiz NetBox yedek internetinizi bu bağlantıdan etkinleştirebilirsiniz:", link: "turk.net/netbox", at: t, opened: false },
+    ],
+  }));
   evaluate(wf.id);
   return wf.id;
 }
@@ -175,7 +175,7 @@ export function activateHybrid(by: "auto" | "customer" = "customer"): boolean {
 /**
  * The one "Hibrit Box'ı Aç" action (home card and Hibrit screen): resumes a paused backup,
  * opens a ready one, or runs the eligibility check first and opens right after it passes.
- * Returns false when the 24-hour rule does not allow opening yet.
+ * Returns false when the backup cannot be opened right now.
  */
 export function openHybridBox(): boolean {
   const h = W.getState().hybrid;
@@ -276,7 +276,7 @@ export function restoreMain(): boolean {
     step(id, "switch_back", "in_progress", "Ana bağlantı doğrulanıyor; yedekten dönüş hazırlanıyor", "Ana bağlantı kararlı çalışmadan yedekten çıkılmaz");
   } else {
     W.setState((s) => ({ ops: s.ops.filter((op) => !(op.workflowId === id && op.op.startsWith("hybrid."))) }));
-    if (stepStatus(id, "hybrid_offer") === "pending") step(id, "hybrid_offer", "skipped", "Kesinti 24 saat dolmadan çözüldü");
+    if (stepStatus(id, "hybrid_offer") === "pending") step(id, "hybrid_offer", "skipped", "Kesinti çözüldü · yedek bağlantı kullanılmadı");
     if (stepStatus(id, "hybrid") !== "skipped") step(id, "hybrid", "skipped", "Yedek bağlantı kullanılmadı");
     step(id, "switch_back", "skipped", "Yedek bağlantı kullanılmadı");
     if (h.device && h.device.status !== "delivered" && h.device.status !== "cancelled") {
@@ -360,10 +360,10 @@ export function resumeHybrid(): boolean {
   return true;
 }
 
-/** Customer preference: switch to the backup automatically once the 24-hour rule opens it. */
+/** Customer preference: switch to the backup automatically as soon as an outage starts. */
 export function setAutoFailover(on: boolean) {
   patchHybrid({ autoFailover: on });
-  log(W.getState().outage?.wfId ?? null, "customer", "info", on ? "Otomatik yedek bağlantı geçişine izin verildi" : "Otomatik yedek bağlantı geçişi kapatıldı", "Geçiş yine yalnızca 24 saati aşan kesintide ve uygunluk kontrolünden sonra yapılır");
+  log(W.getState().outage?.wfId ?? null, "customer", "info", on ? "Otomatik yedek bağlantı geçişine izin verildi" : "Otomatik yedek bağlantı geçişi kapatıldı", "Geçiş kesinti başladığında, uygunluk kontrolünden sonra yapılır");
   const o = openOutage();
   if (on && o && W.getState().hybrid.status === "offered") checkHybrid();
   else if (on && o && W.getState().hybrid.status === "ready") activateHybrid("auto");

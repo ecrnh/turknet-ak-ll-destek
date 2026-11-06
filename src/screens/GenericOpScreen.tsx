@@ -1,7 +1,6 @@
 import { CheckCircle2, Lock } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
-import { FeedbackButton } from "@/components/tn/FeedbackButton";
 import { Banner, StatRow } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { GENERIC_OPS } from "@/data/mock";
@@ -67,7 +66,6 @@ export function GenericOpScreen({ slug }: { slug: string }) {
             </div>
           )}
         </div>
-        <FeedbackButton />
       </div>
     </div>
   );

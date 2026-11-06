@@ -45,11 +45,16 @@ describe("GIGA kullanıcının cümlesinden doğru akışı başlatır", () => {
   });
 
   it("başlangıç önerilerinin her biri anlaşılır", () => {
-    expect(GIGA.starters).toEqual(["İnternetimle ilgili sorun var.", "Faturamı kontrol et.", "Taşınmak istiyorum.", "İşlemimin durumunu öğren."]);
-    expect(gigaReply("İnternetimle ilgili sorun var.", base).topic).toBe("clarify");
-    expect(gigaReply("Faturamı kontrol et.", base).start).toBe("billing");
-    expect(gigaReply("Taşınmak istiyorum.", base).start).toBe("relocation");
-    expect(gigaReply("İşlemimin durumunu öğren.", base).topic).toBe("status");
+    expect(GIGA.starters).toEqual([
+      "İnternetimle ilgili destek almak istiyorum",
+      "Fatura borcum ne kadar?",
+      "İnternetimi başka adrese taşıma işlemini nasıl gerçekleştiririm?",
+      "İnternet hizmetini belli bir süre nasıl dondurabilirim?",
+    ]);
+    expect(gigaReply("İnternetimle ilgili destek almak istiyorum", base).topic).toBe("clarify");
+    expect(gigaReply("Fatura borcum ne kadar?", base).topic).toBe("payment");
+    expect(gigaReply("İnternetimi başka adrese taşıma işlemini nasıl gerçekleştiririm?", base).offer).toBe("relocation");
+    expect(gigaReply("İnternet hizmetini belli bir süre nasıl dondurabilirim?", base).topic).toBe("subscription");
   });
 });
 

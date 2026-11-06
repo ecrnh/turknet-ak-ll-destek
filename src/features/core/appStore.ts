@@ -134,7 +134,7 @@ const seedNotifications = (): AppNotification[] => [
   { id: "n8", kind: "campaign", title: "Arkadaşını Getir", body: "Sayende 1 kişi Turknet'li oldu. 1 ay ücretsiz internet kazandın.", time: T("2026-09-03T18:00:00+03:00"), read: false, to: "/islem/arkadasini-getir" },
   { id: "n9", kind: "support", title: "Yeni: QR ile Destek", body: "Modemindeki QR'ı okut, arızanı form doldurmadan bildir.", time: T("2026-09-02T10:00:00+03:00"), read: false, to: "/qr" },
   { id: "n10", kind: "support", title: "Yeni: Görüntülü Destek", body: "Uzmanımız kameradan modemini görsün, birlikte çözelim.", time: T("2026-09-01T10:00:00+03:00"), read: false, to: "/goruntulu-destek" },
-  { id: "n11", kind: "support", title: "Yeni: Ücretsiz Hibrit İnternet", body: "Kesinti 24 saati aşarsa aboneliğinize dahil yedek bağlantınızı uygulamadan etkinleştirebilirsiniz.", time: T("2026-08-30T10:00:00+03:00"), read: false, to: "/hibrit" },
+  { id: "n11", kind: "support", title: "Yeni: Ücretsiz Hibrit İnternet", body: "Kesinti başladığı anda aboneliğinize dahil yedek bağlantınızı uygulamadan etkinleştirebilirsiniz.", time: T("2026-08-30T10:00:00+03:00"), read: false, to: "/hibrit" },
   { id: "n12", kind: "agent", title: "Merhaba, ben GIGA!", body: "Bir sorun yaşarsan yardımcı olmak için buradayım. Bağlantı sorunlarında gerekli teknik kontrolleri birlikte yapabiliriz.", time: T("2026-08-29T10:00:00+03:00"), read: false, to: "/ajanlar" },
 ];
 
