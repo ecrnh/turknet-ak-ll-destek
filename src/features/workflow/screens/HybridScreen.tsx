@@ -80,7 +80,7 @@ export function HybridScreen() {
   const busyOp = h.status === "checking" || h.status === "activating" || !!h.switching;
   useEffect(() => {
     if (!busyOp) return;
-    const t = window.setInterval(() => runOverdueOps(), 2500);
+    const t = window.setInterval(() => runOverdueOps(2000, undefined, o?.wfId), 2500);
     return () => window.clearInterval(t);
   }, [busyOp]);
 
