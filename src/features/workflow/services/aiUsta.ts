@@ -655,7 +655,8 @@ export function goLive(id: string) {
  */
 export function resumeUsta(id: string) {
   // A queued check whose timer was lost is run here instead of waiting forever.
-  runOverdueOps();
+  // Scoped to this workflow: self-healing must never run another flow's jobs in the background.
+  runOverdueOps(2000, undefined, id);
   const wf = getWf(id);
   if (!wf || wf.type !== "ai_usta" || wf.status === "completed" || wf.handoff || wf.decision) return;
   // Only a queued GIGA Teknik job means the session is moving; unrelated jobs must not block it.
