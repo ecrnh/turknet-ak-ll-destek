@@ -94,4 +94,8 @@ export async function rehydrateAll() {
     useWorkflowStore.persist.rehydrate(),
     useScenarioStore.persist.rehydrate(),
   ]);
+  // Stale GIGA Teknik jobs from a previous session must never run in the background
+  // (they could start an outage by themselves). The panel's resumeUsta re-queues the
+  // next step when the customer actually returns to the flow.
+  useWorkflowStore.setState((s) => ({ ops: s.ops.filter((o) => !o.op.startsWith("usta.")) }));
 }
