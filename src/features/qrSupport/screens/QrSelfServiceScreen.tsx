@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, ChevronRight, FolderOpen, HelpCircle, Home, Loader2, Lock, Mic, PartyPopper, ReceiptText, Router, Send, Star, Wifi, type LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { USER } from "@/data/mock";
+import { QR_SUPPORT_INTRO, USER } from "@/data/mock";
+import { GigaAvatar } from "@/features/giga/GigaAvatar";
 import { useAppStore } from "@/features/core/appStore";
 import { launchIntent } from "@/features/giga/actions";
 import { track, useFlow } from "@/lib/analytics";
@@ -255,7 +256,7 @@ export function QrSelfServiceScreen() {
         <button type="button" onClick={back} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-foreground shadow-card">
           <ArrowLeft className="size-4" /> Geri
         </button>
-        {!fromHelp && <span className="text-xs font-medium text-muted-foreground">{current !== "topic" && !isDone ? `Adım ${path.length} · ` : ""}QR Destek</span>}
+        {!fromHelp && <span className="text-xs font-medium text-muted-foreground">Müşteri No: {USER.subscriberNo}</span>}
       </div>
       <div className="flex-1 space-y-5 px-4 pb-24 pt-6">
         {phase === "idle" ? (
@@ -318,8 +319,21 @@ export function QrSelfServiceScreen() {
               </div>
             ) : (
               <>
-                <h1 className="text-lg font-semibold text-primary">{step.title}</h1>
-                {step.body && <p className="mt-1.5 text-sm text-muted-foreground">{step.body}</p>}
+                {current === "topic" ? (
+                  !fromHelp ? (
+                    <div className="flex items-center gap-3">
+                      <h1 className="min-w-0 flex-1 text-base font-bold leading-relaxed text-primary">{QR_SUPPORT_INTRO}</h1>
+                      <GigaAvatar size={68} label={false} />
+                    </div>
+                  ) : (
+                    <h1 className="text-base font-bold leading-relaxed text-primary">{step.body}</h1>
+                  )
+                ) : (
+                  <>
+                    <h1 className="text-lg font-semibold text-primary">{step.title}</h1>
+                    {step.body && <p className="mt-1.5 text-sm text-muted-foreground">{step.body}</p>}
+                  </>
+                )}
                 {step.tips && (
                   <ol className="mt-5 space-y-2.5">
                     {step.tips.map((t: string, i: number) => (

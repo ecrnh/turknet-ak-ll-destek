@@ -22,6 +22,8 @@ export const QR_SCAN_WELCOME = {
   subtitle: "Hemen yardımcı olacağım.",
 } as const;
 
+export const QR_SUPPORT_INTRO = "QR kodunu okudum, sana nasıl yardımcı olabilirim?";
+
 export const QR_MODEMS = [
   { id: "zte", brand: "ZTE", model: "F6640 GPON", port: "PON", connection: "fiber", lights: "Power ve PON sabit yanmalı; LOS ışığı kapalı olmalı." },
   { id: "tplink", brand: "TP-Link", model: "Archer VR400", port: "DSL", connection: "dsl", lights: "Power ve DSL ışıkları sabit yanmalı." },

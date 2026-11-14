@@ -36,7 +36,7 @@ const FIXED = "Düzeldi, teşekkürler";
 export const QR_STEPS: Record<StepId, Step> = {
   topic: {
     title: "Hangi sorununu çözmek istiyorsun?",
-    body: "Yaşadığın sorunu seç, çözüm adımlarına birlikte bakalım.",
+    body: "Sana nasıl yardımcı olabilirim?",
     options: [
       { label: "Modemim çalışmıyor", next: { step: "modem_ai" } },
       { label: "Kurulum yap", hint: "Modemini AI ile adım adım kur", next: { step: "setup_ai" } },
