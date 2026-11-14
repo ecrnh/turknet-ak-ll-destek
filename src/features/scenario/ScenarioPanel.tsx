@@ -12,8 +12,10 @@ import { buildCtx, cursorOf, next, resetScenario, setPlaying, startScenario, vis
 import { SCENARIOS, scenarioById } from "./scenarios";
 import { useScenarioStore } from "./store";
 import { HybridControls } from "./HybridControls";
+import { QrControls } from "./QrControls";
+import { ProactiveControls } from "@/features/proactive/ProactiveControls";
 
-type Tab = "scenario" | "hybrid" | "log" | "notif" | "classic";
+type Tab = "scenario" | "hybrid" | "qr" | "log" | "notif" | "classic";
 
 const clock = (t: number) => new Date(t).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
@@ -68,11 +70,12 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
         )}
       </div>
 
-      <div className="grid grid-cols-5 gap-0.5 rounded-full bg-muted p-1 text-[10px] font-semibold">
+      <div className="grid grid-cols-6 gap-0.5 rounded-full bg-muted p-1 text-[10px] font-semibold">
         {(
           [
             ["scenario", "Senaryo"],
             ["hybrid", "Hibrit"],
+            ["qr", "QR"],
             ["log", `Günlük ${w.audit.length}`],
             ["notif", `Bildirim ${w.messages.length}`],
             ["classic", "Diğer"],
@@ -282,7 +285,8 @@ export function ScenarioPanel({ onHide }: { onHide?: () => void }) {
       )}
 
       {tab === "hybrid" && <HybridControls />}
-      {tab === "classic" && <DemoPanel />}
+      {tab === "qr" && <QrControls />}
+      {tab === "classic" && <><ProactiveControls /><DemoPanel /></>}
     </div>
   );
 }

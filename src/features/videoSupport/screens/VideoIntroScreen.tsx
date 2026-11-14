@@ -1,6 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { Camera, Check, Eye, Link2, MessageSquare, Mic, ShieldCheck, UserPlus, Video, Zap } from "lucide-react";
+import { Camera, Check, Link2, MessageSquare, Mic, ShieldCheck, Video } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
@@ -61,22 +60,9 @@ export function VideoIntroScreen() {
       <PageHeader title="Görüntülü Destek" />
       {step === "info" ? (
         <div className="space-y-4 px-4">
-          <div className="relative overflow-hidden rounded-card bg-plum p-5 text-primary-foreground shadow-float">
-            <motion.div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-magenta/40 blur-2xl" animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 4 }} />
-            <Video className="relative size-9" strokeWidth={1.5} />
-            <p className="relative mt-3 text-2xl font-semibold leading-tight">GIGA modemini görsün, birlikte çözelim</p>
-            <span className="relative mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-sm font-semibold">
-              <Zap className="size-4" /> Bekleme süresi yok · hemen başlayabilirsin
-            </span>
-          </div>
-
-          <div className="rounded-card bg-card p-5 shadow-card">
-            <p className="font-semibold text-primary">GIGA ile görüntülü desteğin avantajları</p>
-            <ul className="mt-3 space-y-2.5 text-sm">
-              <li className="flex gap-2.5"><Eye className="size-5 shrink-0 text-magenta" /> GIGA modemini görerek sorunun kaynağını anlamaya çalışır.</li>
-              <li className="flex gap-2.5"><Zap className="size-5 shrink-0 text-magenta" /> Sana adım adım yol gösterir; çözümü birlikte denersiniz.</li>
-              <li className="flex gap-2.5"><UserPlus className="size-5 shrink-0 text-magenta" /> Yakınların görüşmeye katılabilir — görüşmeyi sen yönetirsin.</li>
-            </ul>
+          <div className="rounded-card bg-card p-4 shadow-card">
+            <p className="text-sm font-semibold text-primary">GIGA ile görüntülü destek</p>
+            <p className="mt-1.5 text-sm text-muted-foreground">GIGA modemini görerek adım adım yardımcı olur. İstersen yakınların da katılabilir; kontrol sende.</p>
           </div>
 
           <div className="rounded-card bg-card p-5 shadow-card">

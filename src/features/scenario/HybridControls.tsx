@@ -1,6 +1,7 @@
 import { CloudOff, PlugZap, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 import { useNow } from "@/hooks/use-now";
 import { cn } from "@/lib/utils";
 import { HYBRID_OFFER_AFTER_H } from "@/features/workflow/rules";
@@ -11,7 +12,7 @@ import type { DemoConfig, HybridStatus } from "@/features/workflow/types";
 import { useScenarioStore as S } from "./store";
 
 const STATUS: Record<HybridStatus, string> = {
-  unavailable: "Teklif yok (24 saat dolmadı)",
+  unavailable: "Teklif yok (kesinti yok)",
   offered: "Teklif açık",
   checking: "Uygunluk kontrol ediliyor",
   ready: "Uygun · müşteri onayı bekleniyor",
@@ -25,7 +26,7 @@ const STATUS: Record<HybridStatus, string> = {
 
 const setConfig = (p: Partial<DemoConfig>) => W.setState((s) => ({ config: { ...s.config, ...p } }));
 
-function Seg<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: [T, string][]; onChange: (v: T) => void }) {
+export function Seg<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: [T, string][]; onChange: (v: T) => void }) {
   return (
     <div>
       <p className="mb-1 text-[11px] font-semibold text-muted-foreground">{label}</p>
@@ -88,6 +89,7 @@ export function HybridControls() {
           <p className={cn("text-xs font-bold", shown >= HYBRID_OFFER_AFTER_H ? "text-magenta" : "text-muted-foreground")}>{shown} saat</p>
         </div>
         <Slider
+          disabled={!ongoing}
           value={[shown]}
           min={0}
           max={72}
@@ -101,14 +103,14 @@ export function HybridControls() {
         />
         <div className="flex justify-between text-[10px] text-muted-foreground">
           <span>0</span>
-          <span className="font-semibold text-magenta">24 sa · ücretsiz teklif</span>
+          <span className="font-semibold text-magenta">anında ücretsiz teklif</span>
           <span>72</span>
         </div>
         <div className="grid grid-cols-4 gap-1">
           {[2, 23, 25, 48].map((h) => (
-            <button key={h} type="button" onClick={() => setOutageElapsed(h)} className="min-h-8 rounded-lg border border-border bg-card text-[11px] font-semibold text-primary hover:bg-accent">
+            <Button key={h} type="button" variant="ghost" size="sm" disabled={!ongoing} onClick={() => setOutageElapsed(h)} className="min-h-8 rounded-lg border border-border bg-card px-2 text-[11px] font-semibold text-primary hover:bg-accent">
               {h} sa
-            </button>
+            </Button>
           ))}
         </div>
       </div>

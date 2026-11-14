@@ -25,13 +25,15 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { CablePlugAnimation } from "./CablePlugAnimation";
+import { USTA_MORE_OPTIONS } from "../services/aiUsta";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { decide, WO_LABEL } from "../engine";
 import { STATUS_LABEL } from "../rules";
 import { customerAction, lastDoneStep, TYPE_LABEL } from "../copy";
 import { useWorkflowStore } from "../store";
-import type { Actor, AuditEvent, DecisionOption, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
+import type { Actor, AuditEvent, Decision, DecisionOption, StepStatus, Workflow, WorkflowStatus, WorkflowType } from "../types";
 import { ModemInspectCard } from "./modem";
 
 export const TYPE_ICON: Record<WorkflowType, LucideIcon> = {
@@ -105,15 +107,15 @@ export function TechDetails({ title = "Teknik detayları gör", children, classN
   );
 }
 
-export function DecisionCard({ wf }: { wf: Workflow }) {
+export function DecisionCard({ wf, inChat }: { wf: Workflow; inChat?: boolean }) {
   const navigate = useNavigate();
   const stored = wf.decision;
-  const d = stored?.key === "usta_more"
-    ? { ...stored, prompt: "Sorunun hâlâ devam ediyor mu?", detail: undefined, options: [{ id: "yes", label: "Evet, devam ediyor", primary: true }, { id: "fixed", label: "Hayır, düzeldi" }] }
+  const d: Decision | null | undefined = stored?.key === "usta_more"
+    ? { ...stored, prompt: "Sorunun hâlâ devam ediyor mu?", detail: "", options: USTA_MORE_OPTIONS }
     : stored?.key === "usta_support"
       ? { ...stored, prompt: "Bağlantı sorunun sürüyorsa birlikte deneyelim.", detail: "Modem kısa süreli takılmış olabilir. Bağlantıyı uzaktan yenilemek modemin yeniden ağa bağlanmasını sağlar; evindeki modemi kapatıp açmana gerek kalmaz.", options: [{ id: "restart", label: "Bağlantıyı uzaktan yenile", desc: "Modemini yeniden ağa bağlamayı deneyelim.", primary: true }, { id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek." }] }
       : stored?.key === "usta_remote_failed"
-        ? { ...stored, prompt: "Bağlantı sorunun sürüyor. Nasıl devam etmek istersin?", detail: undefined, options: [{ id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek.", primary: true }] }
+        ? { ...stored, prompt: "Bağlantı sorunun sürüyor. Nasıl devam etmek istersin?", detail: "", options: [{ id: "video", label: "GIGA ile görüntülü destek almak istiyorum", desc: "Modemle ilgili bir problem olduğunu düşünüyorsan ideal seçenek.", primary: true }] }
         : stored;
     if (!d) return null;
   if (d.key === "usta_final_support" && d.options.length === 0) return (
@@ -125,22 +127,56 @@ export function DecisionCard({ wf }: { wf: Workflow }) {
   );
   if (d.key === "usta_inspect") return <ModemInspectCard wf={wf} />;
   const options = d.options;
+  const pick = (o: DecisionOption) => {
+    decide(wf.id, o.id, "customer");
+    // "Canlı destekle görüşmek istiyorum" opens the live chat that the handover created.
+    if (o.id === "live" && (wf.type === "ai_usta" || wf.type === "speed_optimize")) navigate({ to: "/canli-destek/$id", params: { id: wf.id } });
+    if (o.id === "video" && wf.type === "ai_usta") navigate({ to: "/goruntulu-destek" });
+  };
+  // In the GIGA chat the decision reads like the assistant's own message:
+  // question text, then full-sentence pastel-pink rows (same style as the QR topic list).
+  if (inChat) return (
+    <div role="group" aria-label="Karar bekleniyor">
+      <h3 className="text-base font-semibold leading-snug text-foreground">{d.prompt}</h3>
+      {d.detail && <p className="mt-1 text-sm text-muted-foreground">{d.detail}</p>}
+      {d.key === "usta_guide_plug" && <CablePlugAnimation />}
+      <div className="mt-3 space-y-2.5">
+        {options.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => pick(o)}
+            className="flex min-h-12 w-full items-center gap-2 rounded-2xl border border-magenta/15 bg-magenta-soft px-3.5 py-3 text-left text-sm font-semibold text-primary transition-colors hover:bg-magenta/15 active:scale-[0.99]"
+          >
+            <span className="flex-1">
+              {o.label}
+              {o.desc && <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{o.desc}</span>}
+              {o.terms && (
+                <span className="mt-1 block space-y-0.5 text-[11px] font-normal text-muted-foreground">
+                  {o.terms.map((t) => (
+                    <span key={t} className="block">• {t}</span>
+                  ))}
+                </span>
+              )}
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-magenta" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
   return (
     <div className="rounded-card border-2 border-magenta/30 bg-card p-5 shadow-card" role="group" aria-label="Karar bekleniyor">
       <p className="text-[11px] font-bold uppercase tracking-widest text-magenta">Sizden bir karar bekleniyor</p>
       <h3 className="mt-1 text-lg font-semibold leading-snug text-primary">{d.prompt}</h3>
       {d.detail && <p className="mt-1.5 text-sm text-muted-foreground">{d.detail}</p>}
+      {d.key === "usta_guide_plug" && <CablePlugAnimation />}
       <div className="mt-4 space-y-2.5">
-        {(options as DecisionOption[]).map((o) => (
+        {options.map((o) => (
           <button
             key={o.id}
             type="button"
-            onClick={() => {
-              decide(wf.id, o.id, "customer");
-              // "Canlı destekle görüşmek istiyorum" opens the live chat that the handover created.
-              if (o.id === "live" && (wf.type === "ai_usta" || wf.type === "speed_optimize")) navigate({ to: "/canli-destek/$id", params: { id: wf.id } });
-              if (o.id === "video" && wf.type === "ai_usta") navigate({ to: "/goruntulu-destek" });
-            }}
+            onClick={() => pick(o)}
             className={cn(
               "w-full rounded-2xl border p-3.5 text-left transition-transform active:scale-[0.99]",
               o.primary ? "border-primary bg-primary text-primary-foreground shadow-float" : "border-primary/20 bg-card text-primary hover:bg-accent",
@@ -272,7 +308,7 @@ export function HandoffCard({ wf }: { wf: Workflow }) {
           <Headset className="size-5" />
         </span>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">Uzman ekibimize iletildi · {wf.handoff.id}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/70">Uzman ekibimize iletildi</p>
           <p className="font-semibold">{wf.handoff.team}</p>
         </div>
       </div>
@@ -280,15 +316,10 @@ export function HandoffCard({ wf }: { wf: Workflow }) {
         <p className="mt-3 font-semibold">Bu adımlara rağmen bağlantın düzelmedi. Sorunu daha detaylı inceleyelim.</p>
       )}
       <p className="mt-3 text-sm text-primary-foreground/90">{wf.handoff.reason}</p>
-      <p className="mt-3 text-xs font-semibold text-primary-foreground/70">Ekibe ilettiğimiz bilgiler (sorunu baştan anlatmanız gerekmez):</p>
-      <ul className="mt-1.5 space-y-1 text-xs text-primary-foreground/90">
-        {wf.handoff.context.map((c, i) => (
-          <li key={`${i}-${c}`}>{c}</li>
-        ))}
-      </ul>
-      <Link to="/canli-destek/$id" params={{ id: wf.id }} className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-full bg-card text-sm font-semibold text-primary">
+      <p className="mt-3 text-xs text-primary-foreground/80">Yaptığımız tüm kontroller ekibe iletildi; konuyu baştan anlatman gerekmez.</p>
+      {wf.type !== "relocation" && <Link to="/canli-destek/$id" params={{ id: wf.id }} className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-full bg-card text-sm font-semibold text-primary">
         <Headset className="size-4" /> Canlı desteğe bağlan
-      </Link>
+      </Link>}
     </div>
   );
 }

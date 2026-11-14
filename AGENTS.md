@@ -13,7 +13,7 @@
 
 - Turkish-language mobile-first prototype rendered inside a 390x844 device frame (`src/components/layout/AppShell.tsx`); `/dashboard` renders full-width outside the frame. Why: presentation demo on desktop, real phone on mobile.
 - No backend: all state lives in per-feature zustand stores persisted to localStorage with `skipHydration`, rehydrated once in AppShell before rendering. Why: avoids SSR hydration mismatches.
-- Feature code lives in `src/features/{videoSupport,qrSupport,aiAgents,family,help,demo,core,workflow,scenario,giga}`; page components in `src/screens`; route files in `src/routes` stay thin (import + head). Why: TanStack forbids `src/pages`; keeps routes declarative.
+- Feature code lives in `src/features/{videoSupport,qrSupport,aiAgents,family,demo,core,workflow,scenario,giga,evim,proactive}`; page components in `src/screens`; route files in `src/routes` stay thin (import + head). Why: TanStack forbids `src/pages`; keeps routes declarative.
 - Classic demo triggers and global reset/rehydrate live in `src/features/demo/scenarios.ts`; every new persisted store must be added to `resetAll`/`rehydrateAll` there. Why: one place for reset and hydration.
 - Autonomous processes go through `src/features/workflow/engine.ts` (central statuses, dedupe keys, completion guards, audit, notifications, persisted delayed ops); services in `workflow/services/*` call only `mockServices.ts` adapters for external systems. Why: one state machine for all features, swappable for real APIs.
 - Presenter scenarios (`src/features/scenario`) only call real service functions and derive step state from workflow data, never their own copies; `ScenarioDriver` runs the op queue and auto-play. Why: panel and phone can never diverge.

@@ -14,7 +14,7 @@ import { MockNetworkAPI, MockVisionAPI } from "../mockServices";
 import { AI_USTA_MAX_ATTEMPTS } from "../rules";
 import { useWorkflowStore as W } from "../store";
 import { setConnectivity } from "./connectivity";
-import { startOutage } from "./hybrid";
+import { openOutage } from "./hybrid";
 import { openLiveChat } from "./liveSupport";
 import { useVideoStore } from "@/features/videoSupport/store";
 
@@ -32,6 +32,12 @@ const USTA_STEPS = [
   { key: "confirm", label: "Çözümü siz doğruladınız" },
 ];
 
+export const USTA_MORE_OPTIONS = [
+  { id: "yes", label: "Evet, devam ediyor", desc: "Adım adım birlikte kontrol edelim.", primary: true },
+  { id: "video", label: "Modeme birlikte bakalım", desc: "GIGA ile görüntülü görüş." },
+  { id: "fixed", label: "Hayır, düzeldi" },
+];
+
 export const LIVE_OPTION = { id: "live", label: "Canlı destekle görüşmek istiyorum." } as const;
 
 /** The selected problem, kept for the whole session (app question or phone menu). */
@@ -45,7 +51,6 @@ export function ustaIssue(id: string) {
 export function startAiUsta(issue: "no_internet" | "modem" = "no_internet", entry: { channel?: "app" | "qr"; modemSerial?: string } = {}): string {
   // The customer started this themselves: automatic checks run without presenter "Sonraki".
   W.setState({ autoFollowUp: true });
-  setConnectivity({ fixed: "down" }, "Modem internet oturumu yok");
   const said = issue === "modem" ? "Modemimde sorun var" : "İnternetim çalışmıyor";
   const baseDedupeKey = `usta:${SUBSCRIPTION.id}`;
   const latestActive = W.getState().workflows
@@ -102,7 +107,6 @@ registerDecision("usta_issue", (id, opt) => {
 
 /* ---------------- GIGA sesli destek (IVR) → SMS → GIGA Teknik ---------------- */
 export function startUstaCall(): string {
-  setConnectivity({ fixed: "down" }, "Modem internet oturumu yok");
   const { wf, created } = createWorkflow({
     type: "ai_usta",
     title: "Bağlantı sorunu · Telefon görüşmesinden",
@@ -260,6 +264,17 @@ registerOp("usta.check", (id) => {
 
 const AFTER_REPAIR = ["remote", "verify", "inspect", "analysis", "step1", "step2", "reconnect", "recheck", "confirm"];
 
+/**
+ * A route that closes the process here must not leave the steps it never used open:
+ * an open step blocks completion, so the customer would see a solved problem still "in progress".
+ */
+function closeOpenSteps(id: string) {
+  USTA_STEPS.forEach(({ key }) => {
+    const st = stepStatus(id, key);
+    if (st === "pending" || st === "waiting") step(id, key, "skipped", "Bu akışta gerekmedi");
+  });
+}
+
 function finishRepair(id: string, forced?: "incomplete") {
   const issue = ustaIssue(id);
   const results = repairResults(getWf(id)?.data ?? {});
@@ -283,8 +298,9 @@ function finishRepair(id: string, forced?: "incomplete") {
     setData(id, { repairOutcome: "regional", etaH });
     step(id, "repair", "done", `Bölgesel arıza bulundu · tahmini çözüm ${etaH} saat (simülasyon)`);
     AFTER_REPAIR.forEach((k) => step(id, k, "skipped", "Sorun bölgesel; müşteri tarafında adım gerekmiyor"));
-    const outageId = startOutage(0.2, { regional: true, etaH, relatedIds: [id], why: "GIGA Teknik dijital onarımı bölgesel arıza buldu (demo)" });
-    setData(id, { outageWf: outageId });
+    const outage = openOutage();
+    if (outage) setData(id, { outageWf: outage.wfId });
+    closeOpenSteps(id);
     complete(id, {
       resolved: false,
       summary: "Sorun bölgesel bir kesintiden kaynaklanıyor; takip Kesinti Takibi'nde sürüyor.",
@@ -303,7 +319,7 @@ function finishRepair(id: string, forced?: "incomplete") {
       {
         key: "usta_more",
         prompt: "Sorunun hâlâ devam ediyor mu?",
-        options: [{ id: "yes", label: "Evet, devam ediyor", primary: true }, { id: "fixed", label: "Hayır, düzeldi" }],
+        options: USTA_MORE_OPTIONS,
       },
       "Kontroller normal görünse de sorun çözülmüş sayılmaz; müşteri tarafı incelenir",
       { push: false },
@@ -364,16 +380,85 @@ registerDecision("usta_incomplete", (id, opt) => {
 
 registerDecision("usta_more", (id, opt) => {
   if (opt === "live") return goLive(id);
+  if (opt === "video") return startVideoSupport(id);
   if (opt === "fixed") {
     step(id, "confirm", "done", "Müşteri bağlantı sorununun düzeldiğini doğruladı");
     setConnectivity({ fixed: "up" }, "Müşteri bağlantısının düzeldiğini doğruladı");
+    closeOpenSteps(id);
     complete(id, { resolved: true, summary: "Bağlantı sorunu giderildi", results: ["Müşteri internetine yeniden erişebildi", "Destek kaydı açılmadı"] });
     return;
   }
-  askUstaSupport(id);
+  startGuidedSteps(id);
 });
 
-function askUstaSupport(id: string, includeRestart = true) {
+/* ---------------- Adım adım müşteri kontrolleri (kablo, konum, yeniden başlatma) ---------------- */
+function startGuidedSteps(id: string) {
+  step(id, "inspect", "waiting", "Müşteriyle adım adım kontrol başladı");
+  step(id, "analysis", "skipped", "Fotoğraf yerine adım adım kontrol yapılıyor");
+  ask(id, {
+    key: "usta_guide_cable",
+    prompt: "Adım 1: Modemin arkasındaki kablolara bakalım",
+    detail: "Modemini hafifçe çevir. İnce fiber kablonun (yeşil uçlu) ve güç kablosunun yuvasına tam oturduğunu kontrol et.",
+    options: [
+      { id: "ok", label: "İkisi de takılı", primary: true },
+      { id: "loose", label: "Fiber kablo çıkmış ya da gevşek" },
+      { id: "unsure", label: "Emin değilim" },
+    ],
+  }, "Önce en sık görülen ve müşterinin kolayca düzeltebileceği neden kontrol edilir", { push: false });
+}
+
+registerDecision("usta_guide_cable", (id, opt) => {
+  if (opt === "live") return goLive(id);
+  step(id, "inspect", "done", opt === "ok" ? "Müşteri kabloların takılı olduğunu söyledi" : "Fiber kablonun çıkmış olabileceği tespit edildi");
+  if (opt === "ok") {
+    setData(id, { cable: "ok" });
+    return askPlacement(id);
+  }
+  setData(id, { cable: "loose", cableMissing: true });
+  step(id, "step1", "waiting", "Fiber kablonun takılması gösteriliyor");
+  ask(id, {
+    key: "usta_guide_plug",
+    prompt: "Fiber kabloyu yerine takalım",
+    detail: "Kablonun yeşil ucunu modemin arkasındaki “PON / FIBER” yuvasına düz tut ve “klik” sesi gelene kadar it. Kabloyu bükme, ucuna dokunma.",
+    options: [{ id: "done", label: "Taktım", primary: true }],
+  }, "Hat sinyali modeme ulaşmıyor; en olası neden çıkmış fiber kablo", { push: false });
+});
+
+registerDecision("usta_guide_plug", (id, opt) => {
+  if (opt === "live") return goLive(id);
+  setData(id, { cablePlugged: true });
+  step(id, "step1", "done", "Müşteri fiber kabloyu yerine taktı");
+  askRestart(id);
+});
+
+function askPlacement(id: string) {
+  step(id, "step1", "waiting", "Modem konumu kontrol ediliyor");
+  ask(id, {
+    key: "usta_guide_place",
+    prompt: "Adım 2: Modeminin konumunu kontrol et",
+    detail: "Modem kapalı bir dolapta, yerde ya da metal eşyaların arkasında olmasın. Açık ve yüksek bir yere al; kabloların ezilmediğinden emin ol.",
+    options: [{ id: "done", label: "Kontrol ettim", primary: true }],
+  }, "Kapalı alan ve ezilen kablo bağlantıyı bozabilir", { push: false });
+}
+
+registerDecision("usta_guide_place", (id, opt) => {
+  if (opt === "live") return goLive(id);
+  step(id, "step1", "done", "Müşteri modem konumunu ve kabloları kontrol etti");
+  askRestart(id);
+});
+
+function askRestart(id: string) {
+  const s = AI_USTA_STEPS[1]!;
+  step(id, "step2", "waiting");
+  ask(id, {
+    key: "usta_step2",
+    prompt: `Son adım: ${s.title}`,
+    detail: `${s.text} ${s.safe}`,
+    options: [{ id: "done", label: s.cta, primary: true }],
+  }, "Kablo ve konum kontrolünden sonra modem yeniden başlatılır", { push: false });
+}
+
+export function askUstaSupport(id: string, includeRestart = true) {
   ask(id, {
     key: "usta_support",
     prompt: "Bağlantı sorunun sürüyorsa birlikte deneyelim.",
@@ -431,6 +516,7 @@ export function finishGigaVideoSupport(id: string, resolved: boolean) {
     step(id, "video", "done", "GIGA görüntülü yönlendirmesiyle bağlantı düzeldi");
     step(id, "recheck", "done", "Müşteri bağlantının düzeldiğini doğruladı");
     setConnectivity({ fixed: "up", metric: { optic: -19.2, drops: 0, speed: 96 } }, "GIGA görüntülü kontrolden sonra müşteri bağlantıyı doğruladı");
+    closeOpenSteps(id);
     complete(id, { resolved: true, summary: "Bağlantı GIGA ile görüntülü destek sırasında düzeldi", results: ["Modem görüntülü olarak incelendi", "Bağlantı yeniden doğrulandı", "Canlı destek kaydı açılmadı"] });
     return;
   }
@@ -555,6 +641,7 @@ registerDecision("usta_step1", (id, opt) => {
   chain("usta.step2", id, 800);
 });
 registerDecision("usta_step2", (id, opt) => {
+  if (opt === "live") return goLive(id);
   step(id, "step2", "done", "Müşteri modemi kapatıp açtı");
   step(id, "reconnect", "in_progress", "Modem yeniden başlıyor, bağlantı kuruluyor");
   schedule("usta.reconnected", id, 2500);
@@ -569,7 +656,7 @@ registerOp("usta.reconnected", (id) => {
 
 registerOp("usta.recheck", (id) => {
   if (stepStatus(id, "recheck") !== "in_progress") return;
-  if (MockNetworkAPI.connectionAfterSelfFix()) {
+  if (getWf(id)?.data["cablePlugged"] || MockNetworkAPI.connectionAfterSelfFix()) {
     step(id, "recheck", "done", "Bağlantı geri geldi · 96 Mbps (demo ölçüm)");
     setConnectivity({ fixed: "up", metric: { optic: -19.2, drops: 0, speed: 96 } }, "Modem oturumu açıldı");
     chain("usta.confirm", id, 1000);
@@ -588,9 +675,9 @@ function askFinalSupport(id: string, reason: string) {
   const inBusinessHours = ["Mon", "Tue", "Wed", "Thu", "Fri"].includes(weekday) && (hour > 9 || (hour === 9 && minute >= 0)) && hour < 18;
   ask(id, {
     key: "usta_final_support",
-    prompt: inBusinessHours ? "GIGA ile yaptığımız kontroller sorunu çözemedi. Canlı desteğe bağlanalım mı?" : "GIGA ile yaptığımız kontroller sorunu çözemedi.",
-    detail: inBusinessHours ? undefined : "Canlı destek hafta içi 09.00–18.00 arasında hizmet veriyor. Bu saatlerde bu süreçten bağlanabilirsin.",
-    options: inBusinessHours ? [{ id: "live", label: "Canlı destekle görüş", primary: true }] : [],
+    prompt: "GIGA ile yaptığımız kontroller sorunu çözemedi. Canlı desteğe bağlanalım mı?",
+    ...(inBusinessHours ? {} : { detail: "Şu an mesai dışındayız (demo). Yine de bağlanabilirsin; talebin destek kaydı olarak temsilciye iletilir." }),
+    options: [{ id: "live", label: "Canlı destekle görüş", primary: true }],
   }, reason, { push: false });
 }
 
@@ -628,11 +715,12 @@ registerDecision("usta_confirm", (id, opt) => {
   const wf = getWf(id);
   const remote = stepStatus(id, "remote") === "done";
   notify(id, "Bağlantı sorununuz giderildi", "Teknisyen beklemeden birlikte çözdük. İnternetiniz kullanıma hazır.");
+  closeOpenSteps(id);
   complete(id, {
     resolved: true,
     summary: "Harika, sorunu GIGA Teknik ile birlikte çözdük",
     results: [
-      remote ? `Dijital onarım: ${String(wf?.data["finding"] ?? "sorun bulundu")} → uzaktan düzeltildi` : `Uygulanan adımlar: ${stepContent(id, 1).title.toLocaleLowerCase("tr-TR")}, modemi yeniden başlatma`,
+      ...(remote ? [`Dijital onarım: ${String(wf?.data["finding"] ?? "sorun bulundu")} → uzaktan düzeltildi`] : []),
       "Bağlantı 96 Mbps ile döndü (demo)",
       "Destek kaydı açılmadı, teknisyen ziyareti gerekmedi",
       `Süre: ${wf ? Math.max(1, Math.round((Date.now() - wf.createdAt) / 60000)) : 1} dk`,
@@ -655,8 +743,7 @@ export function goLive(id: string) {
  */
 export function resumeUsta(id: string) {
   // A queued check whose timer was lost is run here instead of waiting forever.
-  // Scoped to this workflow: self-healing must never run another flow's jobs in the background.
-  runOverdueOps(2000, undefined, id);
+  runOverdueOps();
   const wf = getWf(id);
   if (!wf || wf.type !== "ai_usta" || wf.status === "completed" || wf.handoff || wf.decision) return;
   // Only a queued GIGA Teknik job means the session is moving; unrelated jobs must not block it.

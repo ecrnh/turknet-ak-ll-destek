@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { CheckCircle2, ChevronRight, HeartPulse, Loader2, QrCode, ScanEye, Video } from "lucide-react";
+import { CheckCircle2, HeartPulse, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { Csat } from "@/components/tn/Csat";
@@ -17,6 +17,9 @@ export function DigitalRepairScreen() {
   const setNet = useAppStore((s) => s.setNet);
   const addRecord = useAppStore((s) => s.addRecord);
   const flow = useFlow("digital_repair");
+  const openHelp = useAppStore((s) => s.openHelp);
+  const stillIssue = () =>
+    openHelp(`Dijital Onarım raporu: ${STEPS.join(", ")} adımları tamamlandı, hat sağlıklı görünüyor (${net.speed} Mbps). Ancak sorunum hâlâ devam ediyor. Yaşadığım sorunu birlikte inceleyebilir miyiz?`);
   const outage = net.status === "down" || net.status === "mobile";
   const done = i >= STEPS.length;
 
@@ -63,16 +66,6 @@ export function DigitalRepairScreen() {
             </Button>
           )}
         </div>
-        <Link to="/ai-usta" className="flex items-center gap-3 rounded-card bg-card p-4 shadow-card">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-icon-box text-primary">
-            <ScanEye className="size-5" strokeWidth={1.75} />
-          </span>
-          <span className="flex-1">
-            <span className="block text-sm font-semibold text-primary">GIGA Teknik ile adım adım çöz</span>
-            <span className="text-xs text-muted-foreground">Modem ışıklarını göster, güvenli adımlarla birlikte kontrol edelim</span>
-          </span>
-          <ChevronRight className="size-5 text-muted-foreground" />
-        </Link>
         {done && outage && (
           <Banner tone="warning" title="Sorun senden kaynaklı değil">
             Teknik ekibimiz arıza üzerinde çalışıyor. <Link to="/hibrit" className="font-semibold text-magenta">Kesinti durumunu gör</Link>
@@ -80,12 +73,8 @@ export function DigitalRepairScreen() {
         )}
         {done && !outage && (
           <>
-            <Banner tone="success" title="Hattın sağlıklı">Sorun devam ederse:</Banner>
-            <div className="grid grid-cols-2 gap-3">
-              <Link to="/qr/tara" className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-card font-semibold text-primary shadow-card"><QrCode className="size-5" /> QR ile talep</Link>
-              <Link to="/goruntulu-destek" className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-card font-semibold text-primary shadow-card"><Video className="size-5" /> Görüntülü</Link>
-            </div>
             <Csat feature="digital_repair" />
+            <Button size="xl" variant="outline" className="w-full" onClick={stillIssue}>Sorunum hâlâ devam ediyor</Button>
           </>
         )}
       </div>

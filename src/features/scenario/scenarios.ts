@@ -6,7 +6,6 @@
 import { DEMO_MOVE_DATE, DEMO_NEW_ADDRESS } from "@/data/mock";
 import {
   activateHybrid,
-  activateTemp,
   checkHybrid,
   analyzeSpeed,
   applyWifiPlacement,
@@ -30,7 +29,6 @@ import {
   offerTemp,
   openFieldOrder,
   openInfraFollowup,
-  provisionTemp,
   requestExternal,
   requestHybridDevice,
   startRepair,
@@ -56,6 +54,7 @@ import {
 } from "@/features/workflow";
 import { useWorkflowStore as W, type WorkflowState } from "@/features/workflow/store";
 import type { Actor, DemoConfig, StepStatus, Workflow } from "@/features/workflow/types";
+import { useQrHealthStore } from "@/features/qrSupport/qrHealth";
 import { useScenarioStore as S, type ScenarioState } from "./store";
 
 export type StepState = "pending" | "running" | "waiting" | "done" | "failed" | "skipped";
@@ -99,8 +98,9 @@ export interface DemoScenario {
 }
 
 /* ---------------- helpers ---------------- */
+const qrFlag = (k: string) => (c: Ctx): StepState => (c.s.flags[k] ? "done" : "pending");
 const main = (c: Ctx) => c.main;
-const temp = (c: Ctx) => c.temp;
+
 const setId = (key: string, id: string | null) => id && S.setState((s) => ({ ids: { ...s.ids, [key]: id } }));
 const flag = (key: string) => S.setState((s) => ({ flags: { ...s.flags, [key]: true } }));
 const setConfig = (p: Partial<DemoConfig>) => W.setState((s) => ({ config: { ...s.config, ...p } }));
@@ -138,13 +138,6 @@ export const decisionState = (pick: (c: Ctx) => Workflow | undefined, key: strin
   if (wf.decisions.some((d) => d.key === key)) return "done";
   if (wf.decision?.key === key) return "waiting";
   return closed(wf) ? "skipped" : "pending";
-};
-
-const declined = (c: Ctx, key: string) => c.main?.decisions.some((d) => d.key === key && d.optionId === "decline");
-const tempStep = (key: string, decision: string) => (c: Ctx): StepState => {
-  if (declined(c, decision)) return "skipped";
-  if (!c.temp) return closed(c.main) ? "skipped" : "pending";
-  return wfStep(temp, key)(c);
 };
 
 const detail = (c: Ctx) => (c.main ? `/surec/${c.main.id}` : null);
@@ -187,33 +180,6 @@ const relocationSubmit: ScenarioStep = {
   screen: (c) => `/surec/${S.getState().ids["main"] ?? c.main?.id}`,
 };
 
-const tempDecision = (label: string): ScenarioStep => ({
-  id: "temp_decision",
-  label,
-  why: "Ücret, cihaz ve kapsama koşulları gösterildi; onay olmadan sipariş verilmez",
-  actor: "customer",
-  status: decisionState(main, "relocation_temp"),
-  decisionKey: "relocation_temp",
-});
-
-const tempProvision: ScenarioStep = {
-  id: "temp_provision",
-  label: "Geçici modem siparişi ve kurye teslimatı",
-  why: "Kabul edilen teklif için lojistik iş emri açılır ve teslimat takip edilir",
-  actor: "system",
-  status: tempStep("provision", "relocation_temp"),
-  run: (c) => c.temp && provisionTemp(c.temp.id),
-};
-
-const tempActive: ScenarioStep = {
-  id: "temp_active",
-  label: "Geçici internet aktif",
-  why: "Müşteri sabit internet gelene kadar internetsiz kalmaz",
-  actor: "system",
-  status: tempStep("active", "relocation_temp"),
-  run: (c) => c.temp && activateTemp(c.temp.id),
-};
-
 const relocationTail = (only: string[], finalScreen: (c: Ctx) => string | null): ScenarioStep[] => [
   {
     id: "slot_offer",
@@ -253,46 +219,42 @@ export const SCENARIOS: DemoScenario[] = [
   {
     id: "A",
     title: "Taşınma ve port yok",
-    summary: "Yeni adreste boş port yok. Sistem engeli açıklar, altyapı takibi açar, geçici internet önerir ve süreci kuruluma kadar yönetir.",
-    features: ["Otonom Taşınma", "Geçici İnternet", "Takip"],
+    summary: "Yeni adreste boş port yok. Sistem engeli açıklar, altyapı takibi açar, geçici bağlantı ihtiyacını NetBox ile karşılar ve süreci kuruluma kadar yönetir.",
+    features: ["Otonom Taşınma", "NetBox", "Takip"],
     outcomes: [
-      { id: "success", label: "Altyapı açılır → kurulum", desc: "Müşteri geçici interneti kabul eder, port açılınca kurulum yapılır.", config: { addressCheck: "no_port", externalResponse: "ready" }, choices: { relocation_temp: "accept", relocation_slot: "slot-1" } },
-      { id: "decline", label: "Geçici internet reddedilir", desc: "Müşteri teklifi reddeder; teslimat adımları atlanır.", config: { addressCheck: "no_port", externalResponse: "ready" }, choices: { relocation_temp: "decline", relocation_slot: "slot-2" } },
-      { id: "escalate", label: "Altyapı yanıtsız → aktarım", desc: "Altyapı ekibinden 2 kontrolde yanıt gelmez, uzman ekibe bağlamıyla aktarılır.", config: { addressCheck: "no_port", externalResponse: "no_response" }, choices: { relocation_temp: "accept" } },
+      { id: "success", label: "Altyapı açılır → kurulum", desc: "Port açılınca müşteri randevusunu seçer, kurulum yapılır.", config: { addressCheck: "no_port", externalResponse: "ready" }, choices: { relocation_slot: "slot-1" } },
+      { id: "escalate", label: "Altyapı yanıtsız → aktarım", desc: "Altyapı ekibinden 2 kontrolde yanıt gelmez, uzman ekibe bağlamıyla aktarılır.", config: { addressCheck: "no_port", externalResponse: "no_response" }, choices: {} },
     ],
     steps: [
       relocationOpen,
       relocationSubmit,
       { id: "eligibility", label: "Altyapı sorgusu → port uygun değil", why: "Yeni adresin hizmet uygunluğu dış altyapı servisinden sorgulanır; sonuç uydurulmaz", actor: "external", status: wfStep(main, "eligibility") },
       { id: "infra", label: "Engel açıklanır, port takip iş emri açılır", why: "Port yokluğu müşteri hatası değil; altyapı ekibinin planlaması için iş emri gerekir", actor: "system", status: wfStep(main, "infra_followup"), run: (c) => c.main && openInfraFollowup(c.main.id) },
-      { id: "temp_offer", label: "Geçici internet alternatifi gösterilir", why: "Port açılana kadar müşteri yeni adreste internetsiz kalabilir", actor: "system", status: offered(main, "relocation_temp"), run: (c) => c.main && offerTemp(c.main.id) },
-      tempDecision("Müşteri geçici interneti kabul eder / reddeder"),
-      tempProvision,
-      tempActive,
+      { id: "temp_offer", label: "Geçici bağlantı ihtiyacı NetBox ile karşılanır", why: "Port krizinde mobil SIM teklifi açılmaz; müşteri yedek bağlantısını Bağlantım ekranından yönetir", actor: "system", status: wfStep(main, "temp_offer"), run: (c) => c.main && offerTemp(c.main.id) },
       { id: "external_req", label: "Altyapı genişletme sonucu beklenir", why: "Dış ekip yanıtı gelene kadar işlem ‘dış sistem bekleniyor’ durumunda tutulur", actor: "system", status: reached(main, "external"), run: (c) => c.main && requestExternal(c.main.id) },
       { id: "external_ok", label: "Altyapı güncellendi: port açıldı", why: "Bekleyen dış talep yeniden kontrol edildi, olumlu yanıt geldi", actor: "external", status: wfStep(main, "external"), run: (c) => c.main && checkExternal(c.main.id), only: ["success", "decline"] },
       { id: "transfer", label: "Nakil iş emri oluşturulur", why: "Adres uygun hale gelince nakil iş emri başlatılır", actor: "system", status: wfStep(main, "transfer"), run: (c) => c.main && startTransfer(c.main.id), only: ["success", "decline"] },
       { id: "ext1", label: "1. kontrol: yanıt yok, müşteri bilgilendirilir", why: "Bekleyen yanıt başarı gibi gösterilmez; gecikme açıkça bildirilir", actor: "external", status: (c) => ((c.main?.retries ?? 0) >= 1 ? "done" : "pending"), run: (c) => c.main && checkExternal(c.main.id), only: ["escalate"] },
       { id: "ext2", label: "2. kontrol: yanıt yok → Altyapı Planlama ekibine aktarım", why: "Otomatik takip sınırı aşıldı; bağlam kaybolmadan insan takibine alınır", actor: "system", status: (c) => (c.main?.handoff ? "done" : "pending"), run: (c) => c.main && checkExternal(c.main.id), screen: detail, only: ["escalate"] },
-      ...relocationTail(["success", "decline"], detail),
+      ...relocationTail(["success"], detail),
     ],
   },
   {
     id: "B",
     title: "Kesinti ve ücretsiz Hibrit İnternet",
-    summary: "Kesinti tespit edilir, ilk 24 saat yalnızca arıza takibi yapılır. 24 saati aşınca aboneliğe dahil ücretsiz Hibrit İnternet sunulur; müşteri uygunluk kontrolü ve onayıyla etkinleştirir, ana bağlantı düzelince otomatik geri dönülür.",
+    summary: "Kesinti tespit edilir edilmez aboneliğe dahil ücretsiz Hibrit İnternet sunulur; müşteri uygunluk kontrolü ve onayıyla etkinleştirir, ana bağlantı düzelince otomatik geri dönülür.",
     features: ["Hibrit İnternet", "Kesinti Takibi", "Takip"],
     outcomes: [
       { id: "success", label: "Etkinleştirilir → ana bağlantıya dönüş", desc: "Cihaz, SIM ve kapsama uygun; müşteri ücretsiz etkinleştirir, arıza giderilince geri dönülür.", config: { hybridDevice: true, hybridCoverage: true, hybridActivation: "success" }, choices: {} },
       { id: "no_device", label: "Uyumlu cihaz yok → Cihaz Talep Et", desc: "Cihaz olmadan yedek bağlantı açılmaz; cihaz gönderilir, teslimattan sonra etkinleştirilir.", config: { hybridDevice: false, hybridCoverage: true, hybridActivation: "success" }, choices: {} },
       { id: "no_coverage", label: "Mobil kapsama yetersiz", desc: "Yedek bağlantı açılamaz; müşteri bilgilendirilir, ana arıza takibi sürer.", config: { hybridDevice: true, hybridCoverage: false, hybridActivation: "success" }, choices: {} },
       { id: "fail_retry", label: "Aktivasyon başarısız → tekrar dene", desc: "İlk deneme başarısız olur; hata ve tekrar deneme gösterilir, ikinci denemede açılır.", config: { hybridDevice: true, hybridCoverage: true, hybridActivation: "fail" }, choices: {} },
-      { id: "early", label: "24 saat dolmadan çözülür", desc: "Arıza ilk 24 saatte giderilir; Hibrit İnternet teklifi hiç gösterilmez.", config: { hybridDevice: true, hybridCoverage: true, hybridActivation: "success" }, choices: {} },
+      { id: "early", label: "Kısa kesinti: yedek hiç açılmaz", desc: "Arıza erken giderilir; yedek bağlantı kullanılmadan ana bağlantı geri gelir.", config: { hybridDevice: true, hybridCoverage: true, hybridActivation: "success" }, choices: {} },
     ],
     steps: [
       { id: "signal", label: "Kesinti tespit edilir, push gönderilir", why: "Ağ izleme oturum kaybını bildirdi; müşteri şikâyeti beklenmez", actor: "presenter", status: wfStep(main, "signal"), run: () => setId("main", startOutage(0.3)), screen: () => "/" },
-      { id: "track", label: "İlk 24 saat: arıza takibi (teklif yok)", why: "Kural: 24 saatten kısa kesintide Hibrit İnternet CTA'sı gösterilmez", actor: "presenter", status: (c) => (c.s.flags["track"] ? "done" : closed(c.main) ? "skipped" : "pending"), run: () => { setOutageElapsed(6); flag("track"); }, screen: () => "/" },
-      { id: "h24", label: "Kesinti 24 saati aşar → ücretsiz teklif ve push", why: "24 saat içinde çözülemeyen kesintide aboneliğe dahil yedek bağlantı sunulur", actor: "presenter", status: wfStep(main, "hybrid_offer"), run: () => setOutageElapsed(25), screen: () => "/", only: ["success", "no_device", "no_coverage", "fail_retry"] },
+      { id: "track", label: "Arıza takibi sürer, kesinti süresi güncellenir", why: "Kural: yedek bağlantı kesintinin ilk anından itibaren sunulur; geçen süre yalnızca onarım takibini etkiler", actor: "presenter", status: (c) => (c.s.flags["track"] ? "done" : closed(c.main) ? "skipped" : "pending"), run: () => { setOutageElapsed(6); flag("track"); }, screen: () => "/" },
+      { id: "offer", label: "Ücretsiz Hibrit İnternet teklifi kesintinin ilk anında açılır", why: "Kural: kesinti başladığı anda aboneliğe dahil yedek bağlantı sunulur", actor: "presenter", status: wfStep(main, "hybrid_offer"), run: () => flushOps(), screen: () => "/", only: ["success", "no_device", "no_coverage", "fail_retry"] },
       { id: "open", label: "Müşteri “Hibrit İnterneti Etkinleştir”e dokunur", why: "Aktivasyon ekranı hizmeti ve ücretsiz olduğunu açıklar", actor: "customer", status: (c) => (c.s.flags["open"] || c.w.hybrid.checks ? "done" : "pending"), run: () => flag("open"), screen: () => "/hibrit", only: ["success", "no_device", "no_coverage", "fail_retry"] },
       { id: "check", label: "Cihaz, SIM ve mobil kapsama kontrolü", why: "Hizmet yalnızca uyumlu cihaz, aktif SIM ve yeterli kapsama varsa çalışır", actor: "system", status: hybridCheck, run: () => checkHybrid(), screen: () => "/hibrit", only: ["success", "no_device", "no_coverage", "fail_retry"] },
       { id: "device_req", label: "Müşteri “Cihaz Talep Et”e dokunur", why: "Cihaz olmadan yedek bağlantı aktifmiş gibi gösterilmez", actor: "customer", status: (c) => (c.w.hybrid.device ? "done" : "pending"), run: () => requestHybridDevice(), only: ["no_device"] },
@@ -336,117 +298,15 @@ export const SCENARIOS: DemoScenario[] = [
     summary: "Müşteri TürkNet'i arar. GIGA sesli olarak tanır, sorunu menüden seçtirir ve bölgesel kesintiyi kontrol eder; SMS ile GIGA Teknik'e geçirir. Dijital onarım önce uzaktan kontrol eder; gerekirse modem incelemesi ve güvenli adımlarla çözülür ya da bağlamıyla canlı desteğe aktarılır.",
     features: ["GIGA sesli destek", "SMS", "GIGA Teknik", "Canlı destek"],
     outcomes: [
-      { id: "fixed", label: "Self-servis çözülür", desc: "İki güvenli adımdan sonra bağlantı gelir, müşteri doğrular. Destek kaydı açılmaz.", config: { aiFix: "fixed" }, choices: { usta_ivr_menu: "no_internet", usta_ivr: "sms", usta_more: "yes", usta_inspect: "done", usta_step1: "done", usta_step2: "done", usta_confirm: "yes" } },
-      { id: "not_fixed", label: "Canlı desteğe aktarım", desc: "Adımlar sonuç vermez; tüm kontrollerle canlı desteğe aktarılır.", config: { aiFix: "not_fixed" }, choices: { usta_ivr_menu: "no_internet", usta_ivr: "sms", usta_more: "yes", usta_inspect: "done", usta_step1: "done", usta_step2: "done" } },
-      { id: "no_app", label: "Uygulama yüklü değil", desc: "SMS bağlantısı önce uygulama kurulum ekranını açar; kurulumdan sonra bağlam korunarak devam edilir.", config: { aiFix: "fixed", appInstalled: false }, choices: { usta_ivr_menu: "no_internet", usta_ivr: "sms", usta_more: "yes", usta_inspect: "done", usta_step1: "done", usta_step2: "done", usta_confirm: "yes" } },
-      { id: "remote", label: "Dijital onarım sorunu çözer", desc: "Dijital onarım bir sorun bulur, uzaktan düzeltir ve doğrular; modem fotoğrafı istenmez.", config: { aiFix: "fixed", ustaDiag: "issue" }, choices: { usta_ivr_menu: "no_internet", usta_ivr: "sms", usta_confirm: "yes" } },
-      { id: "agent", label: "Temsilci istenir", desc: "Müşteri uygulamayı kullanmak istemez; telefonda temsilciye bağlamıyla aktarılır.", config: { aiFix: "fixed" }, choices: { usta_ivr_menu: "no_internet", usta_ivr: "agent" } },
+      { id: "fixed", label: "Adımlarla sorun çözülür", desc: "Sağlık kontrolü sorunu bulur, müşteri adımları uygular, bağlantı düzelir ve doğrulanır.", config: { proactive: "remote_fix" }, choices: {} },
     ],
     steps: [
-      { id: "call", label: "Müşteri TürkNet'i arar, GIGA numarasından tanır", why: "Abonelik numaradan bulunur; şifre veya kimlik bilgisi sorulmaz", actor: "customer", status: wfStep(main, "call"), run: () => setId("main", startUstaCall()) },
-      { id: "menu", label: "Sesli menü: 1 — İnternetim hiç çalışmıyor", why: "Sorun kategorisi telefonda seçilir; uygulamada tekrar sorulmaz", actor: "customer", status: decisionState(main, "usta_ivr_menu"), decisionKey: "usta_ivr_menu" },
-      { id: "ivr_check", label: "Bölgesel kesinti kontrol edilir", why: "Bölgesel arıza varsa müşteriye adım yaptırılmaz", actor: "system", status: wfStep(main, "ivr_check"), run: (c) => c.main && ivrCheck(c.main.id) },
-      { id: "ivr_choice", label: "SMS ile devam mı, temsilci mi?", why: "Kanal değişimi müşterinin seçimidir; uygulama zorunlu değildir", actor: "customer", status: decisionState(main, "usta_ivr"), decisionKey: "usta_ivr" },
-      { id: "sms_open", label: "SMS bağlantısı açılır (uygulama yoksa önce kurulum)", why: "Çağrıdaki bağlam aktarılır; müşteri sorunu yeniden anlatmaz (simüle SMS)", actor: "customer", status: wfStep(main, "sms"), run: (c) => c.main && openUstaSms(c.main.id), screen: detail, only: ["fixed", "not_fixed", "no_app", "remote"] },
-      { id: "repair", label: "Dijital onarım: 5 uzaktan kontrol", why: "Modem fotoğrafı istenmeden önce bağlantı uzaktan kontrol edilir (simülasyon)", actor: "agent", status: wfStep(main, "repair"), run: (c) => c.main && startRepair(c.main.id), only: ["fixed", "not_fixed", "no_app", "remote"] },
-      { id: "remote", label: "Sorun bulunur, uzaktan düzeltilir ve doğrulanır", why: "Önce uzaktan çözülebilecek adımlar denenir", actor: "agent", status: (c) => { const v = c.main?.steps.find((x) => x.key === "verify")?.status; return v === "done" ? "done" : c.main && closed(c.main) ? "skipped" : "running"; }, only: ["remote"] },
-      { id: "more", label: "Arıza görünmüyor: “Birlikte detaylı inceleyelim mi?”", why: "Kontroller normal görünse de sorun çözülmüş sayılmaz", actor: "customer", status: decisionState(main, "usta_more"), decisionKey: "usta_more", only: ["fixed", "not_fixed", "no_app"] },
-      { id: "inspect", label: "Modemin ön/arka yüzü: ışık kırmızı, kablolar takılı", why: "Fotoğraf yoksa ışık ve kablo seçimiyle devam edilir", actor: "customer", status: decisionState(main, "usta_inspect"), decisionKey: "usta_inspect", run: (c) => c.main && askInspect(c.main.id), only: ["fixed", "not_fixed", "no_app"] },
-      { id: "analysis", label: "Işık ve kablo değerlendirmesi (simülasyon)", why: "Gerçek model yok; sonuç açıkça simülasyon olarak işaretlenir", actor: "agent", status: wfStep(main, "analysis"), only: ["fixed", "not_fixed", "no_app"] },
-      { id: "step1", label: "Adım 1: güç kablosu kontrolü", why: "En güvenli ve geri alınabilir adımdan başlanır", actor: "agent", status: offered(main, "usta_step1"), run: (c) => c.main && giveStep(c.main.id, 1), only: ["fixed", "not_fixed", "no_app"] },
-      { id: "step1_done", label: "Müşteri “Kontrol ettim” der", why: "Müşteri her adımda sonucu bildirir", actor: "customer", status: decisionState(main, "usta_step1"), decisionKey: "usta_step1", only: ["fixed", "not_fixed", "no_app"] },
-      { id: "step2", label: "Adım 2: modemi kapatıp 20 sn bekle", why: "Sıradaki güvenli kontrol", actor: "agent", status: offered(main, "usta_step2"), run: (c) => c.main && giveStep(c.main.id, 2), only: ["fixed", "not_fixed", "no_app"] },
-      { id: "step2_done", label: "Müşteri “Tamam, açtım” der", why: "Modem yeniden başlatıldı", actor: "customer", status: decisionState(main, "usta_step2"), decisionKey: "usta_step2", only: ["fixed", "not_fixed", "no_app"] },
-      { id: "reconnect", label: "Bağlantının yeniden kurulması beklenir", why: "Modemin açılması zaman alır", actor: "system", status: wfStep(main, "reconnect"), only: ["fixed", "not_fixed", "no_app"] },
-      { id: "recheck", label: "Bağlantı tekrar kontrol edilir", why: "Çözüm ölçümle doğrulanır", actor: "system", status: wfStep(main, "recheck"), only: ["fixed", "not_fixed", "no_app"] },
-      { id: "confirm", label: "Müşteri çözümü doğrular", why: "Çözüm müşteri onayı olmadan kapatılmaz", actor: "customer", status: decisionState(main, "usta_confirm"), decisionKey: "usta_confirm", run: (c) => c.main && askConfirm(c.main.id), only: ["fixed", "no_app", "remote"] },
-      { id: "reward", label: "Sorun çözüldü, destek kaydı açılmadı", why: "Self-servis çözümde kayıt oluşturulmaz", actor: "system", status: (c) => (c.main?.status === "completed" ? "done" : "pending"), screen: detail, only: ["fixed", "no_app", "remote"] },
-      { id: "handoff", label: "Canlı desteğe bağlamıyla aktarım", why: "Müşteri aynı sorunu baştan anlatmaz; tüm kontroller temsilciye gider", actor: "system", status: (c) => (c.main?.handoff ? "done" : "pending"), screen: (c) => (c.main ? `/canli-destek/${c.main.id}` : null), only: ["not_fixed", "agent"] },
-    ],
-  },
-  {
-    id: "E",
-    title: "Proaktif arıza ve hız",
-    summary: "Müşteri fark etmeden anormal sinyal yakalanır; kapsam ve hız analiz edilir, uzaktan güvenli iyileştirme denenir, hız yeniden ölçülür; gerekmezse saha iş emri açılmaz.",
-    features: ["Proaktif Arıza", "Hız Optimizasyonu", "Takip"],
-    outcomes: [
-      { id: "remote_fix", label: "Uzaktan çözülür", desc: "Hat profili yenileme ve uzaktan yeniden başlatma sorunu giderir.", config: { proactive: "remote_fix" }, choices: {} },
-      { id: "field", label: "Saha iş emri gerekir", desc: "Uzaktan çözüm yetmez; teknisyen yönlendirilir.", config: { proactive: "field" }, choices: {} },
-    ],
-    steps: [
-      { id: "baseline", label: "Bağlantı normal (teknik kontroller aktif)", why: "Normal değerler referans alınır: optik -19 dBm, 0 kopma", actor: "system", status: (c) => (c.s.flags["baseline"] ? "done" : "pending"), run: () => { setConnectivity({ fixed: "up", metric: { optic: -19.2, drops: 0 } }, "İzleme: bağlantı normal"); flag("baseline"); }, screen: () => "/baglanti" },
-      { id: "anomaly", label: "Anormal bağlantı sinyali tetiklenir", why: "Demo: izleme verisine eşik dışı değer enjekte edilir", actor: "presenter", status: (c) => (c.s.flags["anomaly"] ? "done" : "pending"), run: () => { injectAnomaly(); flag("anomaly"); } },
-      { id: "detect", label: "Sistem olası arızayı algılar", why: "Müşteri şikâyet etmeden süreç başlar", actor: "system", status: wfStep(main, "signal"), run: () => setId("main", detectAnomaly()) },
-      { id: "scope", label: "Kapsam: tek hat mı, bölgesel mi?", why: "Belirsiz durumda kesin teşhis iddiası yapılmaz", actor: "system", status: wfStep(main, "scope"), run: (c) => c.main && assessScope(c.main.id) },
-      { id: "speed", label: "Hız ve bağlantı analizi (paket 100 → ölçülen 21 Mbps)", why: "Paket ile ölçülen hız arasındaki anlamlı farkın olası nedenleri değerlendirilir", actor: "system", status: wfStep(main, "speed"), run: (c) => c.main && analyzeSpeed(c.main.id), screen: detail },
-      { id: "remote", label: "Uzaktan güvenli iyileştirme denemesi", why: "Yalnızca güvenli ve geri alınabilir işlemler otomatik yapılır", actor: "system", status: wfStep(main, "remote"), run: (c) => c.main && tryRemoteFix(c.main.id) },
-      { id: "retest", label: "Hız yeniden ölçülür (önce / sonra)", why: "İyileşme ölçümle doğrulanır; hız fiziksel kapasitenin üzerine çıkarılmaz", actor: "system", status: wfStep(main, "retest"), run: (c) => c.main && retestSpeed(c.main.id) },
-      { id: "field", label: "Teknik iş emri açılır, müşteri bilgilendirilir", why: "Uzaktan çözülemeyen sorun fiziksel müdahale gerektirir", actor: "system", status: reached(main, "field"), run: (c) => c.main && openFieldOrder(c.main.id), only: ["field"] },
-      { id: "field_done", label: "Teknisyen onarımı tamamlar", why: "Saha iş emri kapanınca doğrulamaya geçilir", actor: "team", status: wfStep(main, "field"), run: (c) => c.main && fieldDone(c.main.id), only: ["field"] },
-      { id: "verify", label: "Çözüm doğrulanır, müşteri bilgilendirilir", why: "30 dk izleme ile doğrulanmadan arıza kapanmaz", actor: "system", status: wfStep(main, "verify"), run: (c) => c.main && verifyProactive(c.main.id), screen: detail },
-    ],
-  },
-  {
-    id: "F",
-    title: "Birden fazla süreç birlikte",
-    summary: "Taşınma + dış operatör gecikmesi + geçici internet + iş emri takibi + randevu + aktivasyon. “Benim İçin Takip Et” hepsini tek yerden yönetir.",
-    features: ["Benim İçin Takip Et", "Taşınma", "Geçici İnternet"],
-    outcomes: [
-      { id: "success", label: "Gecikme sonrası başarı", desc: "Dış operatör gecikir, geçici internet devreye girer, port tahsis edilince kurulum tamamlanır.", config: { addressCheck: "eligible_external", externalResponse: "no_response" }, choices: { relocation_temp: "accept", relocation_slot: "slot-2" } },
-      { id: "escalate", label: "Gecikme sürer → aktarım", desc: "Dış operatör yanıt vermez; müşteri geçici internetle bağlı kalırken nakil ekibine aktarılır.", config: { addressCheck: "eligible_external", externalResponse: "no_response" }, choices: { relocation_temp: "accept" } },
-    ],
-    steps: [
-      relocationOpen,
-      relocationSubmit,
-      { id: "eligibility", label: "Altyapı sorgusu: uygun, port dış sağlayıcıda", why: "Bu adresin altyapısı başka bir sağlayıcıya ait", actor: "external", status: wfStep(main, "eligibility") },
-      { id: "transfer", label: "Nakil iş emri oluşturulur", why: "Adres uygun; nakil başlatılır", actor: "system", status: wfStep(main, "transfer"), run: (c) => c.main && startTransfer(c.main.id) },
-      { id: "external_req", label: "Dış operatöre port tahsis talebi", why: "Dış sistem işlemi gerekiyor; talep oluşturulur ve takibe alınır", actor: "system", status: reached(main, "external"), run: (c) => c.main && requestExternal(c.main.id), screen: () => "/takip" },
-      { id: "delay", label: "Dış sistem gecikiyor → müşteri bilgilendirilir", why: "Bekleme durumu açıkça gösterilir, başarı varsayılmaz", actor: "external", status: (c) => ((c.main?.retries ?? 0) >= 1 ? "done" : "pending"), run: (c) => { setConfig({ externalResponse: "no_response" }); if (c.main) checkExternal(c.main.id); } },
-      { id: "temp_offer", label: "Geçici internet teklifi", why: "Gecikme taşınma tarihini aşabilir; müşteri internetsiz kalmamalı", actor: "system", status: offered(main, "relocation_temp"), run: (c) => c.main && offerTemp(c.main.id) },
-      tempDecision("Müşteri kararı: geçici internet"),
-      tempProvision,
-      tempActive,
-      { id: "external_ok", label: "Dış sistem yanıtı geldi: port tahsis edildi", why: "Yeni durum gelince sonraki adıma geçilir", actor: "external", status: wfStep(main, "external"), run: (c) => { setConfig({ externalResponse: "ready" }); if (c.main) checkExternal(c.main.id); }, screen: () => "/takip", only: ["success"] },
-      { id: "ext2", label: "2. kontrol de yanıtsız → Nakil Operasyon ekibine aktarım", why: "Otomatik takip sınırı aşıldı; müşteri geçici internetle bağlı kalır", actor: "system", status: (c) => (c.main?.handoff ? "done" : "pending"), run: (c) => c.main && checkExternal(c.main.id), screen: () => "/takip", only: ["escalate"] },
-      ...relocationTail(["success"], () => "/takip"),
-    ],
-  },
-  {
-    id: "G",
-    title: "Taşınma ve ekip eşleştirme",
-    summary: "Yeni adres uygun. Müşteri tarih ve saat aralığı seçer; sistem uygun saha ekibini bulur, randevu isteği gönderir ve onayı takip eder. İlk ekip kabul edemezse başka ekip aranır; müşteri kimseyi aramaz.",
-    features: ["Taşınma ve Nakil", "Ekip eşleştirme", "İşlemlerim"],
-    outcomes: [
-      { id: "first", label: "İlk ekip kabul eder", desc: "Seçilen saat için ilk uygun ekip randevuyu onaylar.", config: { addressCheck: "eligible", teamMatch: "first" }, choices: { relocation_slot: "slot-1" } },
-      { id: "second", label: "İlk ekip kabul edemez → başka ekip", desc: "Ekip uygunluğu değişir; başka bir ekip bulunur ve randevu onaylanır.", config: { addressCheck: "eligible", teamMatch: "second" }, choices: { relocation_slot: "slot-1" } },
-    ],
-    steps: [
-      relocationOpen,
-      relocationSubmit,
-      { id: "eligibility", label: "Adres kontrolü: hizmet sunulabiliyor", why: "Yeni adresin uygunluğu altyapı servisinden sorgulanır; sonuç uydurulmaz", actor: "external", status: wfStep(main, "eligibility") },
-      { id: "transfer", label: "Taşınma talebi başlatılır", why: "Adres uygun; nakil iş emri oluşturulur", actor: "system", status: wfStep(main, "transfer"), run: (c) => c.main && startTransfer(c.main.id) },
-      ...relocationTail(["first", "second"], detail),
-    ],
-  },
-  {
-    id: "H",
-    title: "İnternetim yavaş",
-    summary: "GIGA hızını ölçer, modemi uzaktan yeniden başlatıp ayarları yeniler. Hız düşük kalırsa modem konumunu ve ev içi Wi-Fi koşullarını müşteriyle adım adım iyileştirir; sorun sürerse canlı desteğe bağlar.",
-    features: ["Hız ölçümü", "Uzaktan iyileştirme", "Wi-Fi adımları", "Canlı destek"],
-    outcomes: [
-      { id: "remote", label: "Uzaktan iyileştirme yeterli", desc: "Hat ayarları ve Wi-Fi kanalı uzaktan yenilenir; hız artar.", config: { proactive: "remote_fix" }, choices: {} },
-      { id: "wifi", label: "Modem konumu düzenlenince odada hız artar", desc: "Modem daha açık ve merkezi bir yere alınır; sorun yaşanan odada hız yeniden ölçülür.", config: { proactive: "wifi_help" }, choices: {} },
-      { id: "wifi_live", label: "Ev içi adımlara rağmen hız düşük · canlı destek", desc: "Modem konumu düzenlenir ve sorun yaşanan odada hız yeniden ölçülür; düşük kalırsa canlı destek sunulur.", config: { proactive: "wifi_live" }, choices: { speed_live: "live" } },
-    ],
-    steps: [
-      { id: "measure", label: "Hız ölçümü başlatılır", why: "GIGA mevcut hızı ölçerek iyileşmeyi karşılaştırır", actor: "agent", status: wfStep(main, "measure"), run: () => setId("main", startSpeedCheck(false)), screen: detail },
-      { id: "speed", label: "Hat ve bağlantı kontrol edilir", why: "Paket hızıyla mevcut ölçüm karşılaştırılır", actor: "agent", status: wfStep(main, "speed"), run: (c) => c.main && analyzeSpeed(c.main.id), screen: detail },
-      { id: "remote", label: "Güvenli uzaktan iyileştirme denenir", why: "Hat ayarları ve Wi-Fi kanalı yenilenir", actor: "agent", status: wfStep(main, "remote"), run: (c) => c.main && tryRemoteFix(c.main.id) },
-      { id: "retest", label: "Hız yeniden ölçülür", why: "Uzaktan işlemin etkisi hız ölçümüyle doğrulanır", actor: "agent", status: wfStep(main, "retest"), run: (c) => c.main && retestSpeed(c.main.id), screen: detail },
-      { id: "placement", label: "Modem açık ve merkezi bir yere alınır", why: "Yerden yüksek, açık bir konum; kalın duvarlardan ve elektronik cihazlardan uzaklık kapsama alanını iyileştirebilir", actor: "customer", status: (c) => c.main?.data["wifiPlacementDone"] ? "done" : "pending", run: (c) => c.main && applyWifiPlacement(c.main.id), screen: detail, only: ["wifi", "wifi_live"] },
-      { id: "wifi_room_measure", label: "Sorun yaşanan odada hız tekrar ölçülür", why: "Modem konumu düzenlendikten sonra aynı odada alınan ölçüm Wi-Fi kapsamasındaki değişimi gösterir", actor: "agent", status: (c) => c.main?.data["roomSpeed"] != null ? "done" : "pending", run: (c) => c.main && measureRoomSpeed(c.main.id), screen: detail, only: ["wifi", "wifi_live"] },
-      { id: "live", label: "Hız düşük kaldıysa canlı desteğe bağlanılır", why: "Önce uzaktan ve ev içi Wi-Fi adımları denenir; yalnızca sonuç alınmazsa uzman desteği sunulur", actor: "customer", status: decisionState(main, "speed_live"), decisionKey: "speed_live", only: ["wifi_live"] },
-      { id: "verify", label: "Sonuç doğrulanır", why: "Uzaktan iyileşme sonrası hız yeniden ölçülür", actor: "system", status: wfStep(main, "verify"), run: (c) => c.main && verifyProactive(c.main.id), screen: detail, only: ["remote"] },
+      { id: "scan", label: "Müşteri modemdeki QR'ı okutur", why: "Modem ve abonelik QR'dan tanınır; giriş bilgisi istenmez", actor: "customer", status: qrFlag("scan"), run: () => { useQrHealthStore.setState({ health: "bad" }); flag("scan"); }, screen: () => "/qr/destek" },
+      { id: "health", label: "İnternet sağlığı ölçülür", why: "Otomatik iyileştirme yapılmaz; önce durum ölçülür ve müşteriye gösterilir", actor: "system", status: wfStep(main, "measure"), run: () => setId("main", startSpeedCheck(false)) },
+      { id: "found", label: "Bağlantıda sorun bulunur, internet adımları kendiliğinden başlar", why: "Konu seçimi küçülür; müşteri doğrudan ne yaşadığını seçer", actor: "system", status: wfStep(main, "speed"), run: (c) => c.main && analyzeSpeed(c.main.id), screen: () => "/qr/destek" },
+      { id: "steps", label: "Müşteri yönlendirilen adımları uygular, ayarlar yenilenir", why: "Işık durumu ve yeniden başlatma gibi adımlar cevaba göre değişir", actor: "customer", status: wfStep(main, "remote"), run: (c) => c.main && tryRemoteFix(c.main.id) },
+      { id: "retest", label: "Bağlantı yeniden ölçülür", why: "Adımların etkisi ölçümle doğrulanır", actor: "agent", status: wfStep(main, "retest"), run: (c) => c.main && retestSpeed(c.main.id) },
+      { id: "verify", label: "Bağlantı düzelir, işlem kapanır", why: "Sonuç doğrulanınca akış başarıyla biter", actor: "system", status: wfStep(main, "verify"), run: (c) => { if (c.main) verifyProactive(c.main.id); useQrHealthStore.setState({ health: "good" }); }, screen: detail },
     ],
   },
 ];

@@ -105,7 +105,7 @@ export function HeroCarousel() {
     const t = setInterval(() => setI((v) => (v + 1) % HERO_SLIDES.length), 5000);
     return () => clearInterval(t);
   }, [paused]);
-  const slide = HERO_SLIDES[i]!;
+  const slide = HERO_SLIDES[i % HERO_SLIDES.length] ?? HERO_SLIDES[0]!;
 
   return (
     <div className="relative" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} aria-roledescription="carousel" aria-label="Kampanyalar ve yenilikler">

@@ -67,3 +67,34 @@
 - [x] Süreçler sohbet içinde canlı kart + karar (GIGA Teknik, Fatura Kalkanı); taşınma sihirbazı açılır
 - [x] Son aksiyonlarım kaldırıldı; otomatik kontroller /ajanlar/kontroller
 
+
+## Tur 8 — Canlı destek randevusu
+- [x] Temsilci "randevu oluşturabilirim" der, müşteri uygun gün ve saati kendisi seçer; "Şimdilik gerek yok" seçeneği kaldırıldı
+- [x] Seçilen saat randevuya yazılır, iş emri ve Hibrit İnternet teklifi aynı akışta kalır
+
+## Tur 10 — Zip'ten güncel proje açıldı
+- [x] `turknet-ak-ll-destek-guncel_3.zip` projenin üzerine açıldı (yeni: proaktif izleme, altyapı kapsama, QR bileşenleri)
+- [x] Zip'teki bayat parçalar güncel kurallara çekildi: senaryo A NetBox kuralı, GIGA kapanışında açık adımların kapatılması, bayat testler
+- [x] 184 test geçiyor, tip kontrolü temiz
+
+## QR kesinti ve konu düzeni
+- [x] Kesintiyi QR başlangıcında göster; eski sağlıklı sonucu geçersiz kıl
+- [x] Hız sorununu İnternet bağlantım başlığının içinde birleştir
+
+## QR modem kurulumu
+- [x] Mevcut modem modeli ve değiştirilebilir marka/model seçimi
+- [x] Seçilen modeme özel hareketli dört adım; kamera ve görüntülü yardım korunur
+- [x] Kurulum rehberi testleri ve tarayıcı kontrolü
+
+## QR sağlık simülasyonu
+- [x] Eski kontrol sonucunu güncel simülasyonla eşitle; sağlıklı seçimde sahte hat sorunu gösterme
+- [x] Testler ve simülasyon geçişlerini tarayıcıda doğrula
+
+## QR açılışı ve GIGA görseli
+- [x] Kuyruklu yıldız uçuşunu hızlandır; dört saniyelik karşılama süresini koru
+- [x] İndirme ve yazdırma butonlarını QR açıklamasının altına küçülterek taşı
+- [x] Ortak GIGA avatarını fiber sinyali temalı yeni robot görseliyle güncelle
+
+## GIGA sohbeti ve menü
+- [x] Sohbet üstündeki sol GIGA başlığını ve simgeleri kaldır; sağ kontrolleri koru
+- [x] Menüdeki başı düz, karşıdan ve beyaz dairesiz göster

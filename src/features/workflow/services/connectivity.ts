@@ -14,6 +14,7 @@ import type { BoxDevice, ConnectivityStatus, TempKind, TempStatus } from "../typ
 
 /* ---------------- Connectivity status ---------------- */
 export function setConnectivity(p: Partial<ConnectivityStatus>, historyLabel?: string) {
+  if (p.fixed === "down" && !W.getState().demoOutage) return;
   W.setState((s) => ({
     connectivity: {
       ...s.connectivity,
@@ -26,7 +27,7 @@ export function setConnectivity(p: Partial<ConnectivityStatus>, historyLabel?: s
 }
 
 /** Mirrors connectivity onto the app-wide internet status pill. */
-function syncNet() {
+export function syncNet() {
   const c = W.getState().connectivity;
   const app = useAppStore.getState();
   if (c.fixed === "up") app.setNet({ status: "online", speed: c.metric.speed ?? 96, ping: 8 });

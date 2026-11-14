@@ -1,0 +1,2 @@
+- Derive both animated and camera setup steps from `setupGuide.ts` and model examples in `src/data/mock.ts`; keep setup model selection session-scoped. Why: both guides must use the same connector and light instructions without adding a persisted feature store.
+- Keep the timed scan welcome in `QrScanWelcome`, reuse `GigaAvatar`, and bypass it for help entry. Why: scan presentation must not change health checks or restored support progress.

@@ -14,6 +14,8 @@ import { BottomNav } from "./BottomNav";
 import { ActingBanner, PushBanner, Splash } from "./Overlays";
 import { ContextualGiga } from "@/features/giga/ContextualGiga";
 import { TurknetLogo } from "./headers";
+import { useBehaviorTracking } from "@/features/proactive/useBehaviorTracking";
+import { ProactiveGigaCard } from "@/features/proactive/ProactiveGigaCard";
 
 const NO_NAV = ["/goruntulu-destek/gorusme", "/qr/tara"];
 
@@ -41,6 +43,8 @@ function PhoneApp() {
   const showNav = !NO_NAV.some((p) => path.startsWith(p));
   const helpOpen = useAppStore((s) => s.helpOpen);
   const navigate = useNavigate();
+  const phoneRoot = useRef<HTMLDivElement>(null);
+  useBehaviorTracking(phoneRoot);
 
   // Every "ask GIGA" entry (home box, help screen, Benim İçin Hallet…) opens the GIGA screen, which sends the prefilled text.
   useEffect(() => {
@@ -52,13 +56,14 @@ function PhoneApp() {
   }, [path]);
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-background [transform:translateZ(0)]">
+    <div ref={phoneRoot} className="relative flex h-full flex-col overflow-hidden bg-background [transform:translateZ(0)]">
       <StatusBar />
       <ActingBanner />
       <main ref={scroller} id="tn-scroll" className={showNav ? "flex-1 overflow-y-auto pb-28 no-scrollbar" : "flex-1 overflow-y-auto no-scrollbar"}>
         <Outlet />
       </main>
       <ContextualGiga />
+      <ProactiveGigaCard />
       {showNav && <BottomNav />}
       <CallSmsLayer />
     </div>

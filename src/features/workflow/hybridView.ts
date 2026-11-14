@@ -18,7 +18,7 @@ export interface HybridViewInput {
   restoredVerified: boolean;
   /** Elapsed outage hours (0 when unknown). */
   hours: number;
-  /** The 24-hour rule allows opening the backup now. */
+  /** The backup may be opened now (an outage is being tracked). */
   offerOpen: boolean;
   status: HybridStatus;
   paused: boolean;
@@ -46,8 +46,6 @@ export interface HybridView {
   /** Show "you return to the main line automatically" (only while the backup carries traffic). */
   failbackNote: boolean;
 }
-
-const LIMIT = 24;
 
 export function hybridView(i: HybridViewInput): HybridView {
   const mainDown = i.fixed === "down" || i.outageOngoing;
@@ -103,7 +101,7 @@ export function hybridView(i: HybridViewInput): HybridView {
       title: "Yedek bağlantı aktif",
       lines:
         i.activatedBy === "auto"
-          ? ["İnternet bağlantını yeniden sağladık.", `Kesinti ${LIMIT} saati aştığı ve önceden izin verdiğin için Hibrit Box mobil bağlantısı otomatik devreye girdi.`]
+          ? ["İnternet bağlantını yeniden sağladık.", "Kesinti başladığı anda ve önceden izin verdiğin için Hibrit Box mobil bağlantısı otomatik devreye girdi."]
           : ["Hibrit Box'ı açtın.", "Ana internetindeki kesinti devam ettiği için mobil bağlantı üzerinden internete bağlısın."],
       main: "Kesik",
       failbackNote: true,
@@ -135,7 +133,7 @@ export function hybridView(i: HybridViewInput): HybridView {
       ...base,
       phase: "down_open",
       tone: "warn",
-      title: i.hours >= LIMIT ? `Kesinti ${LIMIT} saati aştı` : `Kesintinin ${LIMIT} saatten uzun sürmesi bekleniyor`,
+      title: "Ana internetinde kesinti var",
       lines,
       main: "Kesik",
       showOpen: !blocked,
@@ -150,7 +148,7 @@ export function hybridView(i: HybridViewInput): HybridView {
     lines: [
       "Bağlantı kesintisi tespit ettik.",
       !i.hasDevice
-        ? `Kesinti ${LIMIT} saati aşarsa Hibrit Box'ı ücretsiz gönderebiliriz.`
+        ? "Hibrit Box'ı ücretsiz gönderebiliriz."
         : i.autoFailover
           ? "Hibrit Box hazır. Otomatik yedek geçişi için kesinti süresini takip ediyoruz."
           : "Hibrit Box hazır. Kesinti süresini takip ediyoruz.",
@@ -158,7 +156,7 @@ export function hybridView(i: HybridViewInput): HybridView {
     main: "Kesik",
     showOpen: i.hasDevice,
     canOpen: false,
-    openHint: `Mobil yedek, kesinti ${LIMIT} saati aştığında açılabilir.`,
+    openHint: "Mobil yedek, kesinti başladığında açılabilir.",
   };
 }
 
@@ -171,7 +169,7 @@ export interface HybridSwitchInput {
   paused: boolean;
   switching?: "on" | "off" | null | undefined;
   openRequested?: boolean | undefined;
-  /** The 24-hour rule allows opening the backup now. */
+  /** The backup may be opened now (an outage is being tracked). */
   offerOpen: boolean;
 }
 export interface HybridSwitchView {

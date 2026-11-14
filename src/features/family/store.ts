@@ -36,6 +36,7 @@ interface FamilyState {
   actingAs: string | null;
   addDelegate: (d: Omit<Delegate, "id" | "createdAt" | "expiresAt" | "status">) => Delegate;
   revoke: (id: string) => void;
+  remove: (id: string) => void;
   acceptInvite: (id: string) => void;
   updateScopes: (id: string, scopes: Record<ScopeKey, boolean>) => void;
   restore: (id: string) => void;
@@ -57,6 +58,17 @@ const initial = () => ({
       scopes: { view: true, ticket: true, video: true, appointment: true, bills: true, plan: false, payment: false, cancel: false },
       duration: "unlimited" as Duration,
       createdAt: T("2026-08-02T21:00:00+03:00"),
+      expiresAt: null,
+      status: "active" as const,
+    },
+    {
+      id: "deniz",
+      name: "Deniz Koyuncu",
+      phone: "0532 418 76 09",
+      relation: "Oğlu",
+      scopes: { view: true, ticket: true, video: true, appointment: false, bills: false, plan: false, payment: false, cancel: false },
+      duration: "unlimited" as Duration,
+      createdAt: T("2026-10-05T19:30:00+03:00"),
       expiresAt: null,
       status: "active" as const,
     },
@@ -113,6 +125,14 @@ export const useFamilyStore = create<FamilyState>()(
           log: [{ id: uid(), text: `${d?.name ?? "Kişi"} için yetki iptal edildi`, kind: "revoke", time: Date.now(), by: OWNER }, ...s.log],
         }));
       },
+      remove: (id) => {
+        const d = get().delegates.find((x) => x.id === id);
+        if (!d) return;
+        set((s) => ({
+          delegates: s.delegates.filter((x) => x.id !== id),
+          log: [{ id: uid(), text: `${d.name} TürkNet Evim'den çıkarıldı`, kind: "revoke", time: Date.now(), by: OWNER }, ...s.log],
+        }));
+      },
       restore: (id) => {
         const d = get().delegates.find((x) => x.id === id);
         set((s) => ({
@@ -133,14 +153,14 @@ export const useFamilyStore = create<FamilyState>()(
       name: "tn-family",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      version: 1,
+      version: 2,
       /** v0 had no "view"/"appointment" permissions: fill the defaults. */
       migrate: (persisted) => {
         const p = persisted as Partial<FamilyState>;
         return {
           ...initial(),
           ...p,
-          delegates: (p.delegates ?? initial().delegates).map((d) => ({ ...d, scopes: { ...defaultScopes(), ...d.scopes, view: d.scopes.view !== false } })),
+          delegates: [...(p.delegates ?? initial().delegates), ...initial().delegates.filter((d) => d.id === "deniz" && !(p.delegates ?? []).some((x) => x.id === "deniz"))].map((d) => ({ ...d, scopes: { ...defaultScopes(), ...d.scopes, view: d.scopes.view !== false } })),
           managed: MANAGED_ACCOUNTS,
         } as FamilyState;
       },

@@ -41,6 +41,7 @@ export interface WorkflowState {
   ops: ScheduledOp[];
   config: DemoConfig;
   outage: OutageState | null;
+  demoOutage: boolean;
   hybrid: HybridService;
   chats: LiveChat[];
   autoPay: AutoPayState;
@@ -60,7 +61,7 @@ export const defaultConfig = (): DemoConfig => ({
   aiFix: "fixed",
   ustaDiag: "clear",
   regionalEtaH: 36,
-  proactive: "remote_fix",
+  proactive: "wifi_help",
   teamMatch: "first",
   appInstalled: true,
   ownsBox: false,
@@ -96,6 +97,7 @@ const initial = () => ({
   ops: [] as ScheduledOp[],
   config: defaultConfig(),
   outage: null as OutageState | null,
+  demoOutage: false,
   hybrid: initialHybrid(),
   chats: [] as LiveChat[],
   autoPay: initialAutoPay(),
@@ -105,8 +107,17 @@ const initial = () => ({
 /** Older saved demos lack the new config keys; fill them so the demo never reads undefined. */
 const upgrade = (p: Partial<WorkflowState>) => ({
   ...p,
+  demoOutage: p.demoOutage === true,
+  ...(p.demoOutage !== true ? {
+    connectivity: initialConnectivity(),
+    outage: null,
+    hybrid: initialHybrid(p.hybrid?.autoFailover),
+    workflows: (p.workflows ?? []).filter((w) => w.type !== "outage_recovery"),
+    ops: (p.ops ?? []).filter((op) => !(p.workflows ?? []).some((w) => w.type === "outage_recovery" && w.id === op.workflowId)),
+    sms: (p.sms ?? []).filter((m) => m.kind !== "netbox"),
+  } : {}),
   config: { ...defaultConfig(), ...(p.config ?? {}) },
-  hybrid: { ...initialHybrid(), ...(p.hybrid ?? {}) },
+  hybrid: p.demoOutage === true ? { ...initialHybrid(), ...(p.hybrid ?? {}) } : initialHybrid(p.hybrid?.autoFailover),
   chats: p.chats ?? [],
   autoPay: { ...initialAutoPay(), ...(p.autoPay ?? {}) },
 });
@@ -121,7 +132,7 @@ export const useWorkflowStore = create<WorkflowState>()(
       name: "tn-workflow",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      version: 4,
+      version: 5,
       migrate: (persisted) => ({ ...initial(), ...upgrade(persisted as Partial<WorkflowState>) }) as WorkflowState,
       merge: (persisted, current) => ({ ...current, ...initial(), ...upgrade((persisted ?? {}) as Partial<WorkflowState>), reset: current.reset }),
     },

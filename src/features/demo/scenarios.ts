@@ -1,7 +1,9 @@
+import { useProactive } from "@/features/proactive/store";
 import { useGigaChat } from "@/features/giga/chatStore";
 import { useAppStore } from "@/features/core/appStore";
 import { useAgentsStore } from "@/features/aiAgents/store";
 import { useFamilyStore } from "@/features/family/store";
+import { useQrHealthStore } from "@/features/qrSupport/qrHealth";
 import { useQrStore } from "@/features/qrSupport/store";
 import { useVideoStore } from "@/features/videoSupport/store";
 import { SPEED_FIX_STEPS } from "@/data/mock";
@@ -9,6 +11,7 @@ import { track } from "@/lib/analytics";
 import { useWorkflowStore } from "@/features/workflow/store";
 import { useScenarioStore } from "@/features/scenario/store";
 import { initialScenario } from "@/features/scenario/store";
+import { syncNet } from "@/features/workflow/services/connectivity";
 
 const app = () => useAppStore.getState();
 const agents = () => useAgentsStore.getState();
@@ -70,6 +73,7 @@ export function elderVideoScenario() {
 
 export function qrFaultScenario() {
   useQrStore.getState().setScan({ at: 0, score: 0, checks: [] });
+  useQrHealthStore.setState({ health: "bad" });
 }
 
 export function resetAll() {
@@ -78,10 +82,12 @@ export function resetAll() {
   useAgentsStore.getState().reset();
   useFamilyStore.getState().reset();
   useQrStore.getState().reset();
+  useQrHealthStore.setState({ health: "good", repair: "solved" });
   useVideoStore.getState().reset();
   useWorkflowStore.getState().reset();
   useScenarioStore.setState(initialScenario());
   useGigaChat.getState().clear();
+  useProactive.getState().reset();
 }
 
 export async function rehydrateAll() {
@@ -94,8 +100,5 @@ export async function rehydrateAll() {
     useWorkflowStore.persist.rehydrate(),
     useScenarioStore.persist.rehydrate(),
   ]);
-  // Stale GIGA Teknik jobs from a previous session must never run in the background
-  // (they could start an outage by themselves). The panel's resumeUsta re-queues the
-  // next step when the customer actually returns to the flow.
-  useWorkflowStore.setState((s) => ({ ops: s.ops.filter((o) => !o.op.startsWith("usta.")) }));
+  syncNet();
 }

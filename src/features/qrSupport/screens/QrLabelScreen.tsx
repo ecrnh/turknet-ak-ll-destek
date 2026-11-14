@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Download, Info, Package, Printer, ScanLine } from "lucide-react";
+import { Download, Info, Printer, ScanLine } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
@@ -7,7 +7,6 @@ import { TurknetLogo } from "@/components/layout/headers";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { USER } from "@/data/mock";
-import { useAppStore } from "@/features/core/appStore";
 import { useQrStore } from "../store";
 import { makeQr, qrPayload } from "../qr";
 import { startQrGigaSupport } from "../startQrSupport";
@@ -17,9 +16,6 @@ export function QrLabelScreen() {
   useFlow("qr_label");
   const navigate = useNavigate();
   const serial = useQrStore((s) => s.serial);
-  const ordered = useQrStore((s) => s.labelOrdered);
-  const orderLabel = useQrStore((s) => s.orderLabel);
-  const addHistory = useAppStore((s) => s.addHistory);
   const [src, setSrc] = useState<string | null>(null);
   const [err, setErr] = useState(false);
 
@@ -49,7 +45,7 @@ export function QrLabelScreen() {
 
   const tryQr = () => {
     startQrGigaSupport();
-    navigate({ to: "/ajanlar" });
+    navigate({ to: "/qr/destek" });
   };
 
   return (
@@ -84,29 +80,20 @@ export function QrLabelScreen() {
             </p>
           </div>
           <p className="mt-4 text-center text-sm text-muted-foreground">Bu QR modemine ve aboneliğine özel. Okutulduğunda bilgiler otomatik tanınır; modem modelini, cihaz kodunu veya abonelik numaranı tekrar girmen gerekmez.</p>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            <Button variant="outline" size="sm" onClick={download} disabled={!src}>
+              <Download /> QR Etiketini İndir
+            </Button>
+            <Button variant="outline" size="sm" onClick={print} disabled={!src}>
+              <Printer /> Yazdır
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-card border border-primary/10 bg-card p-4 shadow-card">
           <p className="flex items-center gap-2 font-semibold text-primary"><Info className="size-4 text-magenta" /> Modeminde QR etiketi yok mu?</p>
           <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">Etiketini bu sayfadan oluşturabilir, indirebilir ve yazdırabilirsin. Modeminin üzerine ya da kolayca görebileceğin başka bir yere yapıştırman yeterli; etiketin fiziksel olarak modem üzerinde olması şart değil.</p>
         </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" size="lg" onClick={download} disabled={!src}>
-            <Download /> QR Etiketini İndir
-          </Button>
-          <Button variant="outline" size="lg" onClick={print} disabled={!src}>
-            <Printer /> Yazdır
-          </Button>
-        </div>
-
-        <Button variant="outline" size="lg" className="w-full" disabled={ordered} onClick={() => {
-          orderLabel();
-          addHistory("QR etiket kargo talebi", "Adresine 2-3 iş gününde ulaşacak");
-          toast.success("Etiketin kargoya verilecek", { description: "2-3 iş günü içinde adresinde." });
-        }}>
-          <Package /> {ordered ? "QR etiketi istendi" : "QR Etiketini Kargoyla İste"}
-        </Button>
 
         <Button size="xl" className="w-full rounded-full" onClick={tryQr}>
           <ScanLine /> QR ile Destek Akışını Dene

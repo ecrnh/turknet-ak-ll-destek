@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAppStore } from "@/features/core/appStore";
 
-export type EventName = "feature_opened" | "flow_completed" | "flow_abandoned" | "flow_started" | "cta_clicked";
+export type EventName = "feature_opened" | "flow_completed" | "flow_abandoned" | "flow_started" | "cta_clicked" | "proactive_shown" | "proactive_accepted" | "proactive_dismissed";
 
 export function track(name: EventName, feature: string, props?: Record<string, string | number | boolean>) {
   console.info(`[analytics] ${name}`, { feature, ...props });

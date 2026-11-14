@@ -4,8 +4,8 @@
 
 export const USER = {
   firstName: "Çağrı",
-  name: "ECREN KOYUNCU",
-  initials: "EK",
+  name: "ÇAĞRI KOYUNCU",
+  initials: "ÇK",
   subscriberNo: "4896005",
   location: "İstanbul/Ümraniye",
   phone: "0532 418 22 17",
@@ -14,6 +14,36 @@ export const USER = {
   modemSerial: "MOD-7F3A21",
   modemModel: "Turknet ZTE F6640 GPON",
 };
+
+/** Model-specific installation examples for the presentation prototype. */
+export const QR_SCAN_WELCOME = {
+  durationMs: 4000,
+  title: "Modem Bilgilerini Okuyorum!",
+  subtitle: "Hemen yardımcı olacağım.",
+} as const;
+
+export const QR_MODEMS = [
+  { id: "zte", brand: "ZTE", model: "F6640 GPON", port: "PON", connection: "fiber", lights: "Power ve PON sabit yanmalı; LOS ışığı kapalı olmalı." },
+  { id: "tplink", brand: "TP-Link", model: "Archer VR400", port: "DSL", connection: "dsl", lights: "Power ve DSL ışıkları sabit yanmalı." },
+  { id: "zyxel", brand: "Zyxel", model: "VMG3625-T50B", port: "DSL", connection: "dsl", lights: "Power ve DSL ışıkları sabit yanmalı." },
+] as const;
+
+export const QR_SETUP_COPY = {
+  title: "Kurulum yap",
+  change: "Modemim değişti",
+  choose: "Modeminin markasını ve modelini seçebilir misin?",
+  start: "Adım adım kurulum rehberini başlat",
+  next: "Bu adımı tamamladım",
+  finish: "Kurulumu tamamladım",
+  back: "Önceki adım",
+  safety: "Reset tuşuna basma. Fiber kabloyu bükme, ucuna dokunma ve içine bakma.",
+  steps: [
+    { kind: "line", title: "Hat kablosunu bağla" },
+    { kind: "power", title: "Adaptörü tak ve modemi aç", body: "Modemin kendi adaptörünü güç girişine ve prize tak. Güç düğmesini aç." },
+    { kind: "lights", title: "Bağlantı ışıklarını bekle" },
+    { kind: "wifi", title: "Wi-Fi ağına bağlan", body: "Telefonunun Wi-Fi ayarlarını aç. Modemin etiketindeki ağ adını seç ve etiketteki şifreyi gir." },
+  ],
+} as const;
 
 export const MANAGED_ACCOUNTS = [
   {
@@ -59,45 +89,15 @@ export const defaultScopes = (): Record<ScopeKey, boolean> => Object.fromEntries
 export const RELATIONS = ["Anne", "Baba", "Eş", "Çocuk", "Diğer"] as const;
 
 export const HERO_SLIDES = [
-  {
-    id: "agents",
-    kind: "feature" as const,
-    eyebrow: "YENİ · TÜRKNET MOBİL'DE",
-    title: "GIGA, her şartta seninle.",
-    text: "Bağlantı sorunlarında çözüm adımlarını seninle yürüten yapay zekâ destekli yardımcın.",
-    cta: "Destek süreçlerini keşfet",
-    to: "/yardim",
-    icon: "bot",
-  },
   { id: "campaign", kind: "campaign" as const },
-  {
-    id: "video",
-    kind: "feature" as const,
-    eyebrow: "YENİ",
-    title: "Görüntülü Destek",
-    text: "Uzmanımız kameradan modemini görsün, sorunu birlikte çözelim. Ailen de görüşmeye katılsın.",
-    cta: "Görüşme Başlat",
-    to: "/goruntulu-destek",
-    icon: "video",
-  },
-  {
-    id: "qr",
-    kind: "feature" as const,
-    eyebrow: "YENİ",
-    title: "QR ile Temassız Destek",
-    text: "Modemindeki QR'ı okut, arızanı form doldurmadan bildir.",
-    cta: "QR'ı Tara",
-    to: "/qr/tara",
-    icon: "qr",
-  },
   {
     id: "hybrid",
     kind: "feature" as const,
     eyebrow: "ÜCRETSİZ · ABONELİĞİNE DAHİL",
     title: "Kesintide Bağlı Kal: Hibrit İnternet",
-    text: "Kesinti 24 saati aşarsa yedek bağlantını uygulamadan ücretsiz etkinleştir.",
+    text: "Kesinti başladığı anda yedek bağlantını uygulamadan ücretsiz etkinleştir.",
     cta: "Nasıl Çalışır?",
-    to: "/hibrit",
+    to: "/netbox-nasil-calisir",
     icon: "router",
   },
   {
@@ -134,7 +134,7 @@ export const SUBSCRIPTION_OPS: OpItem[] = [
   { slug: "hiz-yukseltme", title: "Hız Yükseltme", icon: "speed-up", to: "/islem/hiz-yukseltme" },
   { slug: "fiyat-sabitle", title: "12 Ay Fiyat Sabitle", icon: "price", to: "/islem/fiyat-sabitle" },
   { slug: "dondur", title: "Hizmeti Dondur", icon: "freeze", to: "/islem/dondur" },
-  { slug: "tasi", title: "İnternetini Taşı", icon: "move", to: "/tasinma", isNew: true },
+  { slug: "tasi", title: "İnternetini Taşı", icon: "move", to: "/tasinma" },
   { slug: "iptal", title: "Aboneliğini İptal Et", icon: "cancel", to: "/islem/iptal" },
   { slug: "yeni-abonelik", title: "Yeni Abonelik", icon: "user-plus", to: "/islem/yeni-abonelik" },
 ];
@@ -188,7 +188,7 @@ export const GENERIC_OPS: Record<string, { title: string; desc: string; cta?: st
 };
 
 export const HELP_CATEGORIES = [
-  { title: "İnternet Bağlantı Sorunları", icon: "router", to: "/ai-usta" },
+  { title: "İnternet Bağlantı Sorunları", icon: "router", to: "/qr/destek?giris=yardim" },
   { title: "Fatura ve Ödeme İşlemleri", icon: "receipt", to: "/faturalar" },
   { title: "Hizmet & Ürünler", icon: "hand", to: "/islemler" },
   { title: "İptal İşlemleri", icon: "target", to: "/islem/iptal" },
@@ -324,7 +324,7 @@ export const CASE_BASELINE = {
 
 export const AGENT_DEFS = [
   { id: "speed", name: "Hız Koruyucu", desc: "Hızında belirgin bir düşüş olursa izin verdiğin güvenli uzaktan düzeltmeleri dener.", icon: "gauge", to: "/ajanlar/hiz" },
-  { id: "backup", name: "Kesinti Takibi", desc: "Kesintinin güncel durumunu gösterir; 24 saati aşarsa ücretsiz Hibrit İnternet'i hatırlatır.", icon: "route", to: "/hibrit" },
+  { id: "backup", name: "Kesinti Takibi", desc: "Kesintinin güncel durumunu gösterir; kesinti başladığı anda ücretsiz Hibrit İnternet'i hatırlatır.", icon: "route", to: "/hibrit" },
   { id: "modem", name: "Modem Sağlık Kontrolü", desc: "Modem ve bağlantı durumuyla ilgili teknik kontrolleri yapar; bir sorun görünürse haber verir.", icon: "router", to: "/ajanlar/kontroller" },
   { id: "bill", name: "Fatura Hatırlatıcı", desc: "Son ödeme gününü hatırlatır, olağan dışı tutarları açıklar.", icon: "receipt", to: "/fatura-kalkani" },
 ] as const;
@@ -384,6 +384,15 @@ export const DEMO_NEW_ADDRESS: DemoAddress = {
 };
 
 export const DEMO_NEW_ADDRESS_PARTS = { city: "İstanbul", district: "Kadıköy", neighborhood: "Caferağa Mah.", street: "Moda Cd.", building: "No:48 D:3" };
+
+/** Demo areas where TürkNet has no infrastructure at all (relocation can't proceed; customer is offered a direct contact). */
+export const NO_INFRA_AREAS = [
+  { district: "Şile", neighborhood: "" },
+  { district: "Çatalca", neighborhood: "" },
+  { district: "Beykoz", neighborhood: "Riva Mah." },
+];
+export const DEMO_NO_INFRA_ADDRESS_PARTS = { city: "İstanbul", district: "Şile", neighborhood: "Ağva Mah.", street: "Yeşilçay Sk.", building: "No:12" };
+export const TURKNET_CONTACT = { phone: "444 88 75", tel: "4448875", hours: "7/24" };
 
 export const DEMO_MOVE_DATE = "2026-11-10";
 
@@ -583,5 +592,30 @@ export const GIGA = {
   can: ["Bağlantını ve modem durumunu kontrol etmek", "İzin verdiğin uzaktan düzeltmeleri yapıp tekrar ölçmek", "Faturanı ödeme kayıtlarınla karşılaştırmak", "Taşınma ve randevu aşamalarını takip etmek"],
   needsApproval: ["Fatura incelemesi başlatmak, iade veya borç düzeltmesi", "Nakil başvurusu ve randevu oluşturmak", "Hibrit İnternet ve TürkNet Box'ı etkinleştirmek", "Otomatik ödeme talimatı vermek"],
 } as const;
-export const HYBRID_BACKUP_QUOTA_MB = 50 * 1024; // demo allowance of the backup SIM
+export const HYBRID_BACKUP_QUOTA_MB = 250 * 1024; // demo allowance of the backup SIM
 
+
+/** Proactive GIGA: page → feature name (as used in "… işlemiyle ilgili") and the GIGA topic to offer. Longest prefix wins. */
+export const PROACTIVE_FEATURES: { path: string; feature: string; intent?: "billing" | "ai_usta" | "relocation" | "temp_internet" | "speed" | "track" }[] = [
+  { path: "/islem/hiz-yukseltme", feature: "tarife değiştirme", intent: "speed" },
+  { path: "/islem/fiyat-sabitle", feature: "tarife sabitleme" },
+  { path: "/islem/dondur", feature: "hizmet dondurma" },
+  { path: "/islem/iptal", feature: "abonelik iptali" },
+  { path: "/islem/yeni-abonelik", feature: "yeni abonelik" },
+  { path: "/islemler", feature: "işlem seçme" },
+  { path: "/faturalar", feature: "fatura ödeme", intent: "billing" },
+  { path: "/fatura-kalkani", feature: "fatura inceleme", intent: "billing" },
+  { path: "/otomatik-odeme", feature: "otomatik ödeme", intent: "billing" },
+  { path: "/tasinma", feature: "taşınma talebi", intent: "relocation" },
+  { path: "/hiz-testi", feature: "hız testi", intent: "speed" },
+  { path: "/baglanti", feature: "bağlantı kontrolü", intent: "ai_usta" },
+  { path: "/dijital-onarim", feature: "dijital onarım", intent: "ai_usta" },
+  { path: "/hibrit", feature: "Hibrit İnternet", intent: "temp_internet" },
+  { path: "/qr", feature: "QR destek", intent: "ai_usta" },
+  { path: "/evim", feature: "TürkNet Evim" },
+  { path: "/aile", feature: "aile yönetimi" },
+  { path: "/hesabim", feature: "hesap ayarları" },
+  { path: "/tercihler", feature: "tercihler" },
+  { path: "/takip", feature: "süreç takibi", intent: "track" },
+  { path: "/", feature: "ana sayfa" },
+];

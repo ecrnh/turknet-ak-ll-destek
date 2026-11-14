@@ -1,22 +1,23 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowDown, CheckCircle2, Home, Info, Loader2, MapPinned, Search, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowDown, MessageCircle, Phone, PhoneCall, CheckCircle2, Home, Info, Loader2, MapPinned, Search, Sparkles, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/headers";
 import { Banner, PlainNote } from "@/components/tn/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CURRENT_ADDRESS, DEMO_MOVE_DATE, DEMO_NEW_ADDRESS_PARTS, RELOCATION_GUIDANCE, SUBSCRIPTION } from "@/data/mock";
+import { CURRENT_ADDRESS, DEMO_MOVE_DATE, DEMO_NEW_ADDRESS_PARTS, DEMO_NO_INFRA_ADDRESS_PARTS, TURKNET_CONTACT, RELOCATION_GUIDANCE, SUBSCRIPTION } from "@/data/mock";
 import { useScenarioStore } from "@/features/scenario/store";
 import { startRelocation, useWorkflowStore } from "@/features/workflow";
 import { useFlow } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { MockInfraAPI } from "../mockServices";
+import { hasNoInfrastructure } from "../infraCoverage";
 import { isActive, type EligibilityResult } from "../rules";
 import { DemoNote } from "../components/ui";
 
-type Stage = "intent" | "address" | "checking" | "result" | "summary" | "started";
+type Stage = "intent" | "address" | "checking" | "result" | "no_infra" | "summary" | "started";
 interface Addr {
   city: string;
   district: string;
@@ -53,6 +54,7 @@ export function RelocationStartScreen() {
   const [errors, setErrors] = useState<Partial<Record<keyof Addr | "date", string>>>({});
   const [result, setResult] = useState<EligibilityResult | null>(null);
   const [startedId, setStartedId] = useState<string | null>(null);
+  const [callback, setCallback] = useState(false);
 
   const fillDemo = () => {
     setAddr({ ...DEMO_NEW_ADDRESS_PARTS });
@@ -85,6 +87,12 @@ export function RelocationStartScreen() {
     if (!validate()) return;
     setStage("checking");
     setTimeout(() => {
+      if (hasNoInfrastructure(addr)) {
+        setResult(null);
+        setCallback(false);
+        setStage("no_infra");
+        return;
+      }
       setResult(MockInfraAPI.checkAddress({ id: "ADR-NEW", line, district: addr.district.trim(), city: addr.city.trim() }).result);
       setStage("result");
     }, 1900);
@@ -93,7 +101,7 @@ export function RelocationStartScreen() {
   const start = () => {
     if (mode === "move" && !validate()) return;
     useWorkflowStore.setState({ autoFollowUp: true });
-    const id = startRelocation({ address: { id: "ADR-NEW", line, district: addr.district.trim(), city: addr.city.trim() }, moveDate: date, wantsTemp: false, eligibility: result ?? undefined });
+    const id = startRelocation({ address: { id: "ADR-NEW", line, district: addr.district.trim(), city: addr.city.trim() }, moveDate: date, wantsTemp: false, ...(result ? { eligibility: result } : {}) });
     setStartedId(id);
     setStage("started");
   };
@@ -145,9 +153,14 @@ export function RelocationStartScreen() {
               <p className="flex items-center gap-2 font-semibold text-primary">
                 <MapPinned className="size-5" /> Yeni adresin
               </p>
+              <span className="flex items-center gap-3">
               <button type="button" onClick={fillDemo} className="flex items-center gap-1 text-xs font-semibold text-magenta">
                 <Sparkles className="size-3.5" /> Örnek adres
               </button>
+              <button type="button" onClick={() => { setAddr({ ...DEMO_NO_INFRA_ADDRESS_PARTS }); setDate(new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10)); }} className="text-xs font-semibold text-muted-foreground underline-offset-2 hover:underline">
+                Altyapısız adres
+              </button>
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {FIELDS.map((f) => (
@@ -188,6 +201,34 @@ export function RelocationStartScreen() {
           </div>
         )}
 
+        {stage === "no_infra" && (
+          <>
+            <div className="rounded-card bg-warning-soft p-5 shadow-card">
+              <p className="flex items-start gap-2 text-lg font-semibold leading-snug text-foreground">
+                <TriangleAlert className="mt-1 size-5 shrink-0 text-warning" />
+                Yeni adresinde şu an TürkNet altyapısı bulunmuyor.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">{newAddressText}</p>
+            </div>
+            <PlainNote>Bu adrese şu an hizmet veremiyoruz. TürkNet yetkilileriyle doğrudan görüşerek altyapı planlarını ve sana uygun seçenekleri öğrenebilirsin.</PlainNote>
+            <section className="space-y-2 rounded-card bg-card p-4 shadow-card" aria-label="TürkNet yetkililerine ulaş">
+              <h2 className="text-base font-semibold text-primary">TürkNet yetkililerine ulaş</h2>
+              <a href={`tel:${TURKNET_CONTACT.tel}`} className="flex min-h-12 items-center gap-3 rounded-xl border border-border px-3 text-sm font-semibold text-primary">
+                <Phone className="size-5 text-magenta" /> {TURKNET_CONTACT.phone}'i ara <span className="ml-auto text-xs font-normal text-muted-foreground">{TURKNET_CONTACT.hours}</span>
+              </a>
+              <button type="button" onClick={() => setCallback(true)} disabled={callback} className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-border px-3 text-left text-sm font-semibold text-primary disabled:opacity-100">
+                {callback ? <CheckCircle2 className="size-5 text-success" /> : <PhoneCall className="size-5 text-magenta" />}
+                {callback ? "Geri arama talebin alındı" : "Yetkili beni arasın"}
+                {callback && <span className="ml-auto text-xs font-normal text-muted-foreground">En geç 1 saat içinde</span>}
+              </button>
+              <button type="button" onClick={() => navigate({ to: "/ajanlar" })} className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-border px-3 text-left text-sm font-semibold text-primary">
+                <MessageCircle className="size-5 text-magenta" /> Yazılı olarak sor
+              </button>
+            </section>
+            <Button variant="outline" className="w-full" onClick={() => setStage("address")}>Başka bir adres dene</Button>
+          </>
+        )}
+
         {stage === "result" && r && result && (
           <>
             {r.tone !== "ok" && (
@@ -200,9 +241,10 @@ export function RelocationStartScreen() {
             )}
             <PlainNote>{r.giga}</PlainNote>
             {result === "no_port" && (
-              <Button variant="outline" className="w-full" onClick={() => navigate({ to: "/hibrit" })}>
-                NetBox’u etkinleştir
-              </Button>
+              <div className="rounded-2xl border border-magenta/25 bg-magenta-soft/40 p-3.5 text-sm leading-relaxed text-foreground">
+                <p className="font-semibold text-primary">Taşındığın gün internetsiz kalmayacaksın</p>
+                <p className="mt-1 text-xs text-muted-foreground">Bir sonraki adımda NetBox'u aktif edebilmen için seni bilgilendireceğiz. Aktivasyon, girdiğin taşınma adresi ve tarihine göre o gün kullanıma hazır olacak şekilde tanımlanır.</p>
+              </div>
             )}
             {mode === "move" && (
               <>

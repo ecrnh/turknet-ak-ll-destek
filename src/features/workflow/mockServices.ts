@@ -61,7 +61,7 @@ export const MockNetworkAPI = {
   },
   /** Digital repair (simulated): regional outage at the customer's exchange, with an estimated duration. */
   regionalOutage(): { found: boolean; etaH: number } {
-    return { found: cfg().ustaDiag === "regional", etaH: cfg().regionalEtaH };
+    return { found: useWorkflowStore.getState().demoOutage && !!useWorkflowStore.getState().outage && !useWorkflowStore.getState().outage?.restoredAt && cfg().ustaDiag === "regional", etaH: cfg().regionalEtaH };
   },
   /** Digital repair (simulated): did every remote check answer? */
   checksAnswer(): boolean {

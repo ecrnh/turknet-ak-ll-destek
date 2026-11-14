@@ -13,21 +13,38 @@ import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { GigaAvatar } from "@/features/giga/GigaAvatar";
 
-type Scenario = "lights" | "cable" | "regional" | "wifi";
+type Scenario = "lights" | "cable" | "regional" | "wifi" | "place";
 type Choice = { label: string; value: string };
 const scenarioFor = (topic: string | null): Scenario => topic === "cable" ? "cable" : topic === "wifi" ? "wifi" : topic === "other" ? "regional" : "lights";
-const titles: Record<Scenario, string> = { lights: "Modem ışığı", cable: "Kablo bağlantısı", regional: "Bölgesel arıza", wifi: "Wi-Fi bağlantısı" };
+const titles: Record<Scenario, string> = { lights: "Modem ışığı", cable: "Kablo bağlantısı", regional: "Bölgesel arıza", wifi: "Wi-Fi bağlantısı", place: "Modem konumu" };
+type VisionId = "lights" | "cable" | "wifi" | "place" | "devices";
+const VISION: { id: VisionId; label: string; ok: string; pos: string }[] = [
+  { id: "lights", label: "Modem ışıkları", ok: "Güç ve internet ışıkları yeşil", pos: "left-[18%] top-[30%]" },
+  { id: "cable", label: "Kablo bağlantısı", ok: "Fiber ve güç kablosu yerinde", pos: "left-[55%] top-[42%]" },
+  { id: "wifi", label: "Wi-Fi sinyali", ok: "Wi-Fi yayını açık, sinyal iyi", pos: "left-[30%] top-[18%]" },
+  { id: "place", label: "Modem konumu", ok: "Açık ve yüksek bir yerde", pos: "left-[8%] top-[52%]" },
+  { id: "devices", label: "Çevredeki cihazlar", ok: "Parazit yapan cihaz görünmüyor", pos: "left-[60%] top-[24%]" },
+];
+const ISSUES: Record<Scenario, Partial<Record<VisionId, string>>> = {
+  lights: { lights: "LOS ışığı kırmızı yanıyor" },
+  cable: { cable: "Fiber kablo yuvasına tam oturmamış" },
+  wifi: { wifi: "Sinyal duvarlarda zayıflıyor" },
+  place: { place: "Kapalı dolabın içinde, yere yakın", devices: "Yakında mikrodalga fırın ve telsiz telefon" },
+  regional: {},
+};
 const prompts: Record<Scenario, string> = {
-  lights: "Modeminin ön panelindeki ışıklar nasıl görünüyor? Gözlemine göre seç; kameradan otomatik ışık analizi bu demoda kullanılmıyor.",
-  cable: "Modemin arkasındaki kabloları kontrol edelim. Fiber / DSL kablosu ve güç kablosu yerinde duruyor mu?",
+  lights: "Görüntüde modeminin ön panelini inceledim: LOS ışığı kırmızı yanıyor gibi görünüyor. Sen de böyle görüyor musun?",
+  cable: "Görüntüde modemin arkasındaki fiber kablonun yuvasına tam oturmadığını görüyorum. Kontrol edebilir misin?",
   regional: "Önce demo bölgesel arıza bilgisini kontrol edeyim. Bu adımda modemini sıfırlamana gerek yok.",
   wifi: "Wi-Fi sorunu hangi durumda belirginleşiyor? Modemin yanındayken ve sorun yaşadığın odadayken farkı birlikte değerlendirelim.",
+  place: "Görüntüde modemin kapalı bir dolapta ve yere yakın durduğunu, yanında mikrodalga fırın ile telsiz telefon olduğunu görüyorum. Bunlar Wi-Fi sinyalini zayıflatır. Modemi açık, yüksek bir yere ve bu cihazlardan en az 1 metre uzağa alabilir misin?",
 };
 const options: Record<Scenario, Choice[]> = {
   lights: [{ label: "LOS kırmızı yanıyor", value: "los" }, { label: "Işıklar normal görünüyor", value: "normal" }, { label: "Emin değilim", value: "unsure" }],
   cable: [{ label: "Bir kablo gevşek", value: "loose" }, { label: "Kablolar yerinde", value: "secure" }, { label: "Kontrol edemedim", value: "unsure" }],
   regional: [{ label: "Bölgesel durumu kontrol et", value: "check" }],
   wifi: [{ label: "Modemin yanında iyi, diğer odada zayıf", value: "room" }, { label: "Her yerde zayıf", value: "everywhere" }, { label: "Wi-Fi ağına bağlanamıyorum", value: "join" }],
+  place: [{ label: "Modemi taşıdım", value: "moved" }, { label: "Taşıyamıyorum", value: "still" }],
 };
 
 interface Recognition {
@@ -63,6 +80,13 @@ export function VideoCallScreen() {
   const [text, setText] = useState("");
   const [facing, setFacing] = useState<"user" | "environment">("environment");
   const [guestJoined, setGuestJoined] = useState(false);
+  const [scanned, setScanned] = useState(0);
+  const issues = ISSUES[scenario];
+  useEffect(() => {
+    setScanned(0);
+    const t = window.setInterval(() => setScanned((n) => { if (n >= VISION.length) { window.clearInterval(t); return n; } return n + 1; }), 650);
+    return () => window.clearInterval(t);
+  }, [scenario]);
   const startedAt = useRef(Date.now());
   const recognition = useRef<Recognition | null>(null);
   const guest = invitees[0] ?? null;
@@ -130,6 +154,9 @@ export function VideoCallScreen() {
       setFinding("Bölgede bilinen kesinti var (demo).");
       say("Bölgen için bilinen bir kesinti görünüyor (demo). Tahmini çözüm süresi 2 saat. Modemini sıfırlamana gerek yok; gelişme olduğunda uygulamadan takip edebilirsin.", ["Bölgesel arıza kontrol edildi"]);
       window.setTimeout(() => finishDiagnosis(false, "Bölgesel kesinti · tahmini 2 saat (demo)"), 1600);
+    } else if (scenario === "place") {
+      if (value === "moved") finishDiagnosis(true, "Modem açık ve yüksek bir yere, parazit yapan cihazlardan uzağa taşındı");
+      else finishDiagnosis(false, "Modem konumu değiştirilemedi; parazit kaynakları yakında");
     } else {
       if (value === "room") { setFinding("Wi-Fi sinyali modemden uzak odada zayıflıyor olabilir."); say("Bu, ev içi Wi-Fi sinyalinden kaynaklanıyor olabilir. Modemi açık, merkezi ve yerden yüksek bir noktaya alıp kalın duvarlardan uzaklaştır. Sonra sorun yaşadığın odada tekrar deneyelim."); setNextChoices([{ label: "Modemin yerini değiştirdim", value: "moved" }, { label: "Sorun hâlâ sürüyor", value: "still" }]); setBusy(false); }
       else if (value === "moved") finishDiagnosis(true, "Modem konumu düzenlendi; sorun yaşanan odada bağlantı yeniden kontrol edildi");
@@ -185,13 +212,17 @@ export function VideoCallScreen() {
     <div className="absolute inset-0">
       {cam.status === "live" && videoOn ? <video ref={cam.videoRef} autoPlay playsInline muted className="h-full w-full object-cover" /> : <img src={modemBackImg} alt="Örnek modem görüntüsü · demo" className="h-full w-full object-cover opacity-80" />}
       <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/5 to-black/90" />
+      {VISION.slice(0, scanned).map((v) => { const bad = issues[v.id]; return <div key={v.id} className={cn("absolute rounded-md border-2 px-1.5 py-0.5 text-[10px] font-bold backdrop-blur-sm animate-in fade-in zoom-in-95", v.pos, bad ? "border-red-400 bg-red-600/70" : "border-emerald-300 bg-emerald-600/60")}>{bad ? "⚠" : "✓"} {v.label}</div>; })}
+      {scanned < VISION.length && <div className="pointer-events-none absolute inset-x-0 top-1/4 h-0.5 animate-pulse bg-fuchsia-300/80 shadow-[0_0_12px_rgba(240,171,252,.9)]" />}
     </div>
     <div className="relative z-10 flex items-center gap-2 px-4 pt-4">
       <span className="rounded-full bg-red-600/90 px-3 py-1 text-xs font-bold">● {fmtDuration(sec)}</span><span className="flex-1 text-sm font-semibold">GIGA AI · Görüntülü destek</span>
       <button onClick={endCall} aria-label="Görüşmeyi bitir" className="rounded-full bg-red-600 p-2.5"><PhoneOff className="size-5" /></button>
     </div>
     <div className="relative z-10 mx-3 mt-2 rounded-xl border border-white/20 bg-black/55 px-3 py-2 text-xs leading-snug backdrop-blur">
-      {sampleMode ? "DEMO görüntüsü · Örnek modem fotoğrafı kullanılıyor." : "Kamera açık · Görüntü yalnızca bu ekranda gösterilir; AI görsel analiz API’si bağlı değil."}
+      <div className="mb-1 flex items-center gap-1.5 font-bold text-fuchsia-200">{scanned < VISION.length ? <><Loader2 className="size-3 animate-spin"/> GIGA görüntüyü inceliyor…</> : <><Check className="size-3"/> GIGA görüntüyü inceledi</>}</div>
+      <ul className="space-y-0.5">{VISION.map((v, i) => { const bad = issues[v.id]; const done = i < scanned; return <li key={v.id} className="flex gap-1.5"><span className={cn("w-3 shrink-0", !done ? "text-white/40" : bad ? "text-red-300" : "text-emerald-300")}>{!done ? "•" : bad ? "⚠" : "✓"}</span><span className="font-semibold">{v.label}:</span><span className={cn(!done ? "text-white/50" : bad ? "text-red-200" : "text-white/80")}>{!done ? "bakılıyor" : bad ?? v.ok}</span></li>; })}</ul>
+      <span className="mt-1 block text-[10px] text-white/55">{sampleMode ? "Örnek modem görüntüsü · görsel analiz simülasyondur (demo)" : "Kamera açık · görsel analiz simülasyondur (demo)"}</span>
       {cam.status === "pending" && <span className="ml-2 inline-flex items-center gap-1"><Loader2 className="size-3 animate-spin"/>Kamera açılıyor</span>}
       {(cam.status === "denied" || cam.status === "unavailable") && <span className="block mt-1">Kamera izni alınamadı. Görüşme demo görseli ve senaryo yanıtlarıyla sürüyor.</span>}
     </div>
@@ -220,7 +251,7 @@ export function VideoCallScreen() {
         <button onClick={endCall} className="rounded-full bg-red-600 p-3"><PhoneOff className="size-5"/></button>
       </div>
       {answered && <button onClick={endCall} className="w-full rounded-full bg-fuchsia-500 py-3 text-sm font-bold">Görüşme özetini gör</button>}
-      <p className="text-center text-[10px] text-white/70">Demo teşhis, senaryo yanıtlarına dayanır. Görsel analiz modeli veya gerçek destek bağlantısı kullanılmaz.</p>
+      <p className="text-center text-[10px] text-white/70">Demo: GIGA'nın görüntü tespitleri senaryoya göre simüle edilir.</p>
     </div>
   </div>;
 }

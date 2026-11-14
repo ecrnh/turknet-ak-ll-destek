@@ -1,7 +1,7 @@
 import { ChevronRight, LogOut, Play } from "lucide-react";
 import { toast } from "sonner";
 import { TabHeader } from "@/components/layout/headers";
-import { ListCard, ListRow, ReferralCard } from "@/components/tn/cards";
+import { ListCard, ListRow } from "@/components/tn/cards";
 import { NewBadge } from "@/components/tn/primitives";
 import { USER } from "@/data/mock";
 import { useActingAccount, useFamilyStore } from "@/features/family/store";
@@ -56,14 +56,11 @@ export function AccountScreen() {
           <ChevronRight className="size-5 text-primary" />
         </div>
 
-        {!acting && <ReferralCard />}
-
         <ListCard>
-          <ListRow title="Aile ve Yetkilendirme" to="/aile" badge={<NewBadge />} desc="Yakınların adına işlem yap, yetki ver" />
+          <ListRow title="TürkNet Evim" to="/aile" badge={<NewBadge />} desc="Yakınların adına işlem yap, yetki ver" />
           <ListRow title="Tercihlerim" to="/tercihler" desc="Büyük yazı, basit mod, otomatik kontrol izinleri" />
           <ListRow title="Şifre Değiştir" to="/islem/sifre-degistir" />
           <ListRow title="Belgelerim" to="/islem/belgelerim" />
-          <ListRow title="Benim İçin Takip Et" to="/takip" badge={<NewBadge />} desc="Tüm taleplerin, kararların ve iş emirlerin" />
           <ListRow title="İşlem Geçmişi" to="/islem-gecmisi" />
           <ListRow title="Tüm Destek Kayıtları" to="/destek-kayitlari" />
           <ListRow title="Deneyim Programı" to="/islem/deneyim-programi" />

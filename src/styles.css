@@ -40,6 +40,7 @@
   --color-magenta: var(--magenta);
   --color-magenta-foreground: var(--magenta-foreground);
   --color-magenta-soft: var(--magenta-soft);
+  --color-lilac-soft: var(--lilac-soft);
   --color-icon-box: var(--icon-box);
   --color-icon-box-border: var(--icon-box-border);
   --color-orange: var(--orange);
@@ -99,6 +100,7 @@
   --magenta: oklch(0.63 0.26 354);
   --magenta-foreground: oklch(1 0 0);
   --magenta-soft: oklch(0.95 0.035 345);
+  --lilac-soft: oklch(0.93 0.035 310);
 
   --secondary: oklch(0.96 0.025 340);
   --secondary-foreground: oklch(0.33 0.14 322);
@@ -191,6 +193,9 @@
 @utility giga-orbit {
   background: conic-gradient(from 0deg, transparent 0 55%, var(--magenta));
   mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+}
+@utility giga-robot-eye {
+  box-shadow: 0 0 4px color-mix(in oklab, var(--magenta) 65%, transparent), inset 0 0 3px color-mix(in oklab, var(--magenta) 45%, transparent);
 }
 @utility bg-help-btn {
   background: var(--gradient-help-btn);

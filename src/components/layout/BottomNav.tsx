@@ -43,9 +43,9 @@ export function BottomNav() {
         to="/ajanlar"
         aria-label="GIGA"
         aria-current={path === "/ajanlar" || path === "/ajanlar/" ? "page" : undefined}
-        className="absolute left-1/2 top-0 flex h-[66px] w-[66px] -translate-x-1/2 -translate-y-[42%] items-center justify-center rounded-full bg-card shadow-float ring-4 ring-card transition-transform active:scale-95"
+        className="absolute left-1/2 top-0 flex h-[66px] w-[66px] -translate-x-1/2 -translate-y-[42%] items-center justify-center rounded-full transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-95"
       >
-        <GigaAvatar size={54} label={false} />
+        <GigaAvatar size={66} label={false} headOnly />
       </Link>
     </nav>
   );

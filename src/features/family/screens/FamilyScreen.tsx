@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { History, ShieldCheck, ShieldOff, UserPlus, Users } from "lucide-react";
+import { ChevronDown, History, ShieldCheck, Trash2, ShieldOff, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/headers";
@@ -57,9 +57,13 @@ export function FamilyScreen() {
   const [tab, setTab] = useState<"mine" | "managed" | "log">("mine");
   const [confirm, setConfirm] = useState<Delegate | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<Delegate | null>(null);
+  const remove = useFamilyStore((s) => s.remove);
   const acceptInvite = useFamilyStore((s) => s.acceptInvite);
   const updateScopes = useFamilyStore((s) => s.updateScopes);
-  const lastEvent = log[0];
+  const [openedAt] = useState(() => Date.now());
+  const lastEvent = log[0] && log[0].time >= openedAt ? log[0] : undefined;
 
   const doRevoke = () => {
     if (!confirm) return;
@@ -71,36 +75,32 @@ export function FamilyScreen() {
 
   return (
     <div>
-      <PageHeader title="Aile ve Yetkilendirme" />
+      <PageHeader title="TürkNet Evim" />
       <div className="space-y-4 px-4">
-        <div className="rounded-card bg-referral p-5 shadow-card">
-          <Users className="size-7 text-magenta" />
-          <p className="mt-2 font-semibold text-primary">Yakınların adına güvenle işlem yap</p>
-          <p className="mt-1 text-sm text-muted-foreground">Teknolojiye uzak bir yakınının destek taleplerini sen yönet, görüntülü destekte onu da görüşmeye ekle. Fatura ödeme ve iptal varsayılan olarak kapalıdır.</p>
+        <div className="rounded-card bg-referral p-3.5 shadow-card">
+          <div className="flex items-center gap-2">
+            <Users className="size-5 shrink-0 text-magenta" />
+            <p className="text-sm font-semibold text-primary">Hesabını ailenle paylaş, kontrol sende kalsın</p>
+          </div>
+          <p className="mt-1.5 text-xs leading-snug text-muted-foreground">Aile üyelerini ekle, hesabında hangi işlemleri yapabileceklerini tek tek sen seç. Daveti kabul edene kadar kimse işlem yapamaz; fatura ödeme ve iptal her zaman senin onayına bağlı.</p>
         </div>
 
-        {lastEvent && (lastEvent.kind === "edit" || lastEvent.kind === "invite" || lastEvent.kind === "revoke") && (
+        {lastEvent && (lastEvent.kind === "edit" || lastEvent.kind === "revoke") && (
           <PlainNote>
             {lastEvent.kind === "revoke"
               ? `${lastEvent.text}. Bu kişi artık hesabında işlem yapamaz.`
-              : lastEvent.kind === "invite"
-                ? "Davet gönderildi. Kişi kabul edene kadar hiçbir işlem yapamaz; ödeme ve iptal gibi işlemler her zaman senin onayını gerektirir."
-                : "Yetkiler güncellendi. Hassas işlemler yine senin ek onayınla yapılır."}
+              : "Yetkiler güncellendi. Hassas işlemler yine senin ek onayınla yapılır."}
           </PlainNote>
         )}
 
-        <div className="flex gap-2">
-          <Chip active={tab === "mine"} onClick={() => setTab("mine")}>Yetkili Kişiler</Chip>
-          <Chip active={tab === "managed"} onClick={() => setTab("managed")}>Yönettiğim</Chip>
-          <Chip active={tab === "log"} onClick={() => setTab("log")}>Geçmiş</Chip>
-        </div>
+        <p className="font-semibold text-primary">Aile Üyeleri</p>
 
         {tab === "mine" && (
           <>
             {delegates.length === 0 && <EmptyState icon={Users} title="Henüz yetkili kişi yok" text="Eşini, çocuğunu veya bir yakınını yetkilendirebilirsin." />}
             {delegates.map((d) => (
-              <div key={d.id} className={cn("rounded-card bg-card p-5 shadow-card", d.status === "revoked" && "opacity-60")}>
-                <div className="flex items-center gap-3">
+              <div key={d.id} className={cn("rounded-card bg-card p-4 shadow-card", d.status === "revoked" && "opacity-60")}>
+                <button type="button" aria-expanded={open === d.id} onClick={() => { setOpen(open === d.id ? null : d.id); setEditing(null); }} className="flex w-full items-center gap-3 text-left">
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
                     {d.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}
                   </span>
@@ -113,7 +113,15 @@ export function FamilyScreen() {
                   <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-bold", d.status === "active" ? "bg-success-soft text-success" : d.status === "invited" ? "bg-warning-soft text-warning" : "bg-muted text-muted-foreground")}>
                     {d.status === "active" ? "Aktif" : d.status === "invited" ? "Davet bekleniyor" : "İptal"}
                   </span>
+                  <ChevronDown className={cn("size-5 text-muted-foreground transition-transform", open === d.id && "rotate-180")} />
+                </button>
+                {open === d.id && (<>
+                <div className="mt-4 space-y-1 rounded-2xl bg-muted p-3 text-sm">
+                  <p><span className="text-muted-foreground">Yakınlık:</span> {d.relation}</p>
+                  <p><span className="text-muted-foreground">Telefon:</span> {d.phone}</p>
+                  <p><span className="text-muted-foreground">Durum:</span> {d.status === "active" ? "Aktif" : d.status === "invited" ? "Davet bekleniyor" : "Yetki iptal"}</p>
                 </div>
+                <p className="mt-3 text-sm font-semibold text-primary">Yetkileri</p>
                 {editing === d.id ? (
                   <ScopeEditor initial={d.scopes} onCancel={() => setEditing(null)} onSave={(sc) => { updateScopes(d.id, sc); setEditing(null); toast.success("Yetkiler güncellendi", { description: "GIGA değişikliği yetki geçmişine kaydetti." }); }} />
                 ) : (
@@ -133,63 +141,20 @@ export function FamilyScreen() {
                     Yetkileri Düzenle
                   </Button>
                 )}
-                {d.status !== "revoked" ? (
-                  <Button variant="outline" className="mt-4 w-full border-destructive/30 text-destructive" onClick={() => setConfirm(d)}>
-                    <ShieldOff /> Yetkiyi İptal Et
-                  </Button>
-                ) : (
-                  <Button variant="outline" className="mt-4 w-full" onClick={() => restore(d.id)}>
-                    Yetkiyi Yeniden Ver
-                  </Button>
-                )}
+                <Button variant="ghost" className="mt-2 w-full text-destructive" onClick={() => setRemoving(d)}>
+                  <Trash2 /> Kişiyi Çıkar
+                </Button>
+                </>)}
               </div>
             ))}
             <Button asChild size="xl" className="w-full rounded-full">
               <Link to="/aile/yeni">
-                <UserPlus /> Yeni Kişi Yetkilendir
+                <UserPlus /> Yeni Kişi Ekle
               </Link>
             </Button>
           </>
         )}
 
-        {tab === "managed" && (
-          <>
-            <ProfileSwitcher />
-            {managed.map((m) => (
-              <div key={m.id} className="rounded-card bg-card p-5 shadow-card">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-deep text-lg font-semibold text-primary-foreground">{m.initials}</span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-foreground">{m.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {m.relation} · Abone no {m.subscriberNo} · {m.location}
-                    </p>
-                  </div>
-                </div>
-                <ScopeChips scopes={m.scopes} />
-                <Button className="mt-4 w-full" onClick={() => { switchTo(m.id); toast(`${m.honorific} adına işlem yapıyorsun`); }}>
-                  <ShieldCheck /> {m.short} hesabına geç
-                </Button>
-              </div>
-            ))}
-          </>
-        )}
-
-        {tab === "log" && (
-          <div className="rounded-card bg-card px-5 shadow-card">
-            <p className="flex items-center gap-2 pt-4 font-semibold text-primary">
-              <History className="size-4" /> Yetki Geçmişi
-            </p>
-            <ul className="divide-y divide-border">
-              {log.map((l) => (
-                <li key={l.id} className="py-3 text-sm">
-                  <p className="text-foreground">{l.text}</p>
-                  <p className="text-[11px] text-muted-foreground">{fmtDateTime(l.time)}{l.by ? ` · Başlatan: ${l.by}` : ""}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
 
       <ConfirmDialog
@@ -200,6 +165,15 @@ export function FamilyScreen() {
         destructive
         onConfirm={doRevoke}
         onCancel={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        open={!!removing}
+        title="Kişiyi çıkar?"
+        text={`${removing?.name} TürkNet Evim'den çıkarılacak ve tüm yetkileri silinecek.`}
+        confirmLabel="Çıkar"
+        destructive
+        onConfirm={() => { if (removing) { remove(removing.id); toast.success(`${removing.name} çıkarıldı`); setOpen(null); } setRemoving(null); }}
+        onCancel={() => setRemoving(null)}
       />
     </div>
   );

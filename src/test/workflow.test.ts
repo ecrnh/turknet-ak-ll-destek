@@ -117,17 +117,17 @@ describe("Mükerrer işlem önleme", () => {
 });
 
 describe("Taşınma akışı (port yok)", () => {
-  it("engeli bildirir, geçici interneti onaysız açmaz, tekrar seçim mükerrer sipariş oluşturmaz", () => {
+  it("port krizinde mobil geçici internet teklifi açmaz, yedek bağlantı NetBox'a yönlendirilir", () => {
     W.setState((s) => ({ config: { ...s.config, addressCheck: "no_port" } }));
     const id = startRelocation({ address: DEMO_NEW_ADDRESS, moveDate: DEMO_MOVE_DATE, wantsTemp: true });
     drain();
     const wf = getWf(id)!;
     expect(wf.data["eligibility"]).toBe("no_port");
-    expect(wf.decision?.key).toBe("relocation_temp");
+    const tempOffer = wf.steps.find((s) => s.key === "temp_offer");
+    expect(tempOffer?.status).toBe("skipped");
+    expect(tempOffer?.note).toContain("NetBox");
+    expect(wf.decision?.key).not.toBe("relocation_temp");
     expect(W.getState().temp).toHaveLength(0);
-    expect(decide(id, "accept")).toBe(true);
-    expect(decide(id, "accept")).toBe(false);
-    expect(W.getState().temp).toHaveLength(1);
   });
   it("dış sistem yanıt vermiyorsa başarı uydurmaz", () => {
     W.setState((s) => ({ config: { ...s.config, addressCheck: "no_response" }, autoFollowUp: false }));

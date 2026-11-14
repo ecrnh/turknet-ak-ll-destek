@@ -41,6 +41,8 @@ export const useScenarioStore = create<ScenarioState>()(
     name: "tn-scenario",
     storage: createJSONStorage(() => localStorage),
     skipHydration: true,
+    // Old snapshots may still include playing/nav; never resume autoplay on load.
+    merge: (persisted, current) => ({ ...current, ...(persisted as Partial<ScenarioState>), playing: false, nav: null }),
     partialize: (s) => {
       const { nav: _n, playing: _p, ...rest } = s;
       return rest;
